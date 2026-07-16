@@ -6,6 +6,9 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+      "Features": {
+        "$path": "src/features"
       }
     },
 
@@ -19,6 +22,9 @@
       "StarterPlayerScripts": {
         "Client": {
           "$path": "src/client"
+        },
+        "ClientModules": {
+          "$path": "src/ClientModules"
         }
       }
     }
