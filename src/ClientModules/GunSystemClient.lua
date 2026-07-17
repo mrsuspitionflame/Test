@@ -5,9 +5,9 @@ local GunEvent = RemoteEvents:WaitForChild("GunEvent")
 local GunSystemClient = {}
 
 function GunSystemClient:Init(mouse)
-    mouse.Button1Down:Connect(function()
-        GunEvent:FireServer()
-    end)
+	mouse.Button1Down:Connect(function()
+		GunEvent:FireServer()
+	end)
 end
 
 return GunSystemClient

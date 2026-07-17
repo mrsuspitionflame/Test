@@ -1,1 +1,2 @@
-print("This is a server script")
+local GunSystermServer = require(script.Parent:WaitForChild("GunSystemServer"))
+GunSystermServer:Init()
