@@ -1,32 +1,22 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local BuffStats = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("BuffStats"))
---local GunStats = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GunStats"):WaitForChild("TestGun"))
+local ServerScriptService = game:GetService("ServerScriptService")
 local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local GunEvent = RemoteEvents:WaitForChild("GunEvent")
+local CreateGun = RemoteEvents:WaitForChild("CreateGun")
+local WeaponRuntime = require(ServerScriptService:WaitForChild("Classes"):WaitForChild("WeaponRuntime"))
 
 local GunSystemServer = {}
 
-function GunSystemServer:CalculateDamange(buffList)
-	local totalDamage = 0
-	local BDamage = 0
-	local PDamage = 1
-	for _, buff in ipairs(buffList) do
-		if BuffStats[buff] then
-			if BuffStats[buff].BaseDamage then
-				BDamage = BDamage + BuffStats[buff].BaseDamage
-			end
-			if BuffStats[buff].PureDamage then
-				PDamage = PDamage * (1 + BuffStats[buff].PureDamage)
-			end
-		end
-	end
-	totalDamage = (totalDamage + BDamage) * PDamage
-	print("Total Damage: " .. totalDamage)
+function GunSystemServer:Init()
+	GunEvent.OnServerEvent:Connect(function()
+		print("something")
+	end)
 end
 
-function GunSystemServer:Init()
-	GunEvent.OnServerEvent:Connect(function(buffList)
-		print("Received Buff List: ")
+function GunSystemServer:CreateRuntimeInit()
+	CreateGun.OnServerEvent:Connect(function(player, weapon)
+		print("Creating gun for player:", player.Name, "with weapon:", weapon)
+		-- Here you can add logic to create the gun runtime for the player
 	end)
 end
 
