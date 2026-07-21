@@ -3,8 +3,12 @@ WeaponRuntime.__index = WeaponRuntime
 
 function WeaponRuntime.new(weapon)
     local self = setmetatable({}, WeaponRuntime)
-    self.weapon = weapon
+    local GunStats = require(game.ServerScriptService.Classes.GunStats)
+    self.stats = GunStats[weapon]
+    self.name = weapon
     return self
 end
+
+
 
 return WeaponRuntime
