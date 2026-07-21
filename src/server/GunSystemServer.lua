@@ -14,11 +14,4 @@ function GunSystemServer:Init()
 	end)
 end
 
-function GunSystemServer:CreateRuntimeInit()
-	CreateGun.OnServerEvent:Connect(function(player, weapon)
-		print("Creating gun for player:", player.Name, "with weapon:", weapon)
-		WeaponRuntime.new(weapon)
-	end)
-end
-
 return GunSystemServer
