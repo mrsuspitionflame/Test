@@ -5,26 +5,23 @@
 
     "ReplicatedStorage": {
       "Shared": {
-        "$path": "src/shared"
+        "$path": "src/Shared"
+      },
+      "Remotes" :{
+        "$path": "src/Remotes.model.json"
       }
     },
 
     "ServerScriptService": {
       "Server": {
-        "$path": "src/server"
-      },
-      "Classes": {
-        "$path": "src/Classes"
+        "$path": "src/Server"
       }
     },
 
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "Client": {
-          "$path": "src/client"
-        },
-        "ClientModules": {
-          "$path": "src/ClientModules"
+          "$path": "src/Client"
         }
       }
     }

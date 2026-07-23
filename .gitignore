@@ -1,8 +1,27 @@
-# Project place file
+# Rojo build outputs
+/Test.rbxl
 /Test.rbxlx
+/build/
+/dist/
 
-# Roblox Studio lock files
-/*.rbxlx.lock
+# Generated Rojo sourcemaps
+/sourcemap*.json
+
+# Roblox Studio lock and temporary files
 /*.rbxl.lock
+/*.rbxlx.lock
+/*.rbxm.lock
+/*.rbxmx.lock
 
-sourcemap.json
+# Logs
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor-specific local settings
+.idea/
+*.swp
+*.swo

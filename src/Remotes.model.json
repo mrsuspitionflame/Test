@@ -1,0 +1,17 @@
+{
+  "ClassName": "Folder",
+  "Children": [
+    {
+      "ClassName": "RemoteEvent",
+      "Name": "FireGunRequest"
+    },
+    {
+      "ClassName": "RemoteEvent",
+      "Name": "ReloadGunRequest"
+    },
+    {
+      "ClassName": "RemoteEvent",
+      "Name": "CreateGunRequest"
+    }
+  ]
+}
