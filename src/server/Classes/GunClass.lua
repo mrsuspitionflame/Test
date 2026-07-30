@@ -1,21 +1,22 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Definitions = Shared:WaitForChild("Definitions")
-local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
 
 local GunClass = {}
 GunClass.__index = GunClass
 
-function GunClass.CreateGun(player, gunType)
+function GunClass.CreateGun(player, LoadoutSlot)
 	print("Created gun")
-	local self = setmetatable({}, GunClass)
-	self.player = player
-	self.gunType = gunType
-	self.damage = GunDefinitions.GunTypes[gunType].Damage
-	self.range = GunDefinitions.GunTypes[gunType].Range
-	self.fireRate = GunDefinitions.GunTypes[gunType].FireRate
-	self.ammo = GunDefinitions.GunTypes[gunType].Ammo
-	self.perks = GunDefinitions.GunTypes[gunType].PerkList
+	local self = {
+		player = player,
+		Slot = LoadoutSlot,	
+		gunType = LoadoutSlot:GetAttribute("GunType"),
+		damage = LoadoutSlot:GetAttribute("Damage"),
+		range = LoadoutSlot:GetAttribute("Range"),
+		fireRate = LoadoutSlot:GetAttribute("FireRate"),
+		ammo = LoadoutSlot:GetAttribute("Ammo"),
+		perks = LoadoutSlot:GetAttribute("Perks"),
+	}
+	setmetatable(self, GunClass)
 	return self
 end
 

@@ -1,15 +1,11 @@
 local GunDefinitions = {}
 
-GunDefinitions.GunTypes = {
+GunDefinitions = {
     Rifle = {
         Damage = 25,
         Range = 100,
         FireRate = 600,
-        Ammo = 12,
-        PerkList = {
-            "Rapid Fire",
-            "Extended Magazine"
-        }
+        Ammo = 12
     }
 }
 
