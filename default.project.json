@@ -9,12 +9,18 @@
       },
       "Remotes" :{
         "$path": "src/Remotes.model.json"
+      },
+      "Packages": {
+        "$path": "Packages"
       }
     },
 
     "ServerScriptService": {
       "Server": {
         "$path": "src/Server"
+      },
+      "ServerPackages": {
+        "$path": "ServerPackages"
       }
     },
 
