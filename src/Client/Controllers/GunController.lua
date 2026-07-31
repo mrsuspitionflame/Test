@@ -24,25 +24,23 @@ function GunController.new(LoadoutSlot)
 		Gun = LoadoutSlot,
 		GunName = LoadoutSlot:GetAttribute("GunName"),
 		Equipped = false,
-		Firing = false
+		Firing = false,
 	}, GunController)
 
 	self.LifetimeConnections = Trove.new()
 	self.EquippedConnections = Trove.new()
 
-	self.ViewModelController = self.EquippedConnections:Construct(ViewModelController.new(LoadoutSlot))
-
+	print("GunController created")
 	self:Init()
 	return self
 end
-
 
 function GunController:ShootEvent()
 	--Perform checks to see if the gun can shoot, like ammo, fire rate, etc
 	if not self:CanShoot() then
 		return
 	end
-	
+
 	local Camera = workspace.CurrentCamera
 
 	FireGunRequest:FireServer(self.Gun, Camera.CFrame.LookVector)
@@ -74,7 +72,8 @@ end
 
 function GunController:OnEquip()
 	self.Equipped = true
-	self.ViewModelController = self.EquippedConnections:Construct(ViewModelController.new(self.Gun))
+	self.ViewModelController = self.EquippedConnections:Add(ViewModelController.new(self.Gun))
+	self:EquippedInit()
 	--other stuff like animations, etc
 end
 
@@ -93,37 +92,19 @@ function GunController:Destroy()
 end
 
 function GunController:bindAction(trove, actionName, callback, createTouchButton, ...)
-    CAS:BindAction(
-        actionName,
-        callback,
-        createTouchButton,
-        ...
-    )
+	CAS:BindAction(actionName, callback, createTouchButton, ...)
 
-    trove:Add(function()
-        CAS:UnbindAction(actionName)
-    end)
+	trove:Add(function()
+		CAS:UnbindAction(actionName)
+	end)
 end
 
 function GunController:Init()
-	-- Equipped Connections
-	
-	self:bindAction(self.EquippedConnections, "ReloadEvent",
-		function(_, inputState)
-			if inputState == Enum.UserInputState.Begin then
-				self:ReloadEvent()
-			end
-
-			return Enum.ContextActionResult.Sink
-		end,
-		false,Enum.KeyCode.R
-	)
-
-	
 	-- Lifetime Connections
 
 	self.LifetimeConnections:Connect(self.Gun.Activated, function()
-		self:ShootEvent()
+		--self:ShootEvent()
+		self.ViewModelController:Recoil()
 	end)
 
 	self.LifetimeConnections:Connect(self.Gun.Equipped, function()
@@ -133,6 +114,30 @@ function GunController:Init()
 	self.LifetimeConnections:Connect(self.Gun.Unequipped, function()
 		self:OnUnequip()
 	end)
+end
+
+function GunController:EquippedInit()
+	-- Equipped Connections
+
+	self:bindAction(self.EquippedConnections, "ReloadEvent", function(_, inputState)
+		if inputState == Enum.UserInputState.End then
+			--self:ReloadEvent()
+			print("Reload event triggered")
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, Enum.KeyCode.R)
+
+	self:bindAction(self.EquippedConnections, "AimEvent", function(_, inputState)
+		if inputState == Enum.UserInputState.Begin then
+			print("Pre Aim event triggered")
+			self.ViewModelController:OnAim()
+		end
+		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
+			print("Post Aim event triggered")
+			self.ViewModelController:AfterAim()
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, Enum.UserInputType.MouseButton2)
 end
 
 return GunController

@@ -48,44 +48,41 @@ function GunService:Init()
 	end)
 
 	FireGunRequest.OnServerEvent:Connect(function(player, gun, aimDirection)
-		if typeof(gun) ~= "Instance"
-            or not gun:IsA("Tool")
-            or typeof(aimDirection) ~= "Vector3" then
-            return
-        end
+		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") or typeof(aimDirection) ~= "Vector3" then
+			return
+		end
 
-        -- Validate ownership and equipped state
-        if gun.Parent ~= player.Character then
-            return
-        end
+		-- Validate ownership and equipped state
+		if gun.Parent ~= player.Character then
+			return
+		end
 
-        local playerGuns = PlayerGunClasses[player.UserId]
-        local gunClass = playerGuns and playerGuns[gun.Name]
+		local playerGuns = PlayerGunClasses[player.UserId]
+		local gunClass = playerGuns and playerGuns[gun.Name]
 
-        if not gunClass or gunClass.Gun ~= gun then
-            return
-        end
+		if not gunClass or gunClass.Gun ~= gun then
+			return
+		end
 
 		gunClass:Fire(aimDirection)
 	end)
 
 	ReloadGunRequest.OnServerEvent:Connect(function(player, gun)
-		if typeof(gun) ~= "Instance"
-            or not gun:IsA("Tool") then
-            return
-        end
+		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
+			return
+		end
 
-        -- Validate ownership and equipped state
-        if gun.Parent ~= player.Character then
-            return
-        end
+		-- Validate ownership and equipped state
+		if gun.Parent ~= player.Character then
+			return
+		end
 
-        local playerGuns = PlayerGunClasses[player.UserId]
-        local gunClass = playerGuns and playerGuns[gun.Name]
+		local playerGuns = PlayerGunClasses[player.UserId]
+		local gunClass = playerGuns and playerGuns[gun.Name]
 
-        if not gunClass or gunClass.Gun ~= gun then
-            return
-        end
+		if not gunClass or gunClass.Gun ~= gun then
+			return
+		end
 
 		gunClass:Reload()
 	end)
