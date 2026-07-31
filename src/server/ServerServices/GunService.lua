@@ -3,7 +3,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Server = ServerScriptService:WaitForChild("Server")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local Player = game:GetService("Players")
+local Players = game:GetService("Players")
 
 local Classes = Server:WaitForChild("Classes")
 local ServerServices = Server:WaitForChild("ServerServices")
@@ -39,7 +39,7 @@ function GunService.GetGunClass(player, slotName)
 end
 
 function GunService:Init()
-	Player.PlayerAdded:Connect(function(player)
+	Players.PlayerAdded:Connect(function(player)
 		local character = player.Character or player.CharacterAdded:Wait()
 		if character then
 			local tool = LoadoutService.CreatePlayerTools(player, "Rifle", "KineticSlot")
