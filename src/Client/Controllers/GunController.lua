@@ -23,8 +23,13 @@ function GunController.new(LoadoutSlot)
 	local self = setmetatable({
 		Gun = LoadoutSlot,
 		GunName = LoadoutSlot:GetAttribute("GunName"),
+		Ammo = LoadoutSlot:GetAttribute("Ammo"),
+		FireRate = LoadoutSlot:GetAttribute("FireRate"),
+		MagazineSize = LoadoutSlot:GetAttribute("MagazineSize"),
+		IsReloading = false,
 		Equipped = false,
 		Firing = false,
+		LastTimeShot = workspace:GetServerTimeNow(),
 	}, GunController)
 
 	self.LifetimeConnections = Trove.new()
@@ -40,6 +45,7 @@ function GunController:ShootEvent()
 	if not self:CanShoot() then
 		return
 	end
+	--updateUI
 
 	local Camera = workspace.CurrentCamera
 
@@ -48,10 +54,14 @@ function GunController:ShootEvent()
 end
 
 function GunController:CanShoot()
+	local now = workspace:GetServerTimeNow()
+    local delayBetweenShots = 60 / self.FireRate
+
 	return self.Equipped
-		and not self.Gun:GetAttribute("isReloading")
+		and not self.IsReloading
 		and not self.Firing
-		and self.Gun:GetAttribute("Ammo") > 0
+		and self.Ammo > 0
+		and now - self.LastTimeShot >= delayBetweenShots
 end
 
 function GunController:ReloadEvent()
@@ -67,7 +77,7 @@ function GunController:CanReload()
 	return self.Equipped
 		and not self.Gun:GetAttribute("isReloading")
 		and not self.Firing
-		and self.Gun:GetAttribute("Ammo") < self.magazineSize
+		and self.Gun:GetAttribute("Ammo") < self.MagazineSize
 end
 
 function GunController:OnEquip()

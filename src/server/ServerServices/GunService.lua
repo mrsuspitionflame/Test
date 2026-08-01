@@ -64,7 +64,7 @@ function GunService:Init()
 			return
 		end
 
-		gunClass:Fire(aimDirection)
+		gunClass:Shoot(aimDirection)
 	end)
 
 	ReloadGunRequest.OnServerEvent:Connect(function(player, gun)

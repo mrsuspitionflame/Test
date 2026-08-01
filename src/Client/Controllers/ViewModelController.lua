@@ -49,6 +49,11 @@ end
 
 function ViewModelController:Recoil()
 	self.RecoilVelocity += self.RecoilAmount
+	self.RecoilAnimation:Play()
+end
+
+function ViewModelController:Reload()
+	self.ReloadAnimation:Play()
 end
 
 function ViewModelController:UpdateRecoil(deltaTime: number)
@@ -164,7 +169,12 @@ function ViewModelController:CreateViewModel()
 	self.ViewModel.Name = self.ViewModelName
 	local Camera = workspace.CurrentCamera
 	self.ViewModel.Parent = Camera
-	self.AimPart = self.ViewModel:FindFirstChild("AimPart", true)
+	local Humanoid = self.ViewModel:FindFirstChild("Humanoid")
+	local Animator = Humanoid:WaitForChild("Animator")
+	self.AimPart = self.ViewModel:FindFirstChild("AimPart")
+	local Animations = self.ViewModel:FindFirstChild("Animations")
+	self.RecoilAnimation = Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.ViewModelName))
+	self.ReloadAnimation = Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.ViewModelName))
 end
 
 function ViewModelController:Init()

@@ -12,6 +12,10 @@
     {
       "ClassName": "RemoteEvent",
       "Name": "CreateGunRequest"
+    },
+    {
+      "ClassName": "RemoteEvent",
+      "Name": "ChangeStat"
     }
   ]
 }

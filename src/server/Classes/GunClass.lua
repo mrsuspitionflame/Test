@@ -13,12 +13,15 @@ function GunClass.new(player, LoadoutSlot)
 		player = player,
 		Gun = LoadoutSlot,
 		SlotName = LoadoutSlot.Name,
+
 		MagazineSize = LoadoutSlot:GetAttribute("MagazineSize"),
 		FireRate = LoadoutSlot:GetAttribute("FireRate"),
-		lastShotTime = workspace:GetServerTimeNow(),
-		currentAmmo = LoadoutSlot:GetAttribute("CurrentAmmo"),
-        isReloading = false,
-        Equipped = true
+		Ammo = LoadoutSlot:GetAttribute("Ammo"),
+
+        IsReloading = false,
+        IsFiring = false,
+        Equipped = false,
+        lastShotTime = workspace:GetServerTimeNow(),
 	}
 
     self.LifetimeConnections = Trove.new()
@@ -44,11 +47,11 @@ function GunClass:CanReload()
         return false
     end
 
-    if self.isReloading then
+    if self.IsReloading then
         return false
     end
 
-    if self.currentAmmo >= self.MagazineSize then
+    if self.Ammo >= self.MagazineSize then
         return false
     end
 
@@ -60,18 +63,18 @@ function GunClass:Reload()
         return
     end
 
-    self.isReloading = true
+    self.IsReloading = true
 
     -- Simulate reload time (you can adjust this as needed)
     local reloadTime = 2 -- seconds
     task.delay(reloadTime, function()
-        self.currentAmmo = self.MagazineSize
-        self.Gun:SetAttribute("CurrentAmmo", self.currentAmmo)
-        self.isReloading = false
+        self.Ammo = self.MagazineSize
+        self.Gun:SetAttribute("Ammo", self.Ammo)
+        self.IsReloading = false
     end)
 end
 
-function GunClass:CanFire()
+function GunClass:CanShoot()
     local character = self.player.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 
@@ -83,11 +86,11 @@ function GunClass:CanFire()
         return false
     end
 
-    if self.isReloading then
+    if self.IsReloading then
         return false
     end
 
-    if self.currentAmmo <= 0 then
+    if self.Ammo <= 0 then
         return false
     end
 
@@ -101,21 +104,21 @@ function GunClass:CanFire()
     return true
 end
 
-function GunClass:Fire(aimDirection)
+function GunClass:Shoot(aimDirection)
     if typeof(aimDirection) ~= "Vector3"
         or aimDirection.Magnitude < 0.99
         or aimDirection.Magnitude > 1.01 then
         return
     end
 
-    if not self:CanFire() then
+    if not self:CanShoot() then
         return
     end
 
     self.lastShotTime = workspace:GetServerTimeNow()
-    self.currentAmmo -= 1
+    self.Ammo -= 1
 
-    self.Gun:SetAttribute("CurrentAmmo", self.currentAmmo)
+    self.Gun:SetAttribute("Ammo", self.Ammo)
 
     if self:CanReload() then
         self:Reload()
@@ -125,7 +128,10 @@ function GunClass:Fire(aimDirection)
 end
 
 function GunClass:Destroy()
-	-- Cleanup code for the gun instance
+    self.LifetimeConnections:Destroy()
+    if self.EquippedConnections then
+        self.EquippedConnections:Destroy()
+    end
 end
 
 return GunClass
