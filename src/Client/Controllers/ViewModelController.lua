@@ -20,10 +20,11 @@ function ViewModelController.new(LoadoutSlot: Tool)
 	local self = setmetatable({
 		Gun = LoadoutSlot,
 		GunType = LoadoutSlot:GetAttribute("GunType"),
-		ViewModelName = LoadoutSlot:GetAttribute("GunName"),
+		GunName = LoadoutSlot:GetAttribute("GunName"),
 		BindingName = "Update" .. LoadoutSlot.Name .. "ViewModel",
 		Handling = LoadoutSlot:GetAttribute("Handling"),
 		Stability = LoadoutSlot:GetAttribute("Stability"),
+		ReloadSpeed = LoadoutSlot:GetAttribute("ReloadSpeed"),
 
 		Aiming = false,
 		Zooming = false,
@@ -50,10 +51,15 @@ end
 function ViewModelController:Recoil()
 	self.RecoilVelocity += self.RecoilAmount
 	self.RecoilAnimation:Play()
+	return self.RecoilAnimation
 end
 
 function ViewModelController:Reload()
+	self.Aiming = false
+	self:ZoomCamera(70)
 	self.ReloadAnimation:Play()
+	self.ReloadAnimation:AdjustSpeed(0.25)
+	return self.ReloadAnimation
 end
 
 function ViewModelController:UpdateRecoil(deltaTime: number)
@@ -80,6 +86,15 @@ function ViewModelController:UpdateRecoil(deltaTime: number)
 	local angleChange = self.RecoilAngle - oldAngle
 
 	workspace.CurrentCamera.CFrame *= CFrame.Angles(math.rad(angleChange), 0, 0)
+end
+
+function ViewModelController:SetArmsTransparency(transparency)
+	local char = Player.Character or Player.CharacterAdded:Wait()
+	local rightArm = char:WaitForChild("Right Arm")
+	local leftArm = char:WaitForChild("Left Arm")
+
+	rightArm.LocalTransparencyModifier = transparency
+	leftArm.LocalTransparencyModifier = transparency
 end
 
 function ViewModelController:ZoomCamera(targetFOV)
@@ -165,25 +180,43 @@ function ViewModelController:UpdateViewModelAndSway(deltaTime: number)
 end
 
 function ViewModelController:CreateViewModel()
-	self.ViewModel = self.Trove:Add(ClientViewModels:WaitForChild(self.ViewModelName):Clone())
-	self.ViewModel.Name = self.ViewModelName
+	self.ViewModel = self.Trove:Add(ClientViewModels:WaitForChild(self.GunName):Clone())
+	self.ViewModel.Name = self.GunName
 	local Camera = workspace.CurrentCamera
 	self.ViewModel.Parent = Camera
 	local Humanoid = self.ViewModel:FindFirstChild("Humanoid")
 	local Animator = Humanoid:WaitForChild("Animator")
 	self.AimPart = self.ViewModel:FindFirstChild("AimPart")
 	local Animations = self.ViewModel:FindFirstChild("Animations")
-	self.RecoilAnimation = Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.ViewModelName))
-	self.ReloadAnimation = Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.ViewModelName))
+	self.RecoilAnimation = Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName))
+	self.ReloadAnimation = Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName))
+end
+
+function ViewModelController:HideServerViewModel()
+	local char = Player.Character or Player.CharacterAdded:Wait()
+	local ServerViewModel = char:WaitForChild(self.GunName .. "ServerViewModel")
+
+	for _, part in ServerViewModel:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.LocalTransparencyModifier = 1
+		elseif part:IsA("Decal") or part:IsA("Texture") then
+			part.Transparency = 1
+		end
+	end
 end
 
 function ViewModelController:Init()
 	self:CreateViewModel()
-	--local previousCameraMode = Player.CameraMode
 	Player.CameraMode = Enum.CameraMode.LockFirstPerson
+	task.spawn(function()
+		task.wait(0.1)
+		self:SetArmsTransparency(1)
+		self.Trove:Add(function()
+			self:SetArmsTransparency(0)
+		end)
+	end)
 
 	self.Trove:Add(function()
-		--Player.CameraMode = previousCameraMode
 		Player.CameraMode = Enum.CameraMode.Classic
 		Player.CameraMinZoomDistance = 15
 		Player.CameraMaxZoomDistance = 15
@@ -192,6 +225,12 @@ function ViewModelController:Init()
 			Player.CameraMinZoomDistance = 0
 		end)
 	end)
+
+	task.spawn(function()
+		task.wait(0.1)
+		self:HideServerViewModel()
+	end)
+
 	self.Trove:BindToRenderStep(self.BindingName, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
 		self:UpdateViewModelAndSway(deltaTime)
 		self:UpdateRecoil(deltaTime)

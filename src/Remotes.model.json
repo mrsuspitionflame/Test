@@ -15,7 +15,7 @@
     },
     {
       "ClassName": "RemoteEvent",
-      "Name": "ChangeStat"
+      "Name": "EquipGunRequest"
     }
   ]
 }

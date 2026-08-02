@@ -13,6 +13,7 @@ local GunClass = require(Classes:WaitForChild("GunClass"))
 
 local FireGunRequest = Remotes:WaitForChild("FireGunRequest")
 local ReloadGunRequest = Remotes:WaitForChild("ReloadGunRequest")
+local EquipGunRequest = Remotes:WaitForChild("EquipGunRequest")
 
 local Slots = {
 	"KineticSlot",
@@ -85,6 +86,36 @@ function GunService:Init()
 		end
 
 		gunClass:Reload()
+	end)
+
+	EquipGunRequest.OnServerEvent:Connect(function(player, gun, action)
+		if action == "Equip" then
+			print("EquipGunRequest received from player:", player.Name, "for gun:", gun and gun.Name, "action:", action)
+			if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
+				return
+			end
+
+			-- Validate ownership and equipped state
+			if gun.Parent ~= player.Character then
+				return
+			end
+
+			local playerGuns = PlayerGunClasses[player.UserId]
+			local gunClass = playerGuns and playerGuns[gun.Name]
+
+			if not gunClass or gunClass.Gun ~= gun then
+				return
+			end
+			gunClass:OnEquip()
+		elseif action == "UnEquip" then
+			local playerGuns = PlayerGunClasses[player.UserId]
+			local gunClass = playerGuns and playerGuns[gun.Name]
+
+			if not gunClass or gunClass.Gun ~= gun then
+				return
+			end
+			gunClass:OnUnequip()
+		end
 	end)
 end
 
