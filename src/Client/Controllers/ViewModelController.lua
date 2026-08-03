@@ -24,7 +24,6 @@ function ViewModelController.new(LoadoutSlot: Tool)
 		BindingName = "Update" .. LoadoutSlot.Name .. "ViewModel",
 		Handling = LoadoutSlot:GetAttribute("Handling"),
 		Stability = LoadoutSlot:GetAttribute("Stability"),
-		ReloadSpeed = LoadoutSlot:GetAttribute("ReloadSpeed"),
 
 		Aiming = false,
 		Zooming = false,
@@ -48,17 +47,20 @@ function ViewModelController.new(LoadoutSlot: Tool)
 	return self
 end
 
+function ViewModelController:GetMuzzlePosition()
+	return self.RayOrigin.Position
+end
+
 function ViewModelController:Recoil()
 	self.RecoilVelocity += self.RecoilAmount
-	self.RecoilAnimation:Play()
+	self.Muzzle.FlashEmitter:Emit(1)
+	self.Muzzle.CircleEmitter:Emit(1)
 	return self.RecoilAnimation
 end
 
 function ViewModelController:Reload()
 	self.Aiming = false
 	self:ZoomCamera(70)
-	self.ReloadAnimation:Play()
-	self.ReloadAnimation:AdjustSpeed(0.25)
 	return self.ReloadAnimation
 end
 
@@ -121,7 +123,7 @@ function ViewModelController:ZoomCamera(targetFOV)
 
 	self.ZoomTween:Play()
 
-	self.ZoomTween.Completed:Connect(function()
+	self.ZoomTween.Completed:Once(function()
 		self.Zooming = false
 	end)
 end
@@ -184,12 +186,16 @@ function ViewModelController:CreateViewModel()
 	self.ViewModel.Name = self.GunName
 	local Camera = workspace.CurrentCamera
 	self.ViewModel.Parent = Camera
+
 	local Humanoid = self.ViewModel:FindFirstChild("Humanoid")
 	local Animator = Humanoid:WaitForChild("Animator")
 	self.AimPart = self.ViewModel:FindFirstChild("AimPart")
 	local Animations = self.ViewModel:FindFirstChild("Animations")
 	self.RecoilAnimation = Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName))
 	self.ReloadAnimation = Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName))
+
+	self.RayOrigin = self.ViewModel:FindFirstChild("RayOrigin")
+	self.Muzzle = self.RayOrigin:FindFirstChild("MuzzleAttachment")
 end
 
 function ViewModelController:HideServerViewModel()
@@ -208,28 +214,21 @@ end
 function ViewModelController:Init()
 	self:CreateViewModel()
 	Player.CameraMode = Enum.CameraMode.LockFirstPerson
-	task.spawn(function()
-		task.wait(0.1)
-		self:SetArmsTransparency(1)
-		self.Trove:Add(function()
-			self:SetArmsTransparency(0)
-		end)
-	end)
+	print("ViewModelController initialized for gun:", self.GunName)
 
 	self.Trove:Add(function()
 		Player.CameraMode = Enum.CameraMode.Classic
 		Player.CameraMinZoomDistance = 15
 		Player.CameraMaxZoomDistance = 15
-		task.spawn(function()
-			task.wait(0.1)
+		task.delay(0.1, function()
 			Player.CameraMinZoomDistance = 0
 		end)
 	end)
 
-	task.spawn(function()
+	self.Trove:Add(task.spawn(function()
 		task.wait(0.1)
 		self:HideServerViewModel()
-	end)
+	end))
 
 	self.Trove:BindToRenderStep(self.BindingName, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
 		self:UpdateViewModelAndSway(deltaTime)

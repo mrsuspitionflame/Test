@@ -16,6 +16,10 @@
     {
       "ClassName": "RemoteEvent",
       "Name": "EquipGunRequest"
+    },
+    {
+      "ClassName": "RemoteEvent",
+      "Name": "ReplicateShotEvent"
     }
   ]
 }

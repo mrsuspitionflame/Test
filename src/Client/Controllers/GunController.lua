@@ -1,4 +1,4 @@
-local UIP = game:GetService("UserInputService")
+local UIS = game:GetService("UserInputService")
 local CAS = game:GetService("ContextActionService")
 local StarterPlayer = game:GetService("StarterPlayer")
 local StarterPlayerScripts = StarterPlayer:WaitForChild("StarterPlayerScripts")
@@ -7,14 +7,18 @@ local Controllers = Client:WaitForChild("Controllers")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Utility = Shared:WaitForChild("Utility")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 
 local Trove = require(Packages:WaitForChild("Trove"))
 local ViewModelController = require(Controllers:WaitForChild("ViewModelController"))
+local RaycastController = require(Utility:WaitForChild("RaycastController"))
 
 local FireGunRequest = Remotes:WaitForChild("FireGunRequest")
 local ReloadGunRequest = Remotes:WaitForChild("ReloadGunRequest")
 local EquipGunRequest = Remotes:WaitForChild("EquipGunRequest")
+
+local seedGenerator = Random.new()
 
 local GunController = {}
 
@@ -28,6 +32,10 @@ function GunController.new(LoadoutSlot)
 		Ammo = LoadoutSlot:GetAttribute("Ammo"),
 		FireRate = LoadoutSlot:GetAttribute("FireRate"),
 		MagazineSize = LoadoutSlot:GetAttribute("MagazineSize"),
+		ReloadSpeed = LoadoutSlot:GetAttribute("ReloadSpeed"),
+		BulletsPerShot = LoadoutSlot:GetAttribute("BulletsPerShot"),
+		Spread = LoadoutSlot:GetAttribute("Spread"),
+		Range = LoadoutSlot:GetAttribute("Range"),
 
 		IsReloading = false,
 		Equipped = false,
@@ -50,21 +58,43 @@ function GunController:ShootEvent()
 	end
 
 	local Camera = workspace.CurrentCamera
-	FireGunRequest:FireServer(self.Gun, Camera.CFrame.LookVector)
+	local origin = Camera.CFrame
 
 	if self.IsReloading then
+		self.IsReloading = false
 		self.ReloadTrack:Stop()
 	end
 
 	self.Ammo -= 1
 	self.IsFiring = true
 	self.LastTimeShot = workspace:GetServerTimeNow()
-	self.FiringTrack = self.ViewModelController:Recoil()
-	self.FiringTrack.Stopped:Connect(function()
-		self.IsFiring = false
-		self.FiringTrack:Destroy()
-	end)
 
+	local recoilTrack = self.ViewModelController:Recoil()
+	self.FiringTrack = recoilTrack
+	recoilTrack.Stopped:Connect(function()
+		self.IsFiring = false
+		if self.FiringTrack == recoilTrack then
+			self.FiringTrack = nil
+		end
+		recoilTrack:Destroy()
+	end)
+	recoilTrack:Play()
+
+	local seed = seedGenerator:NextInteger(0, 2 ^ 31 - 1)
+
+	local rayDirections =
+		RaycastController.GetRayDirections(origin, self.BulletsPerShot, self.Spread, seed, self.Range * 10)
+
+	local ignoreList = {
+		workspace.CurrentCamera,
+		game.Players.LocalPlayer.Character,
+	}
+
+	local rayResults = RaycastController.CastRays(origin.Position, rayDirections, ignoreList, 0)
+	local muzzlePosition = self.ViewModelController:GetMuzzlePosition()
+	RaycastController.DrawRayResults(muzzlePosition, rayResults)
+
+	FireGunRequest:FireServer(self.Gun, Camera.CFrame, seed)
 	--other stuff like animations, recoil, etc
 end
 
@@ -80,18 +110,31 @@ function GunController:ReloadEvent()
 	if not self:CanReload() then
 		return
 	end
+
+	local reloadTrack = self.ViewModelController:Reload()
+	self.ReloadTrack = reloadTrack
 	self.IsReloading = true
-	self.ReloadTrack = self.ViewModelController:Reload()
-	self.CanAim = false
-	self.ReloadTrack.Stopped:Connect(function()
-		if not self.IsFiring then
-			self.Ammo = self.MagazineSize
+
+	reloadTrack:GetMarkerReachedSignal("ReloadComplete"):Once(function()
+		if not self.IsReloading then
+			return
 		end
-		self.IsReloading = false
-		self.CanAim = true
-		self.ReloadTrack:Destroy()
-		print("Ammo after reload: " .. self.Ammo)
+
+		self.Ammo = self.MagazineSize
 	end)
+
+	reloadTrack.Stopped:Once(function()
+		self.IsReloading = false
+
+		if self.ReloadTrack == reloadTrack then
+			self.ReloadTrack = nil
+		end
+
+		reloadTrack:Destroy()
+	end)
+
+	reloadTrack:Play()
+	reloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
 
 	ReloadGunRequest:FireServer(self.Gun)
 	--other stuff like animations, etc
@@ -102,6 +145,7 @@ function GunController:CanReload()
 end
 
 function GunController:OnEquip()
+	UIS.MouseIconEnabled = false
 	EquipGunRequest:FireServer(self.Gun, "Equip")
 	self.Equipped = true
 	self.ViewModelController = self.EquippedConnections:Add(ViewModelController.new(self.Gun))
@@ -110,6 +154,7 @@ function GunController:OnEquip()
 end
 
 function GunController:OnUnequip()
+	UIS.MouseIconEnabled = Enum.MouseBehavior.Default
 	EquipGunRequest:FireServer(self.Gun, "UnEquip")
 	self.Equipped = false
 	self.EquippedConnections:Clean()

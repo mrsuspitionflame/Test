@@ -11,7 +11,9 @@ GunDefinitions = {
 		Ammo = 12,
 		Handling = 80,
 		Stability = 90,
-		ReloadSpeed = 75,
+		ReloadSpeed = 25,
+		BulletsPerShot = 1,
+		Spread = 0,
 	},
 }
 

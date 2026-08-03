@@ -23,13 +23,10 @@ function ViewModelClass.new(LoadoutSlot: Tool, player)
 end
 
 function ViewModelClass:Recoil()
-	self.RecoilAnimation:Play()
 	return self.RecoilAnimation
 end
 
 function ViewModelClass:Reload()
-	self.ReloadAnimation:Play()
-	self.ReloadAnimation:AdjustSpeed(0.25)
 	return self.ReloadAnimation
 end
 
@@ -42,6 +39,15 @@ function ViewModelClass:CreateViewModel()
 	local Animations = self.ViewModel:FindFirstChild("Animations")
 	self.RecoilAnimation = Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName))
 	self.ReloadAnimation = Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName))
+end
+
+function ViewModelClass:GetRayOrigin()
+	local RayOrigin = self.ViewModel:FindFirstChild("RayOrigin")
+	if RayOrigin then
+		return RayOrigin
+	else
+		return nil
+	end
 end
 
 function ViewModelClass:EquipServerViewModel()

@@ -1,8 +1,12 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Utility = Shared:WaitForChild("Utility")
 local Client = script.Parent
 local Scripts = Client:WaitForChild("Scripts")
 local Player = game.Players.LocalPlayer
 
 local LoadoutHandler = require(Scripts:WaitForChild("LoadoutHandler"))
+local RaycastController = require(Utility:WaitForChild("RaycastController"))
 
 Player.CameraMode = Enum.CameraMode.Classic
 Player.CameraMinZoomDistance = 15
@@ -13,3 +17,4 @@ task.spawn(function()
 end)
 
 LoadoutHandler.Init()
+RaycastController.Init()

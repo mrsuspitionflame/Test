@@ -48,12 +48,25 @@ function GunService:Init()
 		end
 	end)
 
-	FireGunRequest.OnServerEvent:Connect(function(player, gun, aimDirection)
-		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") or typeof(aimDirection) ~= "Vector3" then
+	Players.PlayerRemoving:Connect(function(player)
+		if PlayerGunClasses[player.UserId] then
+			for _, gunClass in pairs(PlayerGunClasses[player.UserId]) do
+				gunClass:Destroy()
+			end
+			PlayerGunClasses[player.UserId] = nil
+		end
+	end)
+
+	FireGunRequest.OnServerEvent:Connect(function(player, gun, origin, seed)
+		if
+			typeof(gun) ~= "Instance"
+			or not gun:IsA("Tool")
+			or typeof(origin) ~= "CFrame"
+			or typeof(seed) ~= "number"
+		then
 			return
 		end
 
-		-- Validate ownership and equipped state
 		if gun.Parent ~= player.Character then
 			return
 		end
@@ -64,8 +77,7 @@ function GunService:Init()
 		if not gunClass or gunClass.Gun ~= gun then
 			return
 		end
-
-		gunClass:Shoot(aimDirection)
+		gunClass:Shoot(origin, seed)
 	end)
 
 	ReloadGunRequest.OnServerEvent:Connect(function(player, gun)
