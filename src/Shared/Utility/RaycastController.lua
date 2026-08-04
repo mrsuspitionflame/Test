@@ -1,4 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Utility = Shared:WaitForChild("Utility")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local ReplicateShotEvent = Remotes:WaitForChild("ReplicateShotEvent")
 local Effects = ReplicatedStorage:WaitForChild("Effects")
@@ -8,14 +10,14 @@ local EnvironmentImpactEffect = Effects:WaitForChild("EnvironmentImpactEffect")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
+local PacketManager = require(Utility:WaitForChild("PacketManager"))
+
 local RayCastController = {}
 
 export type RayResult = {
-	TaggedHumanoid: Humanoid?,
 	Position: Vector3,
 	Normal: Vector3,
 	Instance: Instance?,
-	Material: Enum.Material?,
 	Distance: number?,
 }
 
@@ -51,7 +53,6 @@ function RayCastController.CastRays(origin: Vector3, directions: { Vector3 }, ig
 			local rayResult: RayResult = {
 				Position = origin + direction,
 				Normal = direction.Unit,
-				TaggedHumanoid = nil,
 			}
 
 			if raycastResult then
@@ -59,14 +60,6 @@ function RayCastController.CastRays(origin: Vector3, directions: { Vector3 }, ig
 				rayResult.Normal = raycastResult.Normal
 				rayResult.Distance = raycastResult.Distance
 				rayResult.Instance = raycastResult.Instance
-				rayResult.Material = raycastResult.Material
-
-				local character = raycastResult.Instance:FindFirstAncestorOfClass("Model")
-				if character then
-					rayResult.TaggedHumanoid = character:FindFirstChildOfClass("Humanoid")
-				else
-					rayResult.TaggedHumanoid = nil
-				end
 			end
 
 			table.insert(rayResults, rayResult)
@@ -78,7 +71,6 @@ function RayCastController.CastRays(origin: Vector3, directions: { Vector3 }, ig
 			local rayResult = {
 				Position = origin + direction,
 				Normal = direction.Unit,
-				TaggedHumanoid = nil,
 			}
 
 			if raycastResult then
@@ -86,13 +78,6 @@ function RayCastController.CastRays(origin: Vector3, directions: { Vector3 }, ig
 				rayResult.Normal = raycastResult.Normal
 				rayResult.Distance = raycastResult.Distance
 				rayResult.Instance = raycastResult.Instance
-				rayResult.Material = raycastResult.Material
-				local character = raycastResult.Instance:FindFirstAncestorOfClass("Model")
-				if character then
-					rayResult.TaggedHumanoid = character:FindFirstChildOfClass("Humanoid")
-				else
-					rayResult.TaggedHumanoid = nil
-				end
 			end
 
 			table.insert(rayResults, rayResult)
@@ -112,7 +97,6 @@ function RayCastController.DrawRayResults(origin: Vector3, rayResults: { any })
 		laser.StartAttachment.Position = Vector3.zero
 		laser.EndAttachment.Position = Vector3.new(0, 0, -distance)
 		laser.Parent = Workspace
-
 		local tween = TweenService:Create(laser.StartAttachment, tweenInfo, { Position = laser.EndAttachment.Position })
 		tween:Play()
 		tween.Completed:Once(function()
@@ -145,8 +129,9 @@ function RayCastController.ValidateVector3(value)
 end
 
 function RayCastController.Init()
-	ReplicateShotEvent.OnClientEvent:Connect(function(muzzlePosition, rayResults)
-		RayCastController.DrawRayResults(muzzlePosition, rayResults)
+	PacketManager.Combat.ReplicateShotEvent.listen(function(data)
+		print("Data received")
+		RayCastController.DrawRayResults(data.MuzzlePosition, data.RayResults)
 	end)
 end
 return RayCastController

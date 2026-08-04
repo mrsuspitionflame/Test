@@ -2,7 +2,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local Server = ServerScriptService:WaitForChild("Server")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Utility = Shared:WaitForChild("Utility")
 local Players = game:GetService("Players")
 
 local Classes = Server:WaitForChild("Classes")
@@ -11,9 +12,7 @@ local ServerServices = Server:WaitForChild("ServerServices")
 local LoadoutService = require(ServerServices:WaitForChild("LoadoutService"))
 local GunClass = require(Classes:WaitForChild("GunClass"))
 
-local FireGunRequest = Remotes:WaitForChild("FireGunRequest")
-local ReloadGunRequest = Remotes:WaitForChild("ReloadGunRequest")
-local EquipGunRequest = Remotes:WaitForChild("EquipGunRequest")
+local PacketManager = require(Utility:WaitForChild("PacketManager"))
 
 local Slots = {
 	"KineticSlot",
@@ -25,13 +24,6 @@ local PlayerGunClasses = {}
 
 local GunService = {}
 
-function GunService.CreateGunClass(player, LoadoutSlot)
-	if not PlayerGunClasses[player.UserId] then
-		PlayerGunClasses[player.UserId] = {}
-	end
-	PlayerGunClasses[player.UserId][LoadoutSlot.Name] = GunClass.new(player, LoadoutSlot)
-end
-
 function GunService.GetGunClass(player, slotName)
 	if PlayerGunClasses[player.UserId] then
 		return PlayerGunClasses[player.UserId][slotName]
@@ -41,11 +33,24 @@ end
 
 function GunService:Init()
 	Players.PlayerAdded:Connect(function(player)
-		local character = player.Character or player.CharacterAdded:Wait()
-		if character then
-			local tool = LoadoutService.CreatePlayerTools(player, "Rifle", "KineticSlot")
-			GunService.CreateGunClass(player, tool)
-		end
+		player.CharacterAdded:Connect(function(character)
+			if not PlayerGunClasses[player.UserId] then
+				PlayerGunClasses[player.UserId] = {}
+			end
+
+			for _, slotName in ipairs(Slots) do
+				PlayerGunClasses[player.UserId][slotName] = LoadoutService.CreatePlayerGun(player, "Rifle", slotName)
+			end
+		end)
+
+		player.CharacterRemoving:Connect(function()
+			if PlayerGunClasses[player.UserId] then
+				for _, gunClass in pairs(PlayerGunClasses[player.UserId]) do
+					gunClass:Destroy()
+				end
+				PlayerGunClasses[player.UserId] = nil
+			end
+		end)
 	end)
 
 	Players.PlayerRemoving:Connect(function(player)
@@ -57,7 +62,11 @@ function GunService:Init()
 		end
 	end)
 
-	FireGunRequest.OnServerEvent:Connect(function(player, gun, origin, seed)
+	PacketManager.Combat.ShootRequest.listen(function(data, player)
+		local gun = data.Gun
+		local origin = data.CFrame
+		local seed = data.Seed
+
 		if
 			typeof(gun) ~= "Instance"
 			or not gun:IsA("Tool")
@@ -80,7 +89,8 @@ function GunService:Init()
 		gunClass:Shoot(origin, seed)
 	end)
 
-	ReloadGunRequest.OnServerEvent:Connect(function(player, gun)
+	PacketManager.Combat.ReloadRequest.listen(function(data, player)
+		local gun = data.Gun
 		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
 			return
 		end
@@ -100,7 +110,9 @@ function GunService:Init()
 		gunClass:Reload()
 	end)
 
-	EquipGunRequest.OnServerEvent:Connect(function(player, gun, action)
+	PacketManager.Combat.EquipRequest.listen(function(data, player)
+		local gun = data.Gun
+		local action = data.Action
 		if action == "Equip" then
 			print("EquipGunRequest received from player:", player.Name, "for gun:", gun and gun.Name, "action:", action)
 			if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then

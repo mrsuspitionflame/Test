@@ -8,15 +8,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 
 local Trove = require(Packages:WaitForChild("Trove"))
 local ViewModelController = require(Controllers:WaitForChild("ViewModelController"))
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
 
-local FireGunRequest = Remotes:WaitForChild("FireGunRequest")
-local ReloadGunRequest = Remotes:WaitForChild("ReloadGunRequest")
-local EquipGunRequest = Remotes:WaitForChild("EquipGunRequest")
+local PacketManager = require(Utility:WaitForChild("PacketManager"))
 
 local seedGenerator = Random.new()
 
@@ -47,7 +44,6 @@ function GunController.new(LoadoutSlot)
 	self.LifetimeConnections = Trove.new()
 	self.EquippedConnections = Trove.new()
 
-	print("GunController created")
 	self:Init()
 	return self
 end
@@ -62,23 +58,16 @@ function GunController:ShootEvent()
 
 	if self.IsReloading then
 		self.IsReloading = false
-		self.ReloadTrack:Stop()
+		self.ReloadTrack:Stop(0)
 	end
 
 	self.Ammo -= 1
 	self.IsFiring = true
 	self.LastTimeShot = workspace:GetServerTimeNow()
 
-	local recoilTrack = self.ViewModelController:Recoil()
-	self.FiringTrack = recoilTrack
-	recoilTrack.Stopped:Connect(function()
-		self.IsFiring = false
-		if self.FiringTrack == recoilTrack then
-			self.FiringTrack = nil
-		end
-		recoilTrack:Destroy()
-	end)
-	recoilTrack:Play()
+	self.ViewModelController:Recoil()
+
+	self.RecoilTrack:Play(0)
 
 	local seed = seedGenerator:NextInteger(0, 2 ^ 31 - 1)
 
@@ -94,7 +83,11 @@ function GunController:ShootEvent()
 	local muzzlePosition = self.ViewModelController:GetMuzzlePosition()
 	RaycastController.DrawRayResults(muzzlePosition, rayResults)
 
-	FireGunRequest:FireServer(self.Gun, Camera.CFrame, seed)
+	PacketManager.Combat.ShootRequest.send({
+		Gun = self.Gun,
+		CFrame = Camera.CFrame,
+		Seed = seed,
+	})
 	--other stuff like animations, recoil, etc
 end
 
@@ -111,32 +104,14 @@ function GunController:ReloadEvent()
 		return
 	end
 
-	local reloadTrack = self.ViewModelController:Reload()
-	self.ReloadTrack = reloadTrack
 	self.IsReloading = true
 
-	reloadTrack:GetMarkerReachedSignal("ReloadComplete"):Once(function()
-		if not self.IsReloading then
-			return
-		end
+	self.ReloadTrack:Play(0)
+	self.ReloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
 
-		self.Ammo = self.MagazineSize
-	end)
-
-	reloadTrack.Stopped:Once(function()
-		self.IsReloading = false
-
-		if self.ReloadTrack == reloadTrack then
-			self.ReloadTrack = nil
-		end
-
-		reloadTrack:Destroy()
-	end)
-
-	reloadTrack:Play()
-	reloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
-
-	ReloadGunRequest:FireServer(self.Gun)
+	PacketManager.Combat.ReloadRequest.send({
+		Gun = self.Gun,
+	})
 	--other stuff like animations, etc
 end
 
@@ -146,16 +121,23 @@ end
 
 function GunController:OnEquip()
 	UIS.MouseIconEnabled = false
-	EquipGunRequest:FireServer(self.Gun, "Equip")
+	PacketManager.Combat.EquipRequest.send({
+		Gun = self.Gun,
+		Action = "Equip",
+	})
 	self.Equipped = true
 	self.ViewModelController = self.EquippedConnections:Add(ViewModelController.new(self.Gun))
+	self.ReloadTrack = self.EquippedConnections:Add(self.ViewModelController:GetReloadAnimation())
+	self.RecoilTrack = self.EquippedConnections:Add(self.ViewModelController:GetRecoilAnimation())
 	self:EquippedInit()
-	--other stuff like animations, etc
 end
 
 function GunController:OnUnequip()
 	UIS.MouseIconEnabled = Enum.MouseBehavior.Default
-	EquipGunRequest:FireServer(self.Gun, "UnEquip")
+	PacketManager.Combat.EquipRequest.send({
+		Gun = self.Gun,
+		Action = "UnEquip",
+	})
 	self.Equipped = false
 	self.EquippedConnections:Clean()
 	self.ViewModelController = nil
@@ -188,6 +170,20 @@ end
 
 function GunController:EquippedInit()
 	-- Equipped Connections
+	self.EquippedConnections:Connect(self.RecoilTrack.Stopped, function()
+		self.IsFiring = false
+	end)
+
+	self.EquippedConnections:Connect(self.ReloadTrack.Stopped, function()
+		self.IsReloading = false
+	end)
+
+	self.EquippedConnections:Connect(self.ReloadTrack:GetMarkerReachedSignal("ReloadComplete"), function()
+		if self.IsReloading then
+			self.Ammo = self.MagazineSize
+		end
+	end)
+
 	self.EquippedConnections:Connect(self.Gun.Activated, function()
 		self:ShootEvent()
 	end)

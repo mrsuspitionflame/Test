@@ -55,13 +55,21 @@ function ViewModelController:Recoil()
 	self.RecoilVelocity += self.RecoilAmount
 	self.Muzzle.FlashEmitter:Emit(1)
 	self.Muzzle.CircleEmitter:Emit(1)
+	return 
+end
+
+function ViewModelController:GetRecoilAnimation()
 	return self.RecoilAnimation
+end
+
+function ViewModelController:GetReloadAnimation()
+	return self.ReloadAnimation
 end
 
 function ViewModelController:Reload()
 	self.Aiming = false
 	self:ZoomCamera(70)
-	return self.ReloadAnimation
+	return 
 end
 
 function ViewModelController:UpdateRecoil(deltaTime: number)
@@ -120,6 +128,13 @@ function ViewModelController:ZoomCamera(targetFOV)
 
 	local Camera = workspace.CurrentCamera
 	self.ZoomTween = TS:Create(Camera, tweenInfo, zoomGoal)
+
+	self.Trove:Add(function()
+		if self.ZoomTween then
+			self.ZoomTween:Cancel()
+			self.ZoomTween = nil
+		end
+	end)
 
 	self.ZoomTween:Play()
 
@@ -191,8 +206,8 @@ function ViewModelController:CreateViewModel()
 	local Animator = Humanoid:WaitForChild("Animator")
 	self.AimPart = self.ViewModel:FindFirstChild("AimPart")
 	local Animations = self.ViewModel:FindFirstChild("Animations")
-	self.RecoilAnimation = Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName))
-	self.ReloadAnimation = Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName))
+	self.RecoilAnimation = self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
+	self.ReloadAnimation = self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
 
 	self.RayOrigin = self.ViewModel:FindFirstChild("RayOrigin")
 	self.Muzzle = self.RayOrigin:FindFirstChild("MuzzleAttachment")

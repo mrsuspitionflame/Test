@@ -1,20 +1,29 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local Server = ServerScriptService:WaitForChild("Server")
+local Classes = Server:WaitForChild("Classes")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Definitions = Shared:WaitForChild("Definitions")
 local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
 
+local GunClass = require(Classes:WaitForChild("GunClass"))
+
 local LoadoutService = {}
 
-function LoadoutService.CreatePlayerTools(player, gunName, toolName)
-	-- Example implementation: give the player a default rifle
+function LoadoutService.CreatePlayerGun(player, gunName, slotName)
+	local tool = LoadoutService.CreatePlayerTools(player, gunName, slotName)
+	return GunClass.new(player, tool)
+end
+
+function LoadoutService.CreatePlayerTools(player, gunName, slotName)
 	local tool = Instance.new("Tool")
-	tool.Name = toolName
+	tool.Name = slotName
 	tool.CanBeDropped = false
 	tool.RequiresHandle = false
 	LoadoutService.SetAttributes(tool, gunName)
 	tool.Parent = player:WaitForChild("Backpack")
-	print("Created tool for player:", player.Name, "with gun:", gunName, "and tool name:", toolName)
+	print("Created tool for player:", player.Name, "with gun:", gunName, "and slot name:", slotName)
 	return tool
 end
 

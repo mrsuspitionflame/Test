@@ -12,7 +12,7 @@ local RaycastController = require(Utility:WaitForChild("RaycastController"))
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 local Trove = require(Packages:WaitForChild("Trove"))
-local ReplicateShotEvent = Remotes:WaitForChild("ReplicateShotEvent")
+local PacketManager = require(Utility:WaitForChild("PacketManager"))
 
 local GunClass = {}
 GunClass.__index = GunClass
@@ -54,6 +54,21 @@ function GunClass:OnEquip()
 	end
 	self.Equipped = true
 	self.ViewModelClass = self.EquippedConnections:Add(ViewModelClass.new(self.Gun, self.Player))
+	self.ReloadTrack = self.ViewModelClass:GetReloadAnimation()
+	self.RecoilTrack = self.ViewModelClass:GetRecoilAnimation()
+	self.EquippedConnections:Connect(self.RecoilTrack.Stopped, function()
+		self.IsFiring = false
+	end)
+
+	self.EquippedConnections:Connect(self.ReloadTrack.Stopped, function()
+		self.IsReloading = false
+	end)
+
+	self.EquippedConnections:Connect(self.ReloadTrack:GetMarkerReachedSignal("ReloadComplete"), function()
+		if self.IsReloading then
+			self.Ammo = self.MagazineSize
+		end
+	end)
 	-- Additional logic for equipping the gun can be added here
 end
 
@@ -63,7 +78,7 @@ function GunClass:OnUnequip()
 		return
 	end
 	self.Equipped = false
-	self.EquippedConnections:Destroy()
+	self.EquippedConnections:Clean()
 	self.ViewModelClass = nil
 	-- Additional logic for unequipping the gun can be added here
 end
@@ -86,30 +101,10 @@ function GunClass:Reload()
 		return
 	end
 
-	local reloadTrack = self.ViewModelClass:Reload()
-	self.ReloadTrack = reloadTrack
 	self.IsReloading = true
 
-	reloadTrack:GetMarkerReachedSignal("ReloadComplete"):Once(function()
-		if not self.IsReloading then
-			return
-		end
-
-		self.Ammo = self.MagazineSize
-		print("Ammo after reload: " .. self.Ammo)
-	end)
-
-	reloadTrack.Stopped:Once(function()
-		self.IsReloading = false
-
-		if self.ReloadTrack == reloadTrack then
-			self.ReloadTrack = nil
-		end
-		reloadTrack:Destroy()
-	end)
-
-	reloadTrack:Play()
-	reloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
+	self.ReloadTrack:Play(0)
+	self.ReloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
 end
 
 function GunClass:CanShoot(origin, seed)
@@ -162,23 +157,14 @@ function GunClass:Shoot(origin, seed)
 
 	if self.IsReloading then
 		self.IsReloading = false
-		self.ReloadTrack:Stop()
+		self.ReloadTrack:Stop(0)
 	end
 
 	self.Ammo -= 1
 	self.IsFiring = true
 	self.lastShotTime = workspace:GetServerTimeNow()
 
-	local recoilTrack = self.ViewModelClass:Recoil()
-	self.FiringTrack = recoilTrack
-	recoilTrack.Stopped:Connect(function()
-		self.IsFiring = false
-		if self.FiringTrack == recoilTrack then
-			self.FiringTrack = nil
-		end
-		recoilTrack:Destroy()
-	end)
-	recoilTrack:Play()
+	self.RecoilTrack:Play(0)
 
 	local rayDirections =
 		RaycastController.GetRayDirections(origin, self.BulletsPerShot, self.Spread, seed, self.Range * 10)
@@ -217,13 +203,10 @@ function GunClass:Shoot(origin, seed)
 		muzzlePosition = rayOrigin.Position
 	end
 
-	for _, otherPlayer in Players:GetPlayers() do
-		if otherPlayer == self.Player then
-			continue
-		end
-
-		ReplicateShotEvent:FireClient(otherPlayer, muzzlePosition, rayResults)
-	end
+	PacketManager.Combat.ReplicateShotEvent.sendToAllExcept({
+		MuzzlePosition = muzzlePosition,
+		RayResults = rayResults,
+	}, self.Player)
 end
 
 function GunClass:Destroy()

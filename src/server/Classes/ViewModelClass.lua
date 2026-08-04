@@ -22,14 +22,6 @@ function ViewModelClass.new(LoadoutSlot: Tool, player)
 	return self
 end
 
-function ViewModelClass:Recoil()
-	return self.RecoilAnimation
-end
-
-function ViewModelClass:Reload()
-	return self.ReloadAnimation
-end
-
 function ViewModelClass:CreateViewModel()
 	self.ViewModel = self.Trove:Add(ServerViewModels:WaitForChild(self.GunName .. "ServerViewModel"):Clone())
 	self.ViewModel.Name = self.GunName .. "ServerViewModel"
@@ -37,8 +29,16 @@ function ViewModelClass:CreateViewModel()
 	local Humanoid = self.ViewModel:FindFirstChild("Humanoid")
 	local Animator = Humanoid:WaitForChild("Animator")
 	local Animations = self.ViewModel:FindFirstChild("Animations")
-	self.RecoilAnimation = Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName))
-	self.ReloadAnimation = Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName))
+	self.RecoilAnimation = self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
+	self.ReloadAnimation = self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
+end
+
+function ViewModelClass:GetReloadAnimation()
+	return self.ReloadAnimation
+end
+
+function ViewModelClass:GetRecoilAnimation()
+	return self.RecoilAnimation
 end
 
 function ViewModelClass:GetRayOrigin()

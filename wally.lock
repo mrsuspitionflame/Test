@@ -3,8 +3,18 @@
 registry = "test"
 
 [[package]]
+name = "centau/vide"
+version = "0.4.1"
+dependencies = []
+
+[[package]]
 name = "evaera/promise"
 version = "4.0.0"
+dependencies = []
+
+[[package]]
+name = "ffrostflame/bytenet"
+version = "0.4.6"
 dependencies = []
 
 [[package]]
@@ -15,7 +25,7 @@ dependencies = []
 [[package]]
 name = "mrsus/test"
 version = "0.1.0"
-dependencies = [["Promise", "evaera/promise@4.0.0"], ["Signal", "sleitnick/signal@2.0.3"], ["Trove", "sleitnick/trove@1.8.0"], ["Profilestore", "lm-loleris/profilestore@1.0.3"]]
+dependencies = [["Bytenet", "ffrostflame/bytenet@0.4.6"], ["Promise", "evaera/promise@4.0.0"], ["Signal", "sleitnick/signal@2.0.3"], ["Trove", "sleitnick/trove@1.8.0"], ["Vide", "centau/vide@0.4.1"], ["Profilestore", "lm-loleris/profilestore@1.0.3"]]
 
 [[package]]
 name = "sleitnick/signal"
