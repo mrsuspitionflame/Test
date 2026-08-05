@@ -26,7 +26,7 @@ function GunController.new(LoadoutSlot)
 		Gun = LoadoutSlot,
 
 		GunName = LoadoutSlot:GetAttribute("GunName"),
-		Ammo = LoadoutSlot:GetAttribute("Ammo"),
+		Ammo = LoadoutSlot:GetAttribute("MagazineSize"),
 		FireRate = LoadoutSlot:GetAttribute("FireRate"),
 		MagazineSize = LoadoutSlot:GetAttribute("MagazineSize"),
 		ReloadSpeed = LoadoutSlot:GetAttribute("ReloadSpeed"),
@@ -191,7 +191,6 @@ function GunController:EquippedInit()
 	self:bindAction(self.EquippedConnections, "ReloadEvent", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			self:ReloadEvent()
-			print("Reload event triggered")
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.KeyCode.R)
@@ -199,12 +198,10 @@ function GunController:EquippedInit()
 	self:bindAction(self.EquippedConnections, "AimEvent", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			if self.CanAim then
-				print("Pre Aim event triggered")
 				self.ViewModelController:OnAim()
 			end
 		end
 		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
-			print("Post Aim event triggered")
 			self.ViewModelController:AfterAim()
 		end
 		return Enum.ContextActionResult.Sink

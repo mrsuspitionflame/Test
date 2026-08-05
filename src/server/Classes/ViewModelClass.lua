@@ -29,8 +29,10 @@ function ViewModelClass:CreateViewModel()
 	local Humanoid = self.ViewModel:FindFirstChild("Humanoid")
 	local Animator = Humanoid:WaitForChild("Animator")
 	local Animations = self.ViewModel:FindFirstChild("Animations")
-	self.RecoilAnimation = self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
-	self.ReloadAnimation = self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
+	self.RecoilAnimation =
+		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
+	self.ReloadAnimation =
+		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
 end
 
 function ViewModelClass:GetReloadAnimation()
@@ -84,7 +86,6 @@ function ViewModelClass:EquipServerViewModel()
 end
 
 function ViewModelClass:SetArmsTransparency(transparency)
-	print("Setting arms transparency to:", transparency)
 	local char = self.Player.Character or self.Player.CharacterAdded:Wait()
 	if not char then
 		return

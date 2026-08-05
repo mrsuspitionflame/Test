@@ -39,6 +39,7 @@ function ViewModelController.new(LoadoutSlot: Tool)
 		PreviousRecoilAngle = 0,
 	}, ViewModelController)
 
+	self.ZoomTrove = self.Trove:Extend()
 	self.Stiffness = RecoilSettings[self.GunType].Stiffness
 	self.Damping = RecoilSettings[self.GunType].Damping
 	self.RecoilAmount = RecoilSettings.GetRecoilAmount(self.GunType, self.Stability)
@@ -55,7 +56,7 @@ function ViewModelController:Recoil()
 	self.RecoilVelocity += self.RecoilAmount
 	self.Muzzle.FlashEmitter:Emit(1)
 	self.Muzzle.CircleEmitter:Emit(1)
-	return 
+	return
 end
 
 function ViewModelController:GetRecoilAnimation()
@@ -69,7 +70,7 @@ end
 function ViewModelController:Reload()
 	self.Aiming = false
 	self:ZoomCamera(70)
-	return 
+	return
 end
 
 function ViewModelController:UpdateRecoil(deltaTime: number)
@@ -108,39 +109,28 @@ function ViewModelController:SetArmsTransparency(transparency)
 end
 
 function ViewModelController:ZoomCamera(targetFOV)
-	if self.ZoomTween then
-		self.ZoomTween:Cancel()
-	end
-
+	self.ZoomTrove:Clean()
 	self.Zooming = true
-	local aimSpeed
-	if self.Handling >= 95 then
-		aimSpeed = 0.1
-	else
-		aimSpeed = (100 - self.Handling) / 100
-	end
 
-	local tweenInfo = TweenInfo.new(aimSpeed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+	local aimSpeed = if self.Handling >= 95 then 0.1 else (100 - self.Handling) / 100
 
-	local zoomGoal = {
-		FieldOfView = targetFOV,
-	}
+	local tween = TS:Create(
+		workspace.CurrentCamera,
+		TweenInfo.new(aimSpeed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		{ FieldOfView = targetFOV }
+	)
 
-	local Camera = workspace.CurrentCamera
-	self.ZoomTween = TS:Create(Camera, tweenInfo, zoomGoal)
+	self.ZoomTween = tween
+	self.ZoomTrove:Add(tween)
 
-	self.Trove:Add(function()
-		if self.ZoomTween then
-			self.ZoomTween:Cancel()
+	self.ZoomTrove:Connect(tween.Completed, function()
+		if self.ZoomTween == tween then
+			self.Zooming = false
 			self.ZoomTween = nil
 		end
 	end)
 
-	self.ZoomTween:Play()
-
-	self.ZoomTween.Completed:Once(function()
-		self.Zooming = false
-	end)
+	tween:Play()
 end
 
 function ViewModelController:OnAim()
@@ -206,8 +196,10 @@ function ViewModelController:CreateViewModel()
 	local Animator = Humanoid:WaitForChild("Animator")
 	self.AimPart = self.ViewModel:FindFirstChild("AimPart")
 	local Animations = self.ViewModel:FindFirstChild("Animations")
-	self.RecoilAnimation = self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
-	self.ReloadAnimation = self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
+	self.RecoilAnimation =
+		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
+	self.ReloadAnimation =
+		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
 
 	self.RayOrigin = self.ViewModel:FindFirstChild("RayOrigin")
 	self.Muzzle = self.RayOrigin:FindFirstChild("MuzzleAttachment")
@@ -229,7 +221,6 @@ end
 function ViewModelController:Init()
 	self:CreateViewModel()
 	Player.CameraMode = Enum.CameraMode.LockFirstPerson
-	print("ViewModelController initialized for gun:", self.GunName)
 
 	self.Trove:Add(function()
 		Player.CameraMode = Enum.CameraMode.Classic

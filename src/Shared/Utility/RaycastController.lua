@@ -130,7 +130,6 @@ end
 
 function RayCastController.Init()
 	PacketManager.Combat.ReplicateShotEvent.listen(function(data)
-		print("Data received")
 		RayCastController.DrawRayResults(data.MuzzlePosition, data.RayResults)
 	end)
 end

@@ -26,7 +26,7 @@ function GunClass.new(player, LoadoutSlot)
 		Damage = LoadoutSlot:GetAttribute("Damage"),
 		MagazineSize = LoadoutSlot:GetAttribute("MagazineSize"),
 		FireRate = LoadoutSlot:GetAttribute("FireRate"),
-		Ammo = LoadoutSlot:GetAttribute("Ammo"),
+		Ammo = LoadoutSlot:GetAttribute("MagazineSize"),
 		Handling = LoadoutSlot:GetAttribute("Handling"),
 		Stability = LoadoutSlot:GetAttribute("Stability"),
 		ReloadSpeed = LoadoutSlot:GetAttribute("ReloadSpeed"),
@@ -73,7 +73,6 @@ function GunClass:OnEquip()
 end
 
 function GunClass:OnUnequip()
-	print("Unequipping gun for player:", self.Player.Name)
 	if not self.Equipped then
 		return
 	end
