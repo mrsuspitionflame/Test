@@ -7,9 +7,6 @@
       "Shared": {
         "$path": "src/Shared"
       },
-      "Remotes" :{
-        "$path": "src/Remotes.model.json"
-      },
       "Packages": {
         "$path": "Packages"
       }

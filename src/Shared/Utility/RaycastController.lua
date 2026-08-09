@@ -1,8 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Utility = Shared:WaitForChild("Utility")
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local ReplicateShotEvent = Remotes:WaitForChild("ReplicateShotEvent")
+local Definitions = Shared:WaitForChild("Definitions")
 local Effects = ReplicatedStorage:WaitForChild("Effects")
 local laserBeamEffect = Effects:WaitForChild("LaserBeamEffect")
 
@@ -10,7 +8,7 @@ local EnvironmentImpactEffect = Effects:WaitForChild("EnvironmentImpactEffect")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
-local PacketManager = require(Utility:WaitForChild("PacketManager"))
+local PacketManager = require(Definitions:WaitForChild("PacketManager"))
 
 local RayCastController = {}
 
