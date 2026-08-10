@@ -20,8 +20,8 @@ local function AbilityUI()
 
 		create("Frame")({
 			Name = "SuperBarFrame",
-			Size = UDim2.fromScale(0.9, 0.12),
-			Position = UDim2.fromScale(0.05, 0.15),
+			Size = UDim2.fromScale(0.9, 0.2),
+			Position = UDim2.fromScale(0.05, 0.01),
 			BackgroundTransparency = 0.8,
 			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 
@@ -37,8 +37,8 @@ local function AbilityUI()
 
 		create("Frame")({
 			Name = "GrenadeBarFrame",
-			Size = UDim2.fromScale(0.13, 0.13),
-			Position = UDim2.fromScale(0.05, 0.3),
+			Size = UDim2.fromScale(0.26, 0.26),
+			Position = UDim2.fromScale(0.05, 0.27),
 			SizeConstraint = Enum.SizeConstraint.RelativeXX,
 			BackgroundTransparency = 0.8,
 			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
@@ -48,8 +48,8 @@ local function AbilityUI()
 
 		create("Frame")({
 			Name = "MeleeBarFrame",
-			Size = UDim2.fromScale(0.13, 0.13),
-			Position = UDim2.fromScale(0.20, 0.3),
+			Size = UDim2.fromScale(0.26, 0.26),
+			Position = UDim2.fromScale(0.37, 0.27),
 			SizeConstraint = Enum.SizeConstraint.RelativeXX,
 			BackgroundTransparency = 0.8,
 			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
@@ -59,8 +59,8 @@ local function AbilityUI()
 
 		create("Frame")({
 			Name = "ClassAbilityBarFrame",
-			Size = UDim2.fromScale(0.13, 0.13),
-			Position = UDim2.fromScale(0.35, 0.3),
+			Size = UDim2.fromScale(0.26, 0.26),
+			Position = UDim2.fromScale(0.69, 0.27),
 			SizeConstraint = Enum.SizeConstraint.RelativeXX,
 			BackgroundTransparency = 0.8,
 			BackgroundColor3 = Color3.fromRGB(0, 0, 0),

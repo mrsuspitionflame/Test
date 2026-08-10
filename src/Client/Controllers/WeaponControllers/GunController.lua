@@ -28,6 +28,7 @@ function GunController.new(Gun: Tool, AnimationController, ActionManager, GUICon
 		Ammo = Gun:GetAttribute("MagazineSize"),
 		FireRate = Gun:GetAttribute("FireRate"),
 		MagazineSize = Gun:GetAttribute("MagazineSize"),
+		ReserveAmmo = Gun:GetAttribute("ReserveAmmo"),
 		ReloadSpeed = Gun:GetAttribute("ReloadSpeed"),
 		BulletsPerShot = Gun:GetAttribute("BulletsPerShot"),
 		Spread = Gun:GetAttribute("Spread"),
@@ -90,7 +91,10 @@ function GunController:CanShoot()
 	local now = workspace:GetServerTimeNow()
 	local delayBetweenShots = 60 / self.FireRate
 
-	return self.Equipped and self.ActionManager:TryAction("Weapon", "Fire") and self.Ammo > 0 and now - self.LastTimeShot >= delayBetweenShots
+	return self.Equipped
+		and self.ActionManager:TryAction("Weapon", "Fire")
+		and self.Ammo > 0
+		and now - self.LastTimeShot >= delayBetweenShots
 end
 
 function GunController:ReloadEvent()
@@ -111,11 +115,18 @@ function GunController:ReloadEvent()
 end
 
 function GunController:CanReload()
-	return self.Equipped and self.ActionManager:TryAction("Weapon", "Reload") and self.Ammo < self.MagazineSize
+	return self.Equipped
+		and self.ActionManager:TryAction("Weapon", "Reload")
+		and self.Ammo < self.MagazineSize
+		and self.ReserveAmmo > 0
 end
 
 function GunController:SetAmmo(ammo: number)
 	self.Ammo = ammo
+end
+
+function GunController:SetReserveAmmo(reserveAmmo: number)
+	self.ReserveAmmo = reserveAmmo
 end
 
 function GunController:OnEquip()

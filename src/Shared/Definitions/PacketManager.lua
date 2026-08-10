@@ -24,6 +24,7 @@ PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
 			value = ByteNet.struct({
 				Gun = ByteNet.inst,
 				Ammo = ByteNet.int32,
+				ReserveAmmo = ByteNet.optional(ByteNet.int32),
 			}),
 		}),
 

@@ -17,4 +17,5 @@ task.spawn(function()
 end)
 
 RaycastController.Init()
+
 LoadoutController.Init()
