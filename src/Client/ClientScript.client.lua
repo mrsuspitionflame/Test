@@ -8,6 +8,7 @@ local Player = game.Players.LocalPlayer
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
 local LoadoutController = require(Controllers:WaitForChild("LoadoutController"))
 
+
 Player.CameraMode = Enum.CameraMode.Classic
 Player.CameraMinZoomDistance = 15
 Player.CameraMaxZoomDistance = 15

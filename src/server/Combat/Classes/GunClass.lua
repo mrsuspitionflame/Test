@@ -72,13 +72,11 @@ function GunClass:OnEquip()
 
 	self.EquippedConnections:Connect(self.ReloadTrack:GetMarkerReachedSignal("ReloadComplete"), function()
 		if self.ActionManager:GetState("WeaponState") == "Reloading" then
-			if self.ReserveAmmo >= self.MagazineSize then
-				self.ReserveAmmo -= self.MagazineSize
-				self.Ammo = self.MagazineSize
-			else
-				self.Ammo = self.ReserveAmmo
-				self.ReserveAmmo = 0
-			end
+			local missingAmmo = self.MagazineSize - self.Ammo
+			local ammoToLoad = math.min(missingAmmo, self.ReserveAmmo)
+
+			self.Ammo += ammoToLoad
+			self.ReserveAmmo -= ammoToLoad
 			PacketManager.Combat.AmmoUpdate.sendTo({
 				Gun = self.Gun,
 				Ammo = self.Ammo,

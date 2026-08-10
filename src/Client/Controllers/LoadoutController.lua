@@ -71,12 +71,9 @@ function LoadoutController.Init()
 		local controller = Loadout[data.Gun.Name]
 
 		if controller and controller.Gun == data.Gun then
-			controller:SetAmmo(data.Ammo)
+			controller:SetAmmoState(data.Ammo, data.ReserveAmmo)
 		end
 
-		if controller and controller.Gun == data.Gun and data.ReserveAmmo then
-			controller:SetReserveAmmo(data.ReserveAmmo)
-		end
 	end)
 
 	if Player.Character then

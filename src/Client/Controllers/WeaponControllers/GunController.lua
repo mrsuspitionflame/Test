@@ -57,7 +57,6 @@ function GunController:ShootEvent()
 		self.ReloadTrack:Stop(0)
 	end
 
-	self.Ammo -= 1
 	self.ActionManager:SetState("WeaponState", "Firing")
 	self.LastTimeShot = workspace:GetServerTimeNow()
 
@@ -121,16 +120,23 @@ function GunController:CanReload()
 		and self.ReserveAmmo > 0
 end
 
-function GunController:SetAmmo(ammo: number)
-	self.Ammo = ammo
-end
+function GunController:SetAmmoState(ammo, reserveAmmo)
+    self.Ammo = ammo
 
-function GunController:SetReserveAmmo(reserveAmmo: number)
-	self.ReserveAmmo = reserveAmmo
+    if reserveAmmo ~= nil then
+        self.ReserveAmmo = reserveAmmo
+    end
+
+    self.GUIController:UpdateAmmo(
+        self.Gun.Name,
+        self.Ammo,
+        self.ReserveAmmo
+    )
 end
 
 function GunController:OnEquip()
 	UIS.MouseIconEnabled = false
+	self.GUIController:EquippedSlotChanged(self.Gun.Name)
 	PacketManager.Combat.EquipRequest.send({
 		Gun = self.Gun,
 		Action = "Equip",
@@ -149,6 +155,7 @@ end
 
 function GunController:OnUnequip()
 	UIS.MouseIconEnabled = true
+	self.GUIController:UnequipWeapon()
 	PacketManager.Combat.EquipRequest.send({
 		Gun = self.Gun,
 		Action = "UnEquip",
