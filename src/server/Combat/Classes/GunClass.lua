@@ -23,6 +23,7 @@ function GunClass.new(player, LoadoutSlot, AnimationClass, ActionManager)
 
 		Damage = LoadoutSlot:GetAttribute("Damage"),
 		MagazineSize = LoadoutSlot:GetAttribute("MagazineSize"),
+		ReserveAmmo = LoadoutSlot:GetAttribute("ReserveAmmo"),
 		FireRate = LoadoutSlot:GetAttribute("FireRate"),
 		Ammo = LoadoutSlot:GetAttribute("MagazineSize"),
 		Handling = LoadoutSlot:GetAttribute("Handling"),
@@ -71,10 +72,17 @@ function GunClass:OnEquip()
 
 	self.EquippedConnections:Connect(self.ReloadTrack:GetMarkerReachedSignal("ReloadComplete"), function()
 		if self.ActionManager:GetState("WeaponState") == "Reloading" then
-			self.Ammo = self.MagazineSize
+			if self.ReserveAmmo >= self.MagazineSize then
+				self.ReserveAmmo -= self.MagazineSize
+				self.Ammo = self.MagazineSize
+			else
+				self.Ammo = self.ReserveAmmo
+				self.ReserveAmmo = 0
+			end
 			PacketManager.Combat.AmmoUpdate.sendTo({
 				Gun = self.Gun,
 				Ammo = self.Ammo,
+				ReserveAmmo = self.ReserveAmmo,
 			}, self.Player)
 		end
 	end)
@@ -100,6 +108,7 @@ function GunClass:CanReload()
 		and humanoid.Health > 0
 		and self.Gun.Parent == character
 		and self.Ammo < self.MagazineSize
+		and self.ReserveAmmo > 0
 end
 
 function GunClass:Reload()
