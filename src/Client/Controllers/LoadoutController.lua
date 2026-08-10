@@ -41,24 +41,17 @@ local function FindSlotTool(slotName)
 end
 
 local function WaitForSlotTool(slotName)
-	print(`Waiting for {slotName} tool to appear for player: {Player.Name}`)
-	local existing = FindSlotTool(slotName)
+    while Player.Parent do
+        local tool = FindSlotTool(slotName)
 
-	if existing then
-		print(`Found existing {slotName} tool for player: {Player.Name}`)
-		return existing
-	end
-	print(`No existing {slotName} tool found for player: {Player.Name}, waiting for it to be added...`)
+        if tool then
+            return tool
+        end
 
-	while Player.Parent do
-		local descendant = Player.DescendantAdded:Wait()
+        task.wait()
+    end
 
-		if descendant:IsA("Tool") and descendant.Name == slotName and descendant == FindSlotTool(slotName) then
-			return descendant
-		end
-	end
-
-	error(`Player was removed before {slotName} appeared`)
+    error(`Player was removed before {slotName} appeared`)
 end
 
 function LoadoutController.Init()
