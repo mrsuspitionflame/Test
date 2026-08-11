@@ -5,12 +5,16 @@ local ByteNet = require(Packages:WaitForChild("Bytenet"))
 local PacketManager = {}
 
 PacketManager.Creation = ByteNet.defineNamespace("Creation", function()
-	return{
+	return {
 		CreateGunController = ByteNet.definePacket({
 			value = ByteNet.struct({
 				GunName = ByteNet.string,
 				SlotName = ByteNet.string,
 			}),
+		}),
+
+		RequestLoadout = ByteNet.definePacket({
+			value = ByteNet.nothing,
 		}),
 	}
 end)

@@ -41,6 +41,7 @@ function GunController.new(GunName, SlotName, AnimationController, ActionManager
 		Range = GunInfo.Range,
 		FireMode = GunInfo.FireMode,
 
+		Aiming = false,
 		Equipped = false,
 		TriggerHeld = false,
 		LastTimeShot = workspace:GetServerTimeNow(),
@@ -202,7 +203,6 @@ function GunController:bindAction(trove, actionName, callback, createTouchButton
 	end)
 end
 
-
 function GunController:Init()
 	-- Equipped Connections
 	self.Trove:Connect(self.RecoilTrack.Stopped, function()
@@ -258,6 +258,7 @@ function GunController:Init()
 
 	self:bindAction(self.Trove, "AimEvent", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
+			self.Aiming = true
 			self.ViewModelController:OnAim("Start")
 			PacketManager.Combat.AimEvent.send({
 				SlotName = self.SlotName,
@@ -265,6 +266,7 @@ function GunController:Init()
 			})
 		end
 		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
+			self.Aiming = false
 			self.ViewModelController:AfterAim()
 			PacketManager.Combat.AimEvent.send({
 				SlotName = self.SlotName,

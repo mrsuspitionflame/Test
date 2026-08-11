@@ -68,6 +68,21 @@ local function DestroyPlayerGunClasses(player)
 	PlayerGunClasses[player.UserId] = nil
 end
 
+local function SendLoadout(player)
+	local playerGunClasses = PlayerGunClasses[player.UserId]
+
+	if not playerGunClasses then
+		return
+	end
+
+	for slotName, gunClass in pairs(playerGunClasses) do
+		PacketManager.Creation.CreateGunController.sendTo({
+			GunName = gunClass.GunName,
+			SlotName = slotName,
+		}, player)
+	end
+end
+
 local function CreateCharacterLoadout(player, character)
 	if LoadedCharacters[player.UserId] == character then
 		return
@@ -90,11 +105,16 @@ local function CreateCharacterLoadout(player, character)
 		print("Creating gun class for player:", player.Name, "slot:", SlotName)
 		PlayerGunClasses[player.UserId][SlotName] =
 			GunClass.new(player, "Rifle", SlotName, animationClass, actionManager)
+<<<<<<< HEAD
 		PacketManager.Creation.CreateGunController.sendTo({
 			GunName = "Rifle",
 			SlotName = SlotName,
 		}, player)
+=======
+>>>>>>> 782f3fa8e18ca30b96e4fb8b5326462d9dea0ee0
 	end
+
+	SendLoadout(player)
 end
 
 local function OnPlayerAdded(player)
@@ -129,6 +149,16 @@ local function OnPlayerRemoving(player)
 end
 
 function LoadoutService:Init()
+	PacketManager.Creation.RequestLoadout.listen(function(_, player)
+		OnPlayerAdded(player)
+
+		if not PlayerGunClasses[player.UserId] and player.Character then
+			CreateCharacterLoadout(player, player.Character)
+		else
+			SendLoadout(player)
+		end
+	end)
+
 	Players.PlayerAdded:Connect(OnPlayerAdded)
 	Players.PlayerRemoving:Connect(OnPlayerRemoving)
 
