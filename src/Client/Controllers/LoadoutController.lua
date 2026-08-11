@@ -26,110 +26,53 @@ local Loadout = {
 	HeavySlot = nil,
 }
 
-local LoadoutSlotTools = nil
-local Gui = nil
+local Gui = GUIController.new()
 
-local AnimController = AnimationController.new()
+local Anim = AnimationController.new()
 local Action = ActionManager.new()
 
-local function FindSlotTool(slotName)
-	print(`Searching for {slotName} tool for player: {Player.Name}`)
-	local backpack = Player:FindFirstChildOfClass("Backpack")
-	local character = Player.Character
-
-	return (backpack and backpack:FindFirstChild(slotName)) or (character and character:FindFirstChild(slotName))
-end
-
-local function WaitForSlotTool(slotName)
-	while Player.Parent do
-		local tool = FindSlotTool(slotName)
-
-		if tool then
-			return tool
-		end
-
-		task.wait()
-	end
-
-	error(`Player was removed before {slotName} appeared`)
-end
 
 function LoadoutController.Init()
-	LoadoutSlotTools = {
-		KineticSlot = WaitForSlotTool("KineticSlot"),
-		EnergySlot = WaitForSlotTool("EnergySlot"),
-		HeavySlot = WaitForSlotTool("HeavySlot"),
-	}
-
-	Gui = GUIController.new(LoadoutSlotTools)
-
-	if Player.Character then
-		Loadout.KineticSlot = GunController.new(LoadoutSlotTools.KineticSlot, AnimController, Action, Gui)
-		Loadout.EnergySlot = GunController.new(LoadoutSlotTools.EnergySlot, AnimController, Action, Gui)
-		Loadout.HeavySlot = GunController.new(LoadoutSlotTools.HeavySlot, AnimController, Action, Gui)
-	end
-
-	Player.CharacterAdded:Connect(function(character)
-		print("Character added")
-		if character then
-			if Loadout.KineticSlot == nil then
-				Loadout.KineticSlot = GunController.new(LoadoutSlotTools.KineticSlot, AnimController, Action, Gui)
-			end
-			if Loadout.EnergySlot == nil then
-				Loadout.EnergySlot = GunController.new(LoadoutSlotTools.EnergySlot, AnimController, Action, Gui)
-			end
-			if Loadout.HeavySlot == nil then
-				Loadout.HeavySlot = GunController.new(LoadoutSlotTools.HeavySlot, AnimController, Action, Gui)
+	PacketManager.Creation.CreateGunController.listen(function(data)
+		if data.GunName and data.SlotName then
+			print("Received CreateGunController packet for gun:", data.GunName, "slot:", data.SlotName)
+			if Loadout[data.SlotName] == nil then
+				Loadout[data.SlotName] = GunController.new(data.GunName, data.SlotName, Anim, Action, Gui)
 			end
 		end
-	end)
-
-	Player.CharacterRemoving:Connect(function()
-		if Loadout.KineticSlot ~= nil then
-			Loadout.KineticSlot:Destroy()
-			Loadout.KineticSlot = nil
-		end
-		if Loadout.EnergySlot ~= nil then
-			Loadout.EnergySlot:Destroy()
-			Loadout.EnergySlot = nil
-		end
-		if Loadout.HeavySlot then
-			Loadout.HeavySlot:Destroy()
-			Loadout.HeavySlot = nil
-		end
+		Gui:InitializeSlot(data.GunName, data.SlotName)
 	end)
 
 	LoadoutController.GunInits()
+	PacketManager.Creation.RequestLoadout.send()
 end
 
 function LoadoutController.GunInits()
 	PacketManager.Combat.AmmoUpdate.listen(function(data)
-		if typeof(data.Gun) ~= "Instance" then
-			return
-		end
+		local controller = Loadout[data.SlotName]
 
-		local controller = Loadout[data.Gun.Name]
-
-		if controller and controller.Gun == data.Gun then
-			controller:SetAmmoState(data.Ammo, data.ReserveAmmo)
+		if controller and controller.SlotName == data.SlotName then
+			controller:SetAmmo(data.Ammo, data.ReserveAmmo)
 		end
 	end)
 
 	PacketManager.Combat.EquipResult.listen(function(data)
-		if typeof(data.Gun) ~= "Instance" then
-			return
-		end
+		local controller = Loadout[data.SlotName]
 
-		local controller = Loadout[data.Gun.Name]
-
-		if controller and controller.Gun == data.Gun then
-			if not data.Accepted then
-				print(`Equip/Unequip action {data.Action} for gun {data.Gun.Name} was rejected by the server.`)
+		if controller and controller.SlotName == data.SlotName then
+			if data.Accepted then
+				if data.Action == "Equip" then
+					controller:OnEquip()
+				elseif data.Action == "UnEquip" then
+					controller:OnUnequip()
+				end
+			else
+				warn("Equip/Unequip action was not accepted for slot:", data.SlotName)
 			end
 		end
 	end)
 
-	CAS:BindAction("EquipKinetic", function(_, state)
+	CAS:BindAction("EquipOrUnequipKinetic", function(_, state)
 		if state == Enum.UserInputState.Begin then
 			if Loadout.KineticSlot then
 				Loadout.KineticSlot:EquipOrUnequip()
@@ -137,7 +80,7 @@ function LoadoutController.GunInits()
 		end
 	end, false, Enum.KeyCode.One)
 
-	CAS:BindAction("EquipEnergy", function(_, state)
+	CAS:BindAction("EquipOrUnequipEnergy", function(_, state)
 		if state == Enum.UserInputState.Begin then
 			if Loadout.EnergySlot then
 				Loadout.EnergySlot:EquipOrUnequip()
@@ -145,7 +88,7 @@ function LoadoutController.GunInits()
 		end
 	end, false, Enum.KeyCode.Two)
 
-	CAS:BindAction("EquipHeavy", function(_, state)
+	CAS:BindAction("EquipOrUnequipHeavy", function(_, state)
 		if state == Enum.UserInputState.Begin then
 			if Loadout.HeavySlot then
 				Loadout.HeavySlot:EquipOrUnequip()

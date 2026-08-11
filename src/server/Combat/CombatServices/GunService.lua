@@ -12,113 +12,82 @@ local GunService = {}
 
 function GunService:Init()
 	PacketManager.Combat.ShootRequest.listen(function(data, player)
-		local gun = data.Gun
-		local origin = data.CFrame
-		local seed = data.Seed
+		local SlotName = data.SlotName
+		local Origin = data.CFrame
+		local Seed = data.Seed
 
 		if
-			typeof(gun) ~= "Instance"
-			or not gun:IsA("Tool")
-			or typeof(origin) ~= "CFrame"
-			or typeof(seed) ~= "number"
+			typeof(SlotName) ~= "string"
+			or typeof(Origin) ~= "CFrame"
+			or typeof(Seed) ~= "number"
 		then
 			return
 		end
 
-		if gun.Parent ~= player.Character then
+		local gunClass = LoadoutService.GetGunClass(player, data.SlotName)
+
+		if not gunClass or not gunClass.Equipped then
 			return
 		end
-
-		local gunClass = LoadoutService.GetGunClass(player, gun.Name)
-
-		if not gunClass or gunClass.Gun ~= gun then
-			return
-		end
-		gunClass:Shoot(origin, seed)
+		gunClass:Shoot(Origin, Seed)
 	end)
 
 	PacketManager.Combat.ReloadRequest.listen(function(data, player)
-		local gun = data.Gun
-		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
+		local SlotName = data.SlotName
+
+		local GunClass = LoadoutService.GetGunClass(player, SlotName)
+
+		if not GunClass or not GunClass.Equipped then
 			return
 		end
 
-		-- Validate ownership and equipped state
-		if gun.Parent ~= player.Character then
-			return
-		end
-
-		local gunClass = LoadoutService.GetGunClass(player, gun.Name)
-
-		if not gunClass or gunClass.Gun ~= gun then
-			return
-		end
-
-		gunClass:Reload()
+		GunClass:Reload()
 	end)
 
 	PacketManager.Combat.EquipRequest.listen(function(data, player)
-		local gun = data.Gun
-		local action = data.Action
-
-		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
-			return
-		end
+		local SlotName = data.SlotName
+		local Action = data.Action
 
 		local character = player.Character
-		local backpack = player:FindFirstChildOfClass("Backpack")
 		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 
-		if not character or not backpack or not humanoid or humanoid.Health <= 0 then
+		if not character or not humanoid or humanoid.Health <= 0 then
 			return
 		end
 
-		if gun.Parent ~= backpack and gun.Parent ~= character then
+
+		local GunClass = LoadoutService.GetGunClass(player, SlotName)
+
+		if not GunClass then
 			return
 		end
 
-		local gunClass = LoadoutService.GetGunClass(player, gun.Name)
-
-		if not gunClass or gunClass.Gun ~= gun then
-			return
-		end
-
-		if action == "Equip" then
+		if Action == "Equip" then
 			local equippedGunClass = LoadoutService.GetEquippedGunClass(player)
 
-			if equippedGunClass and equippedGunClass ~= gunClass then
+			if equippedGunClass and equippedGunClass ~= GunClass then
 				if not equippedGunClass:OnUnequip() then
 					return
 				end
 			end
 
-			if gunClass:OnEquip() then
-				humanoid:EquipTool(gun)
-			end
-		elseif action == "UnEquip" and gunClass:OnUnequip() then
-			humanoid:UnequipTools()
+			GunClass:OnEquip()
+		elseif Action == "UnEquip" then
+			GunClass:OnUnequip()
 		end
 	end)
 
 	PacketManager.Combat.AimEvent.listen(function(data, player)
-		local gun = data.Gun
-		local aiming = data.Aiming
+		local SlotName = data.SlotName
+		local Aiming = data.Aiming
 
-		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
+		local GunClass = LoadoutService.GetGunClass(player, SlotName)
+
+		if not GunClass or not GunClass.Equipped then
 			return
 		end
 
-		if gun.Parent ~= player.Character then
-			return
-		end
-
-		local gunClass = LoadoutService.GetGunClass(player, gun.Name)
-
-		if not gunClass or gunClass.Gun ~= gun then
-			return
-		end
-
-		gunClass:SetAiming(aiming)
+		GunClass:SetAiming(Aiming)
 	end)
 end
 

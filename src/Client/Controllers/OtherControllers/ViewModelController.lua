@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Definitions = Shared:WaitForChild("Definitions")
+local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
 local RecoilSettings = require(Definitions:WaitForChild("RecoilSettings"))
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -24,13 +25,14 @@ function ViewModelController.new()
 	return self
 end
 
-function ViewModelController:OnEquip(Gun: Tool)
-	self.Gun = Gun
-	self.GunName = Gun:GetAttribute("GunName")
-	self.GunType = Gun:GetAttribute("GunType")
-	self.BindingName = "Update" .. Gun.Name .. "ViewModel"
-	self.Handling = Gun:GetAttribute("Handling")
-	self.Stability = Gun:GetAttribute("Stability")
+function ViewModelController:OnEquip(GunName: string)
+	local GunInfo = GunDefinitions[GunName]
+
+	self.GunName = GunName
+	self.GunType = GunInfo.GunType
+	self.BindingName = "Update" .. GunName .. "ViewModel"
+	self.Handling = GunInfo.Handling
+	self.Stability = GunInfo.Stability
 	self.Aiming = false
 	self.Zooming = false
 	self.ZoomTween = nil

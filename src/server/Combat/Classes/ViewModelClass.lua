@@ -18,9 +18,8 @@ function ViewModelClass.new(player)
 	return self
 end
 
-function ViewModelClass:OnEquip(Gun: Tool)
-	self.Gun = Gun
-	self.GunName = Gun:GetAttribute("GunName")
+function ViewModelClass:OnEquip(GunName: string)
+	self.GunName = GunName
 	self:Init()
 end
 

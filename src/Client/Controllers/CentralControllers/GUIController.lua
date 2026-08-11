@@ -1,4 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Definitions = Shared:WaitForChild("Definitions")
+local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
 local GUIStorage = ReplicatedStorage:WaitForChild("GUIStorage")
 local CombatUI = GUIStorage:WaitForChild("CombatUI")
 local CombatUIsources = require(CombatUI:WaitForChild("CombatUIsources"))
@@ -11,28 +14,18 @@ local GUIController = {}
 
 GUIController.__index = GUIController
 
-function GUIController.new(LoadoutSlotTools)
+function GUIController.new()
 	local self = setmetatable({}, GUIController)
-	print("Creating GUIController")
-	self.LoadoutSlotTools = LoadoutSlotTools
-	self.destroy = mount(function()
-		return App(LoadoutSlotTools)
-	end, Player:WaitForChild("PlayerGui"))
+	self.destroy = mount(App, Player:WaitForChild("PlayerGui"))
 
-	self:Init()
 	return self
 end
 
-function GUIController:Init()
-	if CombatUIsources then
-		print("CombatUIsources found")
-	end
-	CombatUIsources.KineticSlot.Ammo(self.LoadoutSlotTools.KineticSlot:GetAttribute("MagazineSize"))
-	CombatUIsources.KineticSlot.ReserveAmmo(self.LoadoutSlotTools.KineticSlot:GetAttribute("ReserveAmmo"))
-	CombatUIsources.EnergySlot.Ammo(self.LoadoutSlotTools.EnergySlot:GetAttribute("MagazineSize"))
-	CombatUIsources.EnergySlot.ReserveAmmo(self.LoadoutSlotTools.EnergySlot:GetAttribute("ReserveAmmo"))
-	CombatUIsources.HeavySlot.Ammo(self.LoadoutSlotTools.HeavySlot:GetAttribute("MagazineSize"))
-	CombatUIsources.HeavySlot.ReserveAmmo(self.LoadoutSlotTools.HeavySlot:GetAttribute("ReserveAmmo"))
+function GUIController:InitializeSlot(GunName, SlotName)
+	local GunInfo = GunDefinitions[GunName]
+	CombatUIsources[SlotName].Ammo(GunInfo.MagazineSize)
+	CombatUIsources[SlotName].ReserveAmmo(GunInfo.ReserveAmmo)
+	CombatUIsources[SlotName].AmmoType(GunInfo.AmmoType)
 end
 
 function GUIController:EquippedSlotChanged(newSlot)
@@ -43,15 +36,14 @@ function GUIController:UnequipWeapon()
 	CombatUIsources.EquippedSlot(nil)
 end
 
-function GUIController:UpdateAmmo(slotName, newAmmo, newReserveAmmo)
-	if CombatUIsources[slotName] then
-		CombatUIsources[slotName].Ammo(newAmmo)
-		CombatUIsources[slotName].ReserveAmmo(newReserveAmmo)
+function GUIController:UpdateAmmo(SlotName, NewAmmo, NewReserveAmmo)
+	if CombatUIsources[SlotName] then
+		CombatUIsources[SlotName].Ammo(NewAmmo)
+		CombatUIsources[SlotName].ReserveAmmo(NewReserveAmmo)
 	else
-		warn("Invalid slot name: " .. slotName)
+		warn("Invalid slot name: " .. SlotName)
 	end
 end
 
-function GUIController:UpdateSlots() end
 
 return GUIController

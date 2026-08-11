@@ -54,7 +54,9 @@ local function CreateGunSlot(Guninfo)
 			Name = "AmmoTypeFrame",
 			Size = UDim2.fromScale(0.01, 1),
 			Position = UDim2.fromScale(0, 0),
-			BackgroundColor3 = Guninfo.AmmoColor,
+			BackgroundColor3 = function()
+				return GetAmmoColor(Guninfo.AmmoColor())
+			end,
 		}),
 
 		create("Frame")({
@@ -94,7 +96,7 @@ local function CreateGunSlot(Guninfo)
 	})
 end
 
-local function GunUI(LoadoutSlotTools)
+local function GunUI()
 	return create("Frame")({
 		Name = "GunFrame",
 		Size = UDim2.fromScale(1, 1),
@@ -119,7 +121,7 @@ local function GunUI(LoadoutSlotTools)
 			SlotName = "KineticSlot",
 			Ammo = CombatUIsources.KineticSlot.Ammo,
 			ReserveAmmo = CombatUIsources.KineticSlot.ReserveAmmo,
-			AmmoColor = GetAmmoColor(LoadoutSlotTools.KineticSlot:GetAttribute("AmmoType")),
+			AmmoColor = CombatUIsources.KineticSlot.AmmoType,
 			DefaultOrder = 1,
 		}),
 
@@ -127,7 +129,7 @@ local function GunUI(LoadoutSlotTools)
 			SlotName = "EnergySlot",
 			Ammo = CombatUIsources.EnergySlot.Ammo,
 			ReserveAmmo = CombatUIsources.EnergySlot.ReserveAmmo,
-			AmmoColor = GetAmmoColor(LoadoutSlotTools.EnergySlot:GetAttribute("AmmoType")),
+			AmmoColor = CombatUIsources.EnergySlot.AmmoType,
 			DefaultOrder = 2,
 		}),
 
@@ -135,7 +137,7 @@ local function GunUI(LoadoutSlotTools)
 			SlotName = "HeavySlot",
 			Ammo = CombatUIsources.HeavySlot.Ammo,
 			ReserveAmmo = CombatUIsources.HeavySlot.ReserveAmmo,
-			AmmoColor = GetAmmoColor(LoadoutSlotTools.HeavySlot:GetAttribute("AmmoType")),
+			AmmoColor = CombatUIsources.HeavySlot.AmmoType,
 			DefaultOrder = 3,
 		}),
 	})
