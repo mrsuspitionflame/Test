@@ -22,8 +22,8 @@ function AnimationClass:GetClass(ClassName)
     return
 end
 
-function AnimationClass:OnEquip(Weapon: Tool)
-    self.ViewModelClass:OnEquip(Weapon)
+function AnimationClass:OnEquip(WeaponName: string)
+    self.ViewModelClass:OnEquip(WeaponName)
     --Other animations will be added later
 end
 

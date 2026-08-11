@@ -23,8 +23,8 @@ function AnimationController:GetController(ControllerName)
     return
 end
 
-function AnimationController:OnEquip(Weapon: Tool)
-    self.ViewModelController:OnEquip(Weapon)
+function AnimationController:OnEquip(WeaponName: string)
+    self.ViewModelController:OnEquip(WeaponName)
     --Other animations will be added later
 end
 

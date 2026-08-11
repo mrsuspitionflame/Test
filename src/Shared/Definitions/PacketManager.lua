@@ -4,11 +4,22 @@ local ByteNet = require(Packages:WaitForChild("Bytenet"))
 
 local PacketManager = {}
 
+PacketManager.Creation = ByteNet.defineNamespace("Creation", function()
+	return{
+		CreateGunController = ByteNet.definePacket({
+			value = ByteNet.struct({
+				GunName = ByteNet.string,
+				SlotName = ByteNet.string,
+			}),
+		}),
+	}
+end)
+
 PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
 	return {
 		ShootRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
-				Gun = ByteNet.inst,
+				SlotName = ByteNet.string,
 				CFrame = ByteNet.cframe,
 				Seed = ByteNet.int32,
 			}),
@@ -16,13 +27,13 @@ PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
 
 		ReloadRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
-				Gun = ByteNet.inst,
+				SlotName = ByteNet.string,
 			}),
 		}),
 
 		AmmoUpdate = ByteNet.definePacket({
 			value = ByteNet.struct({
-				Gun = ByteNet.inst,
+				SlotName = ByteNet.string,
 				Ammo = ByteNet.int32,
 				ReserveAmmo = ByteNet.optional(ByteNet.int32),
 			}),
@@ -30,7 +41,7 @@ PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
 
 		EquipRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
-				Gun = ByteNet.inst,
+				SlotName = ByteNet.string,
 				Action = ByteNet.string,
 			}),
 		}),
@@ -38,14 +49,14 @@ PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
 		EquipResult = ByteNet.definePacket({
 			value = ByteNet.struct({
 				Action = ByteNet.string,
-				Gun = ByteNet.inst,
+				SlotName = ByteNet.string,
 				Accepted = ByteNet.bool,
 			}),
 		}),
 
 		AimEvent = ByteNet.definePacket({
 			value = ByteNet.struct({
-				Gun = ByteNet.inst,
+				SlotName = ByteNet.string,
 				Aiming = ByteNet.bool,
 			}),
 		}),

@@ -7,16 +7,19 @@ local CombatUIsources = {
 	KineticSlot = {
 		Ammo = Vide.source(0),
 		ReserveAmmo = Vide.source(0),
+		AmmoType = Vide.source()
 	},
 
 	EnergySlot = {
 		Ammo = Vide.source(0),
 		ReserveAmmo = Vide.source(0),
+		AmmoType = Vide.source()
 	},
 
 	HeavySlot = {
 		Ammo = Vide.source(0),
 		ReserveAmmo = Vide.source(0),
+		AmmoType = Vide.source()
 	},
 }
 

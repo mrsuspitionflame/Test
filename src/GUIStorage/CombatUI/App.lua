@@ -7,7 +7,7 @@ local GunUI = require(CombatUI.GunUI)
 
 local create = Vide.create
 
-local function App(LoadoutSlotTools)
+local function App()
 	return create("ScreenGui")({
 		Name = "CombatUI",
 		ResetOnSpawn = false,
@@ -57,7 +57,7 @@ local function App(LoadoutSlotTools)
 					GroupTransparency = 0,
 					BackgroundTransparency = 1,
 
-					GunUI(LoadoutSlotTools),
+					GunUI(),
 				}),
 			}),
 		}),

@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local Definitions = Shared:WaitForChild("Definitions")
+local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
@@ -11,35 +12,34 @@ local PacketManager = require(Definitions:WaitForChild("PacketManager"))
 local GunClass = {}
 GunClass.__index = GunClass
 
-function GunClass.new(player, LoadoutSlot, AnimationClass, ActionManager)
+function GunClass.new(player, GunName, SlotName, AnimationClass, ActionManager)
+	local GunInfo = GunDefinitions[GunName]
 	local self = {
 		AnimationClass = AnimationClass,
 		ViewModelClass = AnimationClass:GetClass("ViewModel"),
 		ActionManager = ActionManager,
+        Player = player,
+		GunName = GunName,
+		SlotName = SlotName,
 
-		Player = player,
-		Gun = LoadoutSlot,
-		SlotName = LoadoutSlot.Name,
-
-		Damage = LoadoutSlot:GetAttribute("Damage"),
-		MagazineSize = LoadoutSlot:GetAttribute("MagazineSize"),
-		ReserveAmmo = LoadoutSlot:GetAttribute("ReserveAmmo"),
-		FireRate = LoadoutSlot:GetAttribute("FireRate"),
-		Ammo = LoadoutSlot:GetAttribute("MagazineSize"),
-		Handling = LoadoutSlot:GetAttribute("Handling"),
-		Stability = LoadoutSlot:GetAttribute("Stability"),
-		ReloadSpeed = LoadoutSlot:GetAttribute("ReloadSpeed"),
-		BulletsPerShot = LoadoutSlot:GetAttribute("BulletsPerShot"),
-		Spread = LoadoutSlot:GetAttribute("Spread"),
-		Range = LoadoutSlot:GetAttribute("Range"),
+		Damage = GunInfo.Damage,
+		MagazineSize = GunInfo.MagazineSize,
+		ReserveAmmo = GunInfo.ReserveAmmo,
+		FireRate = GunInfo.FireRate,
+		Ammo = GunInfo.MagazineSize,
+		Handling = GunInfo.Handling,
+		Stability = GunInfo.Stability,
+		ReloadSpeed = GunInfo.ReloadSpeed,
+		BulletsPerShot = GunInfo.BulletsPerShot,
+		Spread = GunInfo.Spread,
+		Range = GunInfo.Range,
 
 		Equipped = false,
 		Aiming = false,
 		lastShotTime = workspace:GetServerTimeNow(),
 	}
 
-	self.LifetimeConnections = Trove.new()
-	self.EquippedConnections = Trove.new()
+	self.Trove = Trove.new()
 
 	setmetatable(self, GunClass)
 	return self
@@ -57,7 +57,7 @@ function GunClass:OnEquip()
 	if not self:CanEquip() or self.Equipped then
 		PacketManager.Combat.EquipResult.sendTo({
 			Action = "Equip",
-			Gun = self.Gun,
+			SlotName = self.SlotName,
 			Accepted = false,
 		}, self.Player)
 		return false
@@ -65,12 +65,12 @@ function GunClass:OnEquip()
 
 	PacketManager.Combat.EquipResult.sendTo({
 		Action = "Equip",
-		Gun = self.Gun,
+		SlotName = self.SlotName,
 		Accepted = true,
 	}, self.Player)
 
 	self.Equipped = true
-	self.AnimationClass:OnEquip(self.Gun, self.Player)
+	self.AnimationClass:OnEquip(self.GunName, self.Player)
 	self.ReloadTrack = self.AnimationClass:GetAnimation("ViewModel", "Reload")
 	self.RecoilTrack = self.AnimationClass:GetAnimation("ViewModel", "Recoil")
 	self.EquipTrack = self.AnimationClass:GetAnimation("ViewModel", "Equip")
@@ -78,27 +78,27 @@ function GunClass:OnEquip()
 	self.ActionManager:SetState("WeaponState", "Equipping")
 	self.EquipTrack:Play(0)
 
-	self.EquippedConnections:Connect(self.EquipTrack.Stopped, function()
+	self.Trove:Connect(self.EquipTrack.Stopped, function()
 		self.ActionManager:SetState("WeaponState", "Idle")
 	end)
 
-	self.EquippedConnections:Connect(self.RecoilTrack.Stopped, function()
+	self.Trove:Connect(self.RecoilTrack.Stopped, function()
 		self.ActionManager:SetState("WeaponState", "Idle")
 	end)
 
-	self.EquippedConnections:Connect(self.ReloadTrack.Stopped, function()
+	self.Trove:Connect(self.ReloadTrack.Stopped, function()
 		self.ActionManager:SetState("WeaponState", "Idle")
 	end)
 
-	self.EquippedConnections:Connect(self.ReloadTrack:GetMarkerReachedSignal("ReloadComplete"), function()
+	self.Trove:Connect(self.ReloadTrack:GetMarkerReachedSignal("ReloadComplete"), function()
 		if self.ActionManager:GetState("WeaponState") == "Reloading" then
-			local missingAmmo = self.MagazineSize - self.Ammo
-			local ammoToLoad = math.min(missingAmmo, self.ReserveAmmo)
+			local MissingAmmo = self.MagazineSize - self.Ammo
+			local AmmoToLoad = math.min(MissingAmmo, self.ReserveAmmo)
 
-			self.Ammo += ammoToLoad
-			self.ReserveAmmo -= ammoToLoad
+			self.Ammo += AmmoToLoad
+			self.ReserveAmmo -= AmmoToLoad
 			PacketManager.Combat.AmmoUpdate.sendTo({
-				Gun = self.Gun,
+				SlotName = self.SlotName,
 				Ammo = self.Ammo,
 				ReserveAmmo = self.ReserveAmmo,
 			}, self.Player)
@@ -116,7 +116,7 @@ function GunClass:OnUnequip()
 	if not self.Equipped or not self:CanUnequip() then
 		PacketManager.Combat.EquipResult.sendTo({
 			Action = "UnEquip",
-			Gun = self.Gun,
+			SlotName = self.SlotName,
 			Accepted = false,
 		}, self.Player)
 		return false
@@ -124,13 +124,13 @@ function GunClass:OnUnequip()
 
 	PacketManager.Combat.EquipResult.sendTo({
 		Action = "UnEquip",
-		Gun = self.Gun,
+		SlotName = self.SlotName,
 		Accepted = true,
 	}, self.Player)
 
 	self.Equipped = false
 	self.AnimationClass:OnUnequip()
-	self.EquippedConnections:Clean()
+	self.Trove:Clean()
 	return true
 end
 
@@ -142,7 +142,6 @@ function GunClass:CanReload()
 		and self.ActionManager:TryAction("Weapon", "Reload")
 		and humanoid ~= nil
 		and humanoid.Health > 0
-		and self.Gun.Parent == character
 		and self.Ammo < self.MagazineSize
 		and self.ReserveAmmo > 0
 end
@@ -161,7 +160,7 @@ end
 function GunClass:CanShoot(origin, seed)
 	local character = self.Player.Character
 
-	if not self.Equipped or not character or self.Gun.Parent ~= character then
+	if not self.Equipped or not character then
 		return false
 	end
 
@@ -219,7 +218,7 @@ function GunClass:Shoot(origin, seed)
 
 	self.Ammo -= 1
 	PacketManager.Combat.AmmoUpdate.sendTo({
-		Gun = self.Gun,
+		SlotName = self.SlotName,
 		Ammo = self.Ammo,
 	}, self.Player)
 	self.ActionManager:SetState("WeaponState", "Firing")
@@ -282,10 +281,7 @@ function GunClass:Shoot(origin, seed)
 end
 
 function GunClass:Destroy()
-	self.LifetimeConnections:Destroy()
-	if self.EquippedConnections then
-		self.EquippedConnections:Destroy()
-	end
+	self.Trove:Destroy()
 end
 
 return GunClass

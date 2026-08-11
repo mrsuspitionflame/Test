@@ -7,8 +7,8 @@ local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Definitions = Shared:WaitForChild("Definitions")
+local PacketManager = require(Definitions:WaitForChild("PacketManager"))
 local Utility = Shared:WaitForChild("Utility")
-local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
 
 local GunClass = require(Classes:WaitForChild("GunClass"))
 local AnimationClass = require(Classes:WaitForChild("AnimationClass"))
@@ -30,32 +30,6 @@ local LoadedCharacters = {}
 
 local LoadoutService = {}
 
-function LoadoutService.CreatePlayerGun(player, gunName, slotName, animationClass, actionManager)
-	local tool = LoadoutService.CreatePlayerTools(player, gunName, slotName)
-	return GunClass.new(player, tool, animationClass, actionManager)
-end
-
-function LoadoutService.CreatePlayerTools(player, gunName, slotName)
-	local tool = Instance.new("Tool")
-	tool.Name = slotName
-	tool.CanBeDropped = false
-	tool.RequiresHandle = false
-	LoadoutService.SetAttributes(tool, gunName)
-	tool.Parent = player:WaitForChild("Backpack")
-	print("Created tool for player:", player.Name, "with gun:", gunName, "and slot name:", slotName)
-	return tool
-end
-
-function LoadoutService.SetAttributes(tool, gunName)
-	local gunAttributes = GunDefinitions[gunName]
-	if gunAttributes then
-		for attributeName, attributeValue in pairs(gunAttributes) do
-			tool:SetAttribute(attributeName, attributeValue)
-		end
-	else
-		warn("Gun type '" .. gunName .. "' not found in GunDefinitions.")
-	end
-end
 
 function LoadoutService.GetGunClass(player, slotName)
 	if PlayerGunClasses[player.UserId] then
@@ -112,10 +86,14 @@ local function CreateCharacterLoadout(player, character)
 
 	PlayerGunClasses[player.UserId] = {}
 
-	for _, slotName in ipairs(Slots) do
-		print("Creating gun class for player:", player.Name, "slot:", slotName)
-		PlayerGunClasses[player.UserId][slotName] =
-			LoadoutService.CreatePlayerGun(player, "Rifle", slotName, animationClass, actionManager)
+	for _, SlotName in ipairs(Slots) do
+		print("Creating gun class for player:", player.Name, "slot:", SlotName)
+		PlayerGunClasses[player.UserId][SlotName] =
+			GunClass.new(player, "Rifle", SlotName, animationClass, actionManager)
+		PacketManager.Creation.CreateGunController.sendTo({
+			GunName = "Rifle",
+			SlotName = SlotName,
+		}, player)
 	end
 end
 

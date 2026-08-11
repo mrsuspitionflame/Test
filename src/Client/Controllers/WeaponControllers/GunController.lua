@@ -5,6 +5,7 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local Definitions = Shared:WaitForChild("Definitions")
+local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
 local RunService = game:GetService("RunService")
 
 local Trove = require(Packages:WaitForChild("Trove"))
@@ -18,34 +19,34 @@ local GunController = {}
 
 GunController.__index = GunController
 
-function GunController.new(Gun: Tool, AnimationController, ActionManager, GUIController)
+function GunController.new(GunName, SlotName, AnimationController, ActionManager, GUIController)
+	local GunInfo = GunDefinitions[GunName]
+
 	local self = setmetatable({
 		AnimationController = AnimationController,
 		ViewModelController = AnimationController:GetController("ViewModel"),
 		ActionManager = ActionManager,
 		GUIController = GUIController,
 
-		Gun = Gun,
-		GunName = Gun:GetAttribute("GunName"),
-		Ammo = Gun:GetAttribute("MagazineSize"),
-		FireRate = Gun:GetAttribute("FireRate"),
-		MagazineSize = Gun:GetAttribute("MagazineSize"),
-		ReserveAmmo = Gun:GetAttribute("ReserveAmmo"),
-		ReloadSpeed = Gun:GetAttribute("ReloadSpeed"),
-		BulletsPerShot = Gun:GetAttribute("BulletsPerShot"),
-		Spread = Gun:GetAttribute("Spread"),
-		Range = Gun:GetAttribute("Range"),
-		TriggerHeld = false,
-		FireMode = Gun:GetAttribute("FireMode"),
+		GunName = GunName,
+		SlotName = SlotName,
+
+		Ammo = GunInfo.MagazineSize,
+		FireRate = GunInfo.FireRate,
+		MagazineSize = GunInfo.MagazineSize,
+		ReserveAmmo = GunInfo.ReserveAmmo,
+		ReloadSpeed = GunInfo.ReloadSpeed,
+		BulletsPerShot = GunInfo.BulletsPerShot,
+		Spread = GunInfo.Spread,
+		Range = GunInfo.Range,
+		FireMode = GunInfo.FireMode,
 
 		Equipped = false,
+		TriggerHeld = false,
 		LastTimeShot = workspace:GetServerTimeNow(),
 	}, GunController)
 
-	self.LifetimeConnections = Trove.new()
-	self.EquippedConnections = Trove.new()
-
-	self:Init()
+	self.Trove = Trove.new()
 	return self
 end
 
@@ -94,7 +95,7 @@ function GunController:ShootEvent()
 	RaycastController.DrawRayResults(rayOrigin, rayResults)
 
 	PacketManager.Combat.ShootRequest.send({
-		Gun = self.Gun,
+		SlotName = self.SlotName,
 		CFrame = Camera.CFrame,
 		Seed = seed,
 	})
@@ -123,7 +124,7 @@ function GunController:ReloadEvent()
 	self.ReloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
 
 	PacketManager.Combat.ReloadRequest.send({
-		Gun = self.Gun,
+		SlotName = self.SlotName,
 	})
 	--other stuff like animations, etc
 end
@@ -135,25 +136,25 @@ function GunController:CanReload()
 		and self.ReserveAmmo > 0
 end
 
-function GunController:SetAmmoState(ammo, reserveAmmo)
+function GunController:SetAmmo(ammo, reserveAmmo)
 	self.Ammo = ammo
 
 	if reserveAmmo ~= nil then
 		self.ReserveAmmo = reserveAmmo
 	end
 
-	self.GUIController:UpdateAmmo(self.Gun.Name, self.Ammo, self.ReserveAmmo)
+	self.GUIController:UpdateAmmo(self.SlotName, self.Ammo, self.ReserveAmmo)
 end
 
 function GunController:EquipOrUnequip()
 	if self.Equipped then
 		PacketManager.Combat.EquipRequest.send({
-			Gun = self.Gun,
+			SlotName = self.SlotName,
 			Action = "UnEquip",
 		})
 	else
 		PacketManager.Combat.EquipRequest.send({
-			Gun = self.Gun,
+			SlotName = self.SlotName,
 			Action = "Equip",
 		})
 	end
@@ -162,25 +163,26 @@ function GunController:EquipOrUnequip()
 end
 
 function GunController:OnEquip()
+	self:Init()
 	UIS.MouseIconEnabled = false
-	self.GUIController:EquippedSlotChanged(self.Gun.Name)
+	self.GUIController:EquippedSlotChanged(self.SlotName)
 	self.Equipped = true
-	self.AnimationController:OnEquip(self.Gun)
-	self.ReloadTrack = self.EquippedConnections:Add(self.AnimationController:GetAnimation("ViewModel", "Reload"))
-	self.RecoilTrack = self.EquippedConnections:Add(self.AnimationController:GetAnimation("ViewModel", "Recoil"))
-	self.EquipTrack = self.EquippedConnections:Add(self.AnimationController:GetAnimation("ViewModel", "Equip"))
+	self.AnimationController:OnEquip(self.GunName)
+	self.ReloadTrack = self.Trove:Add(self.AnimationController:GetAnimation("ViewModel", "Reload"))
+	self.RecoilTrack = self.Trove:Add(self.AnimationController:GetAnimation("ViewModel", "Recoil"))
+	self.EquipTrack = self.Trove:Add(self.AnimationController:GetAnimation("ViewModel", "Equip"))
 
 	self.ActionManager:SetState("WeaponState", "Equipping")
 	self.EquipTrack:Play(0)
 
-	self:EquippedInit()
+	self:Init()
 end
 
 function GunController:OnUnequip()
 	UIS.MouseIconEnabled = true
 	self.GUIController:UnequipWeapon()
 	self.Equipped = false
-	self.EquippedConnections:Clean()
+	self.Trove:Clean()
 	self.AnimationController:OnUnequip()
 
 	--other stuff like animations, etc
@@ -189,8 +191,7 @@ end
 function GunController:Destroy()
 	self.AnimationController:OnUnequip()
 	self.GUIController:UnequipWeapon()
-	self.LifetimeConnections:Destroy()
-	self.EquippedConnections:Destroy()
+	self.Trove:Destroy()
 end
 
 function GunController:bindAction(trove, actionName, callback, createTouchButton, ...)
@@ -201,80 +202,72 @@ function GunController:bindAction(trove, actionName, callback, createTouchButton
 	end)
 end
 
+
 function GunController:Init()
-	-- Lifetime Connections
-	self.LifetimeConnections:Connect(self.Gun.Equipped, function()
-		self:OnEquip()
-	end)
-
-	self.LifetimeConnections:Connect(self.Gun.Unequipped, function()
-		self:OnUnequip()
-	end)
-end
-
-function GunController:EquippedInit()
 	-- Equipped Connections
-	self.EquippedConnections:Connect(self.RecoilTrack.Stopped, function()
+	self.Trove:Connect(self.RecoilTrack.Stopped, function()
 		self.ActionManager:SetState("WeaponState", "Idle")
 	end)
 
-	self.EquippedConnections:Connect(self.ReloadTrack.Stopped, function()
+	self.Trove:Connect(self.ReloadTrack.Stopped, function()
 		self.ActionManager:SetState("WeaponState", "Idle")
 	end)
 
-	self.EquippedConnections:Connect(self.EquipTrack.Stopped, function()
+	self.Trove:Connect(self.EquipTrack.Stopped, function()
 		print("Equip animation finished")
 		self.ActionManager:SetState("WeaponState", "Idle")
 	end)
 
-	self.EquippedConnections:Connect(self.Gun.Activated, function()
-		if self.FireMode == "Semi" then
-			self:ShootEvent()
-			return
-		end
-
-		if self.TriggerHeld then
-			return
-		end
-
-		self.TriggerHeld = true
-		self:ShootEvent()
-	end)
-
-	self.EquippedConnections:Connect(self.Gun.Deactivated, function()
-		self.TriggerHeld = false
-	end)
-
-	self.EquippedConnections:Connect(RunService.Heartbeat, function()
+	self.Trove:Connect(RunService.Heartbeat, function()
 		if not self.TriggerHeld then
 			return
 		end
 		self:ShootEvent()
 	end)
 
-	self.EquippedConnections:Add(function()
+	self.Trove:Add(function()
 		self.TriggerHeld = false
 	end)
 
-	self:bindAction(self.EquippedConnections, "ReloadEvent", function(_, inputState)
+	self:bindAction(self.Trove, "GunActivatedOrDeactivated", function(_, inputState)
+		if inputState == Enum.UserInputState.Begin then
+			if self.FireMode == "Semi" then
+				self:ShootEvent()
+				return
+			end
+
+			if self.TriggerHeld then
+				return
+			end
+
+			self.TriggerHeld = true
+			self:ShootEvent()
+		end
+		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
+			self.TriggerHeld = false
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, Enum.UserInputType.MouseButton1)
+
+	self:bindAction(self.Trove, "ReloadEvent", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			self:ReloadEvent()
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.KeyCode.R)
 
-	self:bindAction(self.EquippedConnections, "AimEvent", function(_, inputState)
+	self:bindAction(self.Trove, "AimEvent", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			self.ViewModelController:OnAim("Start")
 			PacketManager.Combat.AimEvent.send({
-				Gun = self.Gun,
+				SlotName = self.SlotName,
 				Aiming = true,
 			})
 		end
 		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
 			self.ViewModelController:AfterAim()
 			PacketManager.Combat.AimEvent.send({
-				Gun = self.Gun,
+				SlotName = self.SlotName,
 				Aiming = false,
 			})
 		end
