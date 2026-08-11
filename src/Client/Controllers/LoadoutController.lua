@@ -1,5 +1,5 @@
 local Client = script.Parent.Parent
-
+local CAS = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
@@ -41,17 +41,17 @@ local function FindSlotTool(slotName)
 end
 
 local function WaitForSlotTool(slotName)
-    while Player.Parent do
-        local tool = FindSlotTool(slotName)
+	while Player.Parent do
+		local tool = FindSlotTool(slotName)
 
-        if tool then
-            return tool
-        end
+		if tool then
+			return tool
+		end
 
-        task.wait()
-    end
+		task.wait()
+	end
 
-    error(`Player was removed before {slotName} appeared`)
+	error(`Player was removed before {slotName} appeared`)
 end
 
 function LoadoutController.Init()
@@ -62,19 +62,6 @@ function LoadoutController.Init()
 	}
 
 	Gui = GUIController.new(LoadoutSlotTools)
-
-	PacketManager.Combat.AmmoUpdate.listen(function(data)
-		if typeof(data.Gun) ~= "Instance" then
-			return
-		end
-
-		local controller = Loadout[data.Gun.Name]
-
-		if controller and controller.Gun == data.Gun then
-			controller:SetAmmoState(data.Ammo, data.ReserveAmmo)
-		end
-
-	end)
 
 	if Player.Character then
 		Loadout.KineticSlot = GunController.new(LoadoutSlotTools.KineticSlot, AnimController, Action, Gui)
@@ -111,6 +98,60 @@ function LoadoutController.Init()
 			Loadout.HeavySlot = nil
 		end
 	end)
+
+	LoadoutController.GunInits()
+end
+
+function LoadoutController.GunInits()
+	PacketManager.Combat.AmmoUpdate.listen(function(data)
+		if typeof(data.Gun) ~= "Instance" then
+			return
+		end
+
+		local controller = Loadout[data.Gun.Name]
+
+		if controller and controller.Gun == data.Gun then
+			controller:SetAmmoState(data.Ammo, data.ReserveAmmo)
+		end
+	end)
+
+	PacketManager.Combat.EquipResult.listen(function(data)
+		if typeof(data.Gun) ~= "Instance" then
+			return
+		end
+
+		local controller = Loadout[data.Gun.Name]
+
+		if controller and controller.Gun == data.Gun then
+			if not data.Accepted then
+				print(`Equip/Unequip action {data.Action} for gun {data.Gun.Name} was rejected by the server.`)
+			end
+		end
+	end)
+
+	CAS:BindAction("EquipKinetic", function(_, state)
+		if state == Enum.UserInputState.Begin then
+			if Loadout.KineticSlot then
+				Loadout.KineticSlot:EquipOrUnequip()
+			end
+		end
+	end, false, Enum.KeyCode.One)
+
+	CAS:BindAction("EquipEnergy", function(_, state)
+		if state == Enum.UserInputState.Begin then
+			if Loadout.EnergySlot then
+				Loadout.EnergySlot:EquipOrUnequip()
+			end
+		end
+	end, false, Enum.KeyCode.Two)
+
+	CAS:BindAction("EquipHeavy", function(_, state)
+		if state == Enum.UserInputState.Begin then
+			if Loadout.HeavySlot then
+				Loadout.HeavySlot:EquipOrUnequip()
+			end
+		end
+	end, false, Enum.KeyCode.Three)
 end
 
 return LoadoutController

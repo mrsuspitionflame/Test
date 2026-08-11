@@ -60,31 +60,65 @@ function GunService:Init()
 	PacketManager.Combat.EquipRequest.listen(function(data, player)
 		local gun = data.Gun
 		local action = data.Action
-		if action == "Equip" then
-			print("EquipGunRequest received from player:", player.Name, "for gun:", gun and gun.Name, "action:", action)
-			if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
-				return
-			end
 
-			-- Validate ownership and equipped state
-			if gun.Parent ~= player.Character then
-				return
-			end
-
-			local gunClass = LoadoutService.GetGunClass(player, gun.Name)
-
-			if not gunClass or gunClass.Gun ~= gun then
-				return
-			end
-			gunClass:OnEquip()
-		elseif action == "UnEquip" then
-			local gunClass = LoadoutService.GetGunClass(player, gun.Name)
-
-			if not gunClass or gunClass.Gun ~= gun then
-				return
-			end
-			gunClass:OnUnequip()
+		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
+			return
 		end
+
+		local character = player.Character
+		local backpack = player:FindFirstChildOfClass("Backpack")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+		if not character or not backpack or not humanoid or humanoid.Health <= 0 then
+			return
+		end
+
+		if gun.Parent ~= backpack and gun.Parent ~= character then
+			return
+		end
+
+		local gunClass = LoadoutService.GetGunClass(player, gun.Name)
+
+		if not gunClass or gunClass.Gun ~= gun then
+			return
+		end
+
+		if action == "Equip" then
+			local equippedGunClass = LoadoutService.GetEquippedGunClass(player)
+
+			if equippedGunClass and equippedGunClass ~= gunClass then
+				if not equippedGunClass:OnUnequip() then
+					return
+				end
+			end
+
+			if gunClass:OnEquip() then
+				humanoid:EquipTool(gun)
+			end
+		elseif action == "UnEquip" and gunClass:OnUnequip() then
+			humanoid:UnequipTools()
+		end
+	end)
+
+	PacketManager.Combat.AimEvent.listen(function(data, player)
+		local gun = data.Gun
+		local aiming = data.Aiming
+
+		if typeof(gun) ~= "Instance" or not gun:IsA("Tool") then
+			return
+		end
+
+		if gun.Parent ~= player.Character then
+			return
+		end
+
+		local gunClass = LoadoutService.GetGunClass(player, gun.Name)
+
+		if not gunClass or gunClass.Gun ~= gun then
+			return
+		end
+
+		gunClass:SetAiming(aiming)
 	end)
 end
 

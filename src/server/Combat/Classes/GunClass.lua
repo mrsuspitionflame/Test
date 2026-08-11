@@ -45,10 +45,30 @@ function GunClass.new(player, LoadoutSlot, AnimationClass, ActionManager)
 	return self
 end
 
+function GunClass:SetAiming(isAiming)
+	self.Aiming = isAiming
+end
+
+function GunClass:CanEquip()
+	return self.ActionManager:TryAction("Weapon", "Equip")
+end
+
 function GunClass:OnEquip()
-	if self.Equipped then
-		return
+	if not self:CanEquip() or self.Equipped then
+		PacketManager.Combat.EquipResult.sendTo({
+			Action = "Equip",
+			Gun = self.Gun,
+			Accepted = false,
+		}, self.Player)
+		return false
 	end
+
+	PacketManager.Combat.EquipResult.sendTo({
+		Action = "Equip",
+		Gun = self.Gun,
+		Accepted = true,
+	}, self.Player)
+
 	self.Equipped = true
 	self.AnimationClass:OnEquip(self.Gun, self.Player)
 	self.ReloadTrack = self.AnimationClass:GetAnimation("ViewModel", "Reload")
@@ -85,15 +105,33 @@ function GunClass:OnEquip()
 		end
 	end)
 	-- Additional logic for equipping the gun can be added here
+	return true
+end
+
+function GunClass:CanUnequip()
+	return self.ActionManager:TryAction("Weapon", "UnEquip")
 end
 
 function GunClass:OnUnequip()
-	if not self.Equipped then
-		return
+	if not self.Equipped or not self:CanUnequip() then
+		PacketManager.Combat.EquipResult.sendTo({
+			Action = "UnEquip",
+			Gun = self.Gun,
+			Accepted = false,
+		}, self.Player)
+		return false
 	end
+
+	PacketManager.Combat.EquipResult.sendTo({
+		Action = "UnEquip",
+		Gun = self.Gun,
+		Accepted = true,
+	}, self.Player)
+
 	self.Equipped = false
 	self.AnimationClass:OnUnequip()
 	self.EquippedConnections:Clean()
+	return true
 end
 
 function GunClass:CanReload()
@@ -189,8 +227,19 @@ function GunClass:Shoot(origin, seed)
 
 	self.RecoilTrack:Play(0)
 
-	local rayDirections =
-		RaycastController.GetRayDirections(origin, self.BulletsPerShot, self.Spread, seed, self.Range * 10)
+	local rayDirections
+	if self.Aiming then
+		print("Aiming, no spread")
+		rayDirections = RaycastController.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
+	else
+		rayDirections = RaycastController.GetRayDirections(
+			origin,
+			self.BulletsPerShot,
+			math.rad(self.Spread),
+			seed,
+			self.Range * 10
+		)
+	end
 
 	local ignoreList = {
 		self.Player.Character,

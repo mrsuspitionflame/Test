@@ -64,6 +64,22 @@ function LoadoutService.GetGunClass(player, slotName)
 	return nil
 end
 
+function LoadoutService.GetEquippedGunClass(player)
+	local playerGunClasses = PlayerGunClasses[player.UserId]
+
+	if not playerGunClasses then
+		return nil
+	end
+
+	for _, gunClass in pairs(playerGunClasses) do
+		if gunClass.Equipped then
+			return gunClass
+		end
+	end
+
+	return nil
+end
+
 local function DestroyPlayerGunClasses(player)
 	local playerGunClasses = PlayerGunClasses[player.UserId]
 

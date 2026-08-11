@@ -5,6 +5,7 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local Definitions = Shared:WaitForChild("Definitions")
+local RunService = game:GetService("RunService")
 
 local Trove = require(Packages:WaitForChild("Trove"))
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
@@ -23,6 +24,7 @@ function GunController.new(Gun: Tool, AnimationController, ActionManager, GUICon
 		ViewModelController = AnimationController:GetController("ViewModel"),
 		ActionManager = ActionManager,
 		GUIController = GUIController,
+
 		Gun = Gun,
 		GunName = Gun:GetAttribute("GunName"),
 		Ammo = Gun:GetAttribute("MagazineSize"),
@@ -33,6 +35,8 @@ function GunController.new(Gun: Tool, AnimationController, ActionManager, GUICon
 		BulletsPerShot = Gun:GetAttribute("BulletsPerShot"),
 		Spread = Gun:GetAttribute("Spread"),
 		Range = Gun:GetAttribute("Range"),
+		TriggerHeld = false,
+		FireMode = Gun:GetAttribute("FireMode"),
 
 		Equipped = false,
 		LastTimeShot = workspace:GetServerTimeNow(),
@@ -66,8 +70,19 @@ function GunController:ShootEvent()
 
 	local seed = seedGenerator:NextInteger(0, 2 ^ 31 - 1)
 
-	local rayDirections =
-		RaycastController.GetRayDirections(origin, self.BulletsPerShot, self.Spread, seed, self.Range * 10)
+	local rayDirections
+
+	if self.Aiming then
+		rayDirections = RaycastController.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
+	else
+		rayDirections = RaycastController.GetRayDirections(
+			origin,
+			self.BulletsPerShot,
+			math.rad(self.Spread),
+			seed,
+			self.Range * 10
+		)
+	end
 
 	local ignoreList = {
 		workspace.CurrentCamera,
@@ -121,26 +136,34 @@ function GunController:CanReload()
 end
 
 function GunController:SetAmmoState(ammo, reserveAmmo)
-    self.Ammo = ammo
+	self.Ammo = ammo
 
-    if reserveAmmo ~= nil then
-        self.ReserveAmmo = reserveAmmo
-    end
+	if reserveAmmo ~= nil then
+		self.ReserveAmmo = reserveAmmo
+	end
 
-    self.GUIController:UpdateAmmo(
-        self.Gun.Name,
-        self.Ammo,
-        self.ReserveAmmo
-    )
+	self.GUIController:UpdateAmmo(self.Gun.Name, self.Ammo, self.ReserveAmmo)
+end
+
+function GunController:EquipOrUnequip()
+	if self.Equipped then
+		PacketManager.Combat.EquipRequest.send({
+			Gun = self.Gun,
+			Action = "UnEquip",
+		})
+	else
+		PacketManager.Combat.EquipRequest.send({
+			Gun = self.Gun,
+			Action = "Equip",
+		})
+	end
+
+	return
 end
 
 function GunController:OnEquip()
 	UIS.MouseIconEnabled = false
 	self.GUIController:EquippedSlotChanged(self.Gun.Name)
-	PacketManager.Combat.EquipRequest.send({
-		Gun = self.Gun,
-		Action = "Equip",
-	})
 	self.Equipped = true
 	self.AnimationController:OnEquip(self.Gun)
 	self.ReloadTrack = self.EquippedConnections:Add(self.AnimationController:GetAnimation("ViewModel", "Reload"))
@@ -156,10 +179,6 @@ end
 function GunController:OnUnequip()
 	UIS.MouseIconEnabled = true
 	self.GUIController:UnequipWeapon()
-	PacketManager.Combat.EquipRequest.send({
-		Gun = self.Gun,
-		Action = "UnEquip",
-	})
 	self.Equipped = false
 	self.EquippedConnections:Clean()
 	self.AnimationController:OnUnequip()
@@ -168,6 +187,8 @@ function GunController:OnUnequip()
 end
 
 function GunController:Destroy()
+	self.AnimationController:OnUnequip()
+	self.GUIController:UnequipWeapon()
 	self.LifetimeConnections:Destroy()
 	self.EquippedConnections:Destroy()
 end
@@ -207,7 +228,32 @@ function GunController:EquippedInit()
 	end)
 
 	self.EquippedConnections:Connect(self.Gun.Activated, function()
+		if self.FireMode == "Semi" then
+			self:ShootEvent()
+			return
+		end
+
+		if self.TriggerHeld then
+			return
+		end
+
+		self.TriggerHeld = true
 		self:ShootEvent()
+	end)
+
+	self.EquippedConnections:Connect(self.Gun.Deactivated, function()
+		self.TriggerHeld = false
+	end)
+
+	self.EquippedConnections:Connect(RunService.Heartbeat, function()
+		if not self.TriggerHeld then
+			return
+		end
+		self:ShootEvent()
+	end)
+
+	self.EquippedConnections:Add(function()
+		self.TriggerHeld = false
 	end)
 
 	self:bindAction(self.EquippedConnections, "ReloadEvent", function(_, inputState)
@@ -220,9 +266,17 @@ function GunController:EquippedInit()
 	self:bindAction(self.EquippedConnections, "AimEvent", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			self.ViewModelController:OnAim("Start")
+			PacketManager.Combat.AimEvent.send({
+				Gun = self.Gun,
+				Aiming = true,
+			})
 		end
 		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
 			self.ViewModelController:AfterAim()
+			PacketManager.Combat.AimEvent.send({
+				Gun = self.Gun,
+				Aiming = false,
+			})
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.UserInputType.MouseButton2)

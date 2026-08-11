@@ -35,6 +35,21 @@ PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
 			}),
 		}),
 
+		EquipResult = ByteNet.definePacket({
+			value = ByteNet.struct({
+				Action = ByteNet.string,
+				Gun = ByteNet.inst,
+				Accepted = ByteNet.bool,
+			}),
+		}),
+
+		AimEvent = ByteNet.definePacket({
+			value = ByteNet.struct({
+				Gun = ByteNet.inst,
+				Aiming = ByteNet.bool,
+			}),
+		}),
+
 		ReplicateShotEvent = ByteNet.definePacket({
 			value = ByteNet.struct({
 				MuzzlePosition = ByteNet.vec3,

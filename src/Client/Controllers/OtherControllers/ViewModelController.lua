@@ -45,6 +45,9 @@ function ViewModelController:OnEquip(Gun: Tool)
 	self.Damping = RecoilSettings[self.GunType].Damping
 	self.RecoilAmount = RecoilSettings.GetRecoilAmount(self.GunType, self.Stability)
 
+	self.Trove:Add(function()
+		workspace.CurrentCamera.FieldOfView = 80
+	end)
 	self:Init()
 end
 
@@ -147,7 +150,7 @@ end
 
 function ViewModelController:AfterAim()
 	self.Aiming = false
-	self:ZoomCamera(70)
+	self:ZoomCamera(80)
 end
 
 function ViewModelController:UpdateViewModelAndSway(deltaTime: number)
@@ -232,8 +235,8 @@ function ViewModelController:Init()
 
 	self.Trove:Add(function()
 		Player.CameraMode = Enum.CameraMode.Classic
-		Player.CameraMinZoomDistance = 15
-		Player.CameraMaxZoomDistance = 15
+		Player.CameraMinZoomDistance = 17
+		Player.CameraMaxZoomDistance = 17
 		task.delay(0.1, function()
 			Player.CameraMinZoomDistance = 0
 		end)

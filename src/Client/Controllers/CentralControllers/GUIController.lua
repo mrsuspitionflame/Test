@@ -52,4 +52,6 @@ function GUIController:UpdateAmmo(slotName, newAmmo, newReserveAmmo)
 	end
 end
 
+function GUIController:UpdateSlots() end
+
 return GUIController

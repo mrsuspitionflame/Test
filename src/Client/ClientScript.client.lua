@@ -8,14 +8,18 @@ local Player = game.Players.LocalPlayer
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
 local LoadoutController = require(Controllers:WaitForChild("LoadoutController"))
 
+local StarterGui = game:GetService("StarterGui")
+
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+
+local Workspace = game:GetService("Workspace")
+
+local camera = Workspace.CurrentCamera
+camera.FieldOfView = 80
 
 Player.CameraMode = Enum.CameraMode.Classic
-Player.CameraMinZoomDistance = 15
-Player.CameraMaxZoomDistance = 15
-task.spawn(function()
-	task.wait(0.1)
-	Player.CameraMinZoomDistance = 0
-end)
+Player.CameraMinZoomDistance = 0
+Player.CameraMaxZoomDistance = 17
 
 RaycastController.Init()
 
