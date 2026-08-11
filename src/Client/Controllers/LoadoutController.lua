@@ -27,9 +27,7 @@ local Loadout = {
 }
 
 local Gui = GUIController.new()
-local Gui = GUIController.new()
 
-local Anim = AnimationController.new()
 local Anim = AnimationController.new()
 local Action = ActionManager.new()
 
@@ -40,14 +38,8 @@ function LoadoutController.Init()
 			print("Received CreateGunController packet for gun:", data.GunName, "slot:", data.SlotName)
 			if Loadout[data.SlotName] == nil then
 				Loadout[data.SlotName] = GunController.new(data.GunName, data.SlotName, Anim, Action, Gui)
-	PacketManager.Creation.CreateGunController.listen(function(data)
-		if data.GunName and data.SlotName then
-			print("Received CreateGunController packet for gun:", data.GunName, "slot:", data.SlotName)
-			if Loadout[data.SlotName] == nil then
-				Loadout[data.SlotName] = GunController.new(data.GunName, data.SlotName, Anim, Action, Gui)
 			end
 		end
-		Gui:InitializeSlot(data.GunName, data.SlotName)
 		Gui:InitializeSlot(data.GunName, data.SlotName)
 	end)
 
@@ -58,10 +50,7 @@ end
 function LoadoutController.GunInits()
 	PacketManager.Combat.AmmoUpdate.listen(function(data)
 		local controller = Loadout[data.SlotName]
-		local controller = Loadout[data.SlotName]
 
-		if controller and controller.SlotName == data.SlotName then
-			controller:SetAmmo(data.Ammo, data.ReserveAmmo)
 		if controller and controller.SlotName == data.SlotName then
 			controller:SetAmmo(data.Ammo, data.ReserveAmmo)
 		end
@@ -69,17 +58,7 @@ function LoadoutController.GunInits()
 
 	PacketManager.Combat.EquipResult.listen(function(data)
 		local controller = Loadout[data.SlotName]
-		local controller = Loadout[data.SlotName]
 
-		if controller and controller.SlotName == data.SlotName then
-			if data.Accepted then
-				if data.Action == "Equip" then
-					controller:OnEquip()
-				elseif data.Action == "UnEquip" then
-					controller:OnUnequip()
-				end
-			else
-				warn("Equip/Unequip action was not accepted for slot:", data.SlotName)
 		if controller and controller.SlotName == data.SlotName then
 			if data.Accepted then
 				if data.Action == "Equip" then
@@ -93,7 +72,6 @@ function LoadoutController.GunInits()
 		end
 	end)
 
-	CAS:BindAction("EquipOrUnequipKinetic", function(_, state)
 	CAS:BindAction("EquipOrUnequipKinetic", function(_, state)
 		if state == Enum.UserInputState.Begin then
 			if Loadout.KineticSlot then
@@ -103,7 +81,6 @@ function LoadoutController.GunInits()
 	end, false, Enum.KeyCode.One)
 
 	CAS:BindAction("EquipOrUnequipEnergy", function(_, state)
-	CAS:BindAction("EquipOrUnequipEnergy", function(_, state)
 		if state == Enum.UserInputState.Begin then
 			if Loadout.EnergySlot then
 				Loadout.EnergySlot:EquipOrUnequip()
@@ -111,7 +88,6 @@ function LoadoutController.GunInits()
 		end
 	end, false, Enum.KeyCode.Two)
 
-	CAS:BindAction("EquipOrUnequipHeavy", function(_, state)
 	CAS:BindAction("EquipOrUnequipHeavy", function(_, state)
 		if state == Enum.UserInputState.Begin then
 			if Loadout.HeavySlot then

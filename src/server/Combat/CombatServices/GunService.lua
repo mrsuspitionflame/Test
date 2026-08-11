@@ -26,11 +26,7 @@ function GunService:Init()
 
 		local gunClass = LoadoutService.GetGunClass(player, data.SlotName)
 
-<<<<<<< HEAD
-		if not gunClass then
-=======
 		if not gunClass or not gunClass.Equipped then
->>>>>>> 782f3fa8e18ca30b96e4fb8b5326462d9dea0ee0
 			return
 		end
 		gunClass:Shoot(Origin, Seed)
@@ -41,11 +37,7 @@ function GunService:Init()
 
 		local GunClass = LoadoutService.GetGunClass(player, SlotName)
 
-<<<<<<< HEAD
-		if not GunClass then
-=======
 		if not GunClass or not GunClass.Equipped then
->>>>>>> 782f3fa8e18ca30b96e4fb8b5326462d9dea0ee0
 			return
 		end
 
@@ -91,11 +83,7 @@ function GunService:Init()
 
 		local GunClass = LoadoutService.GetGunClass(player, SlotName)
 
-<<<<<<< HEAD
-		if not GunClass then
-=======
 		if not GunClass or not GunClass.Equipped then
->>>>>>> 782f3fa8e18ca30b96e4fb8b5326462d9dea0ee0
 			return
 		end
 

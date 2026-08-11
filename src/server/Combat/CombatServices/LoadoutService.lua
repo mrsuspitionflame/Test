@@ -30,7 +30,6 @@ local LoadedCharacters = {}
 
 local LoadoutService = {}
 
-
 function LoadoutService.GetGunClass(player, slotName)
 	if PlayerGunClasses[player.UserId] then
 		return PlayerGunClasses[player.UserId][slotName]
@@ -105,13 +104,6 @@ local function CreateCharacterLoadout(player, character)
 		print("Creating gun class for player:", player.Name, "slot:", SlotName)
 		PlayerGunClasses[player.UserId][SlotName] =
 			GunClass.new(player, "Rifle", SlotName, animationClass, actionManager)
-<<<<<<< HEAD
-		PacketManager.Creation.CreateGunController.sendTo({
-			GunName = "Rifle",
-			SlotName = SlotName,
-		}, player)
-=======
->>>>>>> 782f3fa8e18ca30b96e4fb8b5326462d9dea0ee0
 	end
 
 	SendLoadout(player)

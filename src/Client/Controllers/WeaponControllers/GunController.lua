@@ -164,7 +164,6 @@ function GunController:EquipOrUnequip()
 end
 
 function GunController:OnEquip()
-	self:Init()
 	UIS.MouseIconEnabled = false
 	self.GUIController:EquippedSlotChanged(self.SlotName)
 	self.Equipped = true
@@ -202,6 +201,7 @@ function GunController:bindAction(trove, actionName, callback, createTouchButton
 		CAS:UnbindAction(actionName)
 	end)
 end
+
 
 function GunController:Init()
 	-- Equipped Connections
