@@ -7,6 +7,7 @@ local Definitions = Shared:WaitForChild("Definitions")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
+local humanoid
 
 local Controllers = Client:WaitForChild("Controllers")
 local WeaponControllers = Controllers:WaitForChild("WeaponControllers")
@@ -26,25 +27,57 @@ local Loadout = {
 	HeavySlot = nil,
 }
 
-local Gui = GUIController.new()
+local gui = GUIController.new()
 
-local Anim = AnimationController.new()
-local Action = ActionManager.new()
-
+local animation = AnimationController.new()
+local action = ActionManager.new()
 
 function LoadoutController.Init()
 	PacketManager.Creation.CreateGunController.listen(function(data)
 		if data.GunName and data.SlotName then
 			print("Received CreateGunController packet for gun:", data.GunName, "slot:", data.SlotName)
 			if Loadout[data.SlotName] == nil then
-				Loadout[data.SlotName] = GunController.new(data.GunName, data.SlotName, Anim, Action, Gui)
+				print("Creating GunController for gun:", data.GunName, "slot:", data.SlotName)
+				gui:InitializeSlot(data.GunName, data.SlotName)
+				Loadout[data.SlotName] = GunController.new(data.GunName, data.SlotName, animation, action, gui)
 			end
 		end
-		Gui:InitializeSlot(data.GunName, data.SlotName)
 	end)
 
 	LoadoutController.GunInits()
 	PacketManager.Creation.RequestLoadout.send()
+
+	Player.CharacterRemoving:Connect(function()
+		action:SetState("WeaponState", "Idle")
+		for _, controller in pairs(Loadout) do
+			if controller.Equipped then
+				controller:OnUnequip()
+			end
+		end
+
+		gui:SetCombatUIEnabled(false)
+	end)
+
+	local function OnCharacterAdded(character)
+		gui:SetCombatUIEnabled(true)
+
+		humanoid = character:WaitForChild("Humanoid")
+		humanoid.Died:Connect(function()
+			action:SetState("WeaponState", "Idle")
+			for _, controller in pairs(Loadout) do
+				if controller.Equipped then
+					controller:OnUnequip()
+				end
+			end
+			gui:SetCombatUIEnabled(false)
+		end)
+	end
+
+	Player.CharacterAdded:Connect(OnCharacterAdded)
+
+	if Player.Character then
+		task.spawn(OnCharacterAdded, Player.Character)
+	end
 end
 
 function LoadoutController.GunInits()

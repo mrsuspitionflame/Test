@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local Definitions = Shared:WaitForChild("Definitions")
-local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
+local gunSettings = require(Definitions:WaitForChild("GunSettings"))
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
@@ -12,27 +12,27 @@ local PacketManager = require(Definitions:WaitForChild("PacketManager"))
 local GunClass = {}
 GunClass.__index = GunClass
 
-function GunClass.new(player, GunName, SlotName, AnimationClass, ActionManager)
-	local GunInfo = GunDefinitions[GunName]
+function GunClass.new(player, gunName, slotName, animationClass, actionManager)
+	local gunInfo = gunSettings[gunName]
 	local self = {
-		AnimationClass = AnimationClass,
-		ViewModelClass = AnimationClass:GetClass("ViewModel"),
-		ActionManager = ActionManager,
-        Player = player,
-		GunName = GunName,
-		SlotName = SlotName,
+		AnimationClass = animationClass,
+		ViewModelClass = animationClass:GetClass("ViewModel"),
+		ActionManager = actionManager,
+		Player = player,
+		GunName = gunName,
+		SlotName = slotName,
 
-		Damage = GunInfo.Damage,
-		MagazineSize = GunInfo.MagazineSize,
-		ReserveAmmo = GunInfo.ReserveAmmo,
-		FireRate = GunInfo.FireRate,
-		Ammo = GunInfo.MagazineSize,
-		Handling = GunInfo.Handling,
-		Stability = GunInfo.Stability,
-		ReloadSpeed = GunInfo.ReloadSpeed,
-		BulletsPerShot = GunInfo.BulletsPerShot,
-		Spread = GunInfo.Spread,
-		Range = GunInfo.Range,
+		Damage = gunInfo.Damage,
+		MagazineSize = gunInfo.MagazineSize,
+		ReserveAmmo = gunInfo.ReserveAmmo,
+		FireRate = gunInfo.FireRate,
+		Ammo = gunInfo.MagazineSize,
+		Handling = gunInfo.Handling,
+		Stability = gunInfo.Stability,
+		ReloadSpeed = gunInfo.ReloadSpeed,
+		BulletsPerShot = gunInfo.BulletsPerShot,
+		Spread = gunInfo.Spread,
+		Range = gunInfo.Range,
 
 		Equipped = false,
 		Aiming = false,
@@ -129,6 +129,7 @@ function GunClass:OnUnequip()
 	}, self.Player)
 
 	self.Equipped = false
+	self.Aiming = false
 	self.AnimationClass:OnUnequip()
 	self.Trove:Clean()
 	return true

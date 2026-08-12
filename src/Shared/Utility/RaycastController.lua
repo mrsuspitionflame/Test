@@ -106,7 +106,6 @@ function RayCastController.DrawRayResults(origin: Vector3, rayResults: { any })
 			impact.CFrame = CFrame.lookAlong(rayResult.Position, rayResult.Normal)
 			impact.Parent = Workspace
 
-			impact.SparkEmitter:Emit(10)
 			impact.CircleEmitter:Emit(2)
 
 			task.delay(0.5, function()

@@ -2,24 +2,26 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Vide = require(ReplicatedStorage.Packages.Vide)
 
 local CombatUIsources = {
+	UIEnabled = Vide.source(false),
+
 	EquippedSlot = Vide.source(),
 
 	KineticSlot = {
 		Ammo = Vide.source(0),
 		ReserveAmmo = Vide.source(0),
-		AmmoType = Vide.source()
+		AmmoType = Vide.source(),
 	},
 
 	EnergySlot = {
 		Ammo = Vide.source(0),
 		ReserveAmmo = Vide.source(0),
-		AmmoType = Vide.source()
+		AmmoType = Vide.source(),
 	},
 
 	HeavySlot = {
 		Ammo = Vide.source(0),
 		ReserveAmmo = Vide.source(0),
-		AmmoType = Vide.source()
+		AmmoType = Vide.source(),
 	},
 }
 

@@ -2,41 +2,41 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local StarterPlayerScripts = StarterPlayer:WaitForChild("StarterPlayerScripts")
 local Client = StarterPlayerScripts:WaitForChild("Client")
 local Controllers = Client:WaitForChild("Controllers")
-local OtherControllers = Controllers:WaitForChild("OtherControllers")
+local CentralControllers = Controllers:WaitForChild("CentralControllers")
 
-local ViewModelController = require(OtherControllers:WaitForChild("ViewModelController"))
+local ViewModelController = require(CentralControllers:WaitForChild("ViewModelController"))
 
 local AnimationController = {}
 
 function AnimationController.new()
-    local self = setmetatable({}, { __index = AnimationController })
+	local self = setmetatable({}, { __index = AnimationController })
 
-    self.ViewModelController = ViewModelController.new()
+	self.ViewModelController = ViewModelController.new()
 
-    return self
+	return self
 end
 
-function AnimationController:GetController(ControllerName)
-    if ControllerName == "ViewModel" then
-        return self.ViewModelController
-    end
-    return
+function AnimationController:GetController(controllerName)
+	if controllerName == "ViewModel" then
+		return self.ViewModelController
+	end
+	return
 end
 
-function AnimationController:OnEquip(WeaponName: string)
-    self.ViewModelController:OnEquip(WeaponName)
-    --Other animations will be added later
+function AnimationController:OnEquip(weaponName: string)
+	self.ViewModelController:OnEquip(weaponName)
+	--Other animations will be added later
 end
 
 function AnimationController:OnUnequip()
-    self.ViewModelController:OnUnequip()
+	self.ViewModelController:OnUnequip()
 end
 
-function AnimationController:GetAnimation(AnimationType: string, AnimationName: string)
-    if AnimationType == "ViewModel" then
-        return self.ViewModelController:GetAnimation(AnimationName)
-    end
-    return
+function AnimationController:GetAnimation(animationType: string, animationName: string)
+	if animationType == "ViewModel" then
+		return self.ViewModelController:GetAnimation(animationName)
+	end
+	return
 end
 
 return AnimationController

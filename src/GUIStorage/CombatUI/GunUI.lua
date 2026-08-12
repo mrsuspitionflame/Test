@@ -31,6 +31,18 @@ local function CreateGunSlot(Guninfo)
 		end
 	end
 
+	local slotNumber = function()
+		if Guninfo.SlotName == "KineticSlot" then
+			return "1"
+		elseif Guninfo.SlotName == "EnergySlot" then
+			return "2"
+		elseif Guninfo.SlotName == "HeavySlot" then
+			return "3"
+		else
+			return ""
+		end
+	end
+
 	local animatedSize = spring(targetSize, 0.25, 0.85)
 
 	return create("Frame")({
@@ -43,55 +55,106 @@ local function CreateGunSlot(Guninfo)
 
 		BackgroundTransparency = 1,
 
-		create("UIStroke")({
-			Color = Color3.fromRGB(255, 255, 255),
-			Thickness = 1,
-			Transparency = 0.7,
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-		}),
-
 		create("Frame")({
-			Name = "AmmoTypeFrame",
-			Size = UDim2.fromScale(0.01, 1),
-			Position = UDim2.fromScale(0, 0),
-			BackgroundColor3 = function()
-				return GetAmmoColor(Guninfo.AmmoColor())
-			end,
-		}),
-
-		create("Frame")({
-			Name = "SeparatorFrame",
-			BackgroundTransparency = 0.7,
-			Size = UDim2.fromScale(0.005, 1),
-			Position = UDim2.fromScale(0.75, 0),
-		}),
-
-		create("TextLabel")({
-			Name = "AmmoCount",
-			Size = UDim2.fromScale(0.25, 0.9),
-			Position = UDim2.fromScale(0.48, 0),
+			Name = "GunInfoFrame",
+			Size = UDim2.fromScale(0.75, 1),
+			Position = UDim2.fromScale(0.25, 0),
 			BackgroundTransparency = 1,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			TextScaled = true,
-			Text = function()
-				return tostring(Guninfo.Ammo())
-			end,
-			TextXAlignment = Enum.TextXAlignment.Center,
-			TextYAlignment = Enum.TextYAlignment.Center,
+
+			create("UIStroke")({
+				Color = Color3.fromRGB(255, 255, 255),
+				Thickness = 1,
+				Transparency = 0.7,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			}),
+
+			create("Frame")({
+				Name = "AmmoTypeFrame",
+				Size = UDim2.fromScale(0.01, 1),
+				Position = UDim2.fromScale(0, 0),
+				BackgroundColor3 = function()
+					return GetAmmoColor(Guninfo.AmmoColor())
+				end,
+			}),
+
+			create("Frame")({
+				Name = "SeparatorFrame",
+				BackgroundTransparency = 0.7,
+				Size = UDim2.fromScale(0.005, 1),
+				Position = UDim2.fromScale(0.75, 0),
+			}),
+
+			create("TextLabel")({
+				Name = "AmmoCount",
+				Size = UDim2.fromScale(0.25, 0.9),
+				Position = UDim2.fromScale(0.48, 0),
+				BackgroundTransparency = 1,
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				TextScaled = true,
+				Text = function()
+					return tostring(Guninfo.Ammo())
+				end,
+				TextXAlignment = Enum.TextXAlignment.Center,
+				TextYAlignment = Enum.TextYAlignment.Center,
+			}),
+
+			create("TextLabel")({
+				Name = "ReserveAmmoCount",
+				Size = UDim2.fromScale(0.25, 0.6),
+				Position = UDim2.fromScale(0.75, 0.15),
+				BackgroundTransparency = 1,
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				TextScaled = true,
+				Text = function()
+					return tostring(Guninfo.ReserveAmmo())
+				end,
+				TextXAlignment = Enum.TextXAlignment.Center,
+				TextYAlignment = Enum.TextYAlignment.Center,
+			}),
 		}),
 
-		create("TextLabel")({
-			Name = "ReserveAmmoCount",
-			Size = UDim2.fromScale(0.25, 0.6),
-			Position = UDim2.fromScale(0.75, 0.15),
+		create("CanvasGroup")({
+			Name = "SlotNumberCanvasGroup",
+			Size = UDim2.fromScale(0.25, 1),
+			Position = UDim2.fromScale(0.09, 0),
 			BackgroundTransparency = 1,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			TextScaled = true,
-			Text = function()
-				return tostring(Guninfo.ReserveAmmo())
+			GroupTransparency = function()
+				return if isEquipped() then 1 else 0
 			end,
-			TextXAlignment = Enum.TextXAlignment.Center,
-			TextYAlignment = Enum.TextYAlignment.Center,
+
+			create("Frame")({
+				Name = "SlotNumberFrame",
+				Size = UDim2.fromScale(1, 0.56),
+				Position = UDim2.fromScale(0.12, 0.22),
+				BackgroundTransparency = 0.7,
+				BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+
+				create("UIAspectRatioConstraint")({
+					AspectRatio = 1,
+					DominantAxis = Enum.DominantAxis.Width,
+				}),
+
+				create("UIStroke")({
+					Color = Color3.fromRGB(255, 255, 255),
+					Thickness = 1,
+					Transparency = 0.7,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				}),
+
+				create("TextLabel")({
+					Name = "SlotNumber",
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					TextColor3 = Color3.fromRGB(255, 255, 255),
+					TextTransparency = 0.5,
+					TextScaled = true,
+					Text = function()
+						return slotNumber()
+					end,
+					TextXAlignment = Enum.TextXAlignment.Center,
+					TextYAlignment = Enum.TextYAlignment.Center,
+				}),
+			}),
 		}),
 	})
 end

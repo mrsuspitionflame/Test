@@ -12,14 +12,14 @@ local GunService = {}
 
 function GunService:Init()
 	PacketManager.Combat.ShootRequest.listen(function(data, player)
-		local SlotName = data.SlotName
-		local Origin = data.CFrame
-		local Seed = data.Seed
+		local slotName = data.SlotName
+		local origin = data.CFrame
+		local seed = data.Seed
 
 		if
-			typeof(SlotName) ~= "string"
-			or typeof(Origin) ~= "CFrame"
-			or typeof(Seed) ~= "number"
+			typeof(slotName) ~= "string"
+			or typeof(origin) ~= "CFrame"
+			or typeof(seed) ~= "number"
 		then
 			return
 		end
@@ -29,24 +29,24 @@ function GunService:Init()
 		if not gunClass or not gunClass.Equipped then
 			return
 		end
-		gunClass:Shoot(Origin, Seed)
+		gunClass:Shoot(origin, seed)
 	end)
 
 	PacketManager.Combat.ReloadRequest.listen(function(data, player)
-		local SlotName = data.SlotName
+		local slotName = data.SlotName
 
-		local GunClass = LoadoutService.GetGunClass(player, SlotName)
+		local gunClass = LoadoutService.GetGunClass(player, slotName)
 
-		if not GunClass or not GunClass.Equipped then
+		if not gunClass or not gunClass.Equipped then
 			return
 		end
 
-		GunClass:Reload()
+		gunClass:Reload()
 	end)
 
 	PacketManager.Combat.EquipRequest.listen(function(data, player)
-		local SlotName = data.SlotName
-		local Action = data.Action
+		local slotName = data.SlotName
+		local action = data.Action
 
 		local character = player.Character
 		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -56,38 +56,38 @@ function GunService:Init()
 		end
 
 
-		local GunClass = LoadoutService.GetGunClass(player, SlotName)
+		local gunClass = LoadoutService.GetGunClass(player, slotName)
 
-		if not GunClass then
+		if not gunClass then
 			return
 		end
 
-		if Action == "Equip" then
+		if action == "Equip" then
 			local equippedGunClass = LoadoutService.GetEquippedGunClass(player)
 
-			if equippedGunClass and equippedGunClass ~= GunClass then
+			if equippedGunClass and equippedGunClass ~= gunClass then
 				if not equippedGunClass:OnUnequip() then
 					return
 				end
 			end
 
-			GunClass:OnEquip()
-		elseif Action == "UnEquip" then
-			GunClass:OnUnequip()
+			gunClass:OnEquip()
+		elseif action == "UnEquip" then
+			gunClass:OnUnequip()
 		end
 	end)
 
 	PacketManager.Combat.AimEvent.listen(function(data, player)
-		local SlotName = data.SlotName
-		local Aiming = data.Aiming
+		local slotName = data.SlotName
+		local aiming = data.Aiming
 
-		local GunClass = LoadoutService.GetGunClass(player, SlotName)
+		local gunClass = LoadoutService.GetGunClass(player, slotName)
 
-		if not GunClass or not GunClass.Equipped then
+		if not gunClass or not gunClass.Equipped then
 			return
 		end
 
-		GunClass:SetAiming(Aiming)
+		gunClass:SetAiming(aiming)
 	end)
 end
 

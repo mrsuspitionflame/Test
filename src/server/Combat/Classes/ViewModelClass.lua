@@ -18,8 +18,8 @@ function ViewModelClass.new(player)
 	return self
 end
 
-function ViewModelClass:OnEquip(GunName: string)
-	self.GunName = GunName
+function ViewModelClass:OnEquip(gunName: string)
+	self.GunName = gunName
 	self:Init()
 end
 
@@ -31,23 +31,23 @@ function ViewModelClass:CreateViewModel()
 	self.ViewModel = self.Trove:Add(ServerViewModels:WaitForChild(self.GunName .. "ServerViewModel"):Clone())
 	self.ViewModel.Name = self.GunName .. "ServerViewModel"
 	self.ViewModel.Parent = self.Player.Character
-	local Humanoid = self.ViewModel:FindFirstChild("Humanoid")
-	local Animator = Humanoid:WaitForChild("Animator")
-	local Animations = self.ViewModel:FindFirstChild("Animations")
+	local humanoid = self.ViewModel:FindFirstChild("Humanoid")
+	local animator = humanoid:WaitForChild("Animator")
+	local animations = self.ViewModel:FindFirstChild("Animations")
 	self.RecoilAnimation =
-		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
+		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
 	self.ReloadAnimation =
-		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
+		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
 	self.EquipAnimation =
-		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("EquipAnimation" .. self.GunName)))
+		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("EquipAnimation" .. self.GunName)))
 end
 
-function ViewModelClass:GetAnimation(AnimationName: string)
-	if AnimationName == "Recoil" then
+function ViewModelClass:GetAnimation(animationName: string)
+	if animationName == "Recoil" then
 		return self.RecoilAnimation
-	elseif AnimationName == "Reload" then
+	elseif animationName == "Reload" then
 		return self.ReloadAnimation
-	elseif AnimationName == "Equip" then
+	elseif animationName == "Equip" then
 		return self.EquipAnimation
 	end
 	return

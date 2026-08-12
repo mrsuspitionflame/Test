@@ -26,8 +26,6 @@ local PlayerAnimationClasses = {}
 
 local PlayerActionManagers = {}
 
-local LoadedCharacters = {}
-
 local LoadoutService = {}
 
 function LoadoutService.GetGunClass(player, slotName)
@@ -82,14 +80,7 @@ local function SendLoadout(player)
 	end
 end
 
-local function CreateCharacterLoadout(player, character)
-	if LoadedCharacters[player.UserId] == character then
-		return
-	end
-
-	LoadedCharacters[player.UserId] = character
-	DestroyPlayerGunClasses(player)
-
+local function CreateCharacterLoadout(player)
 	local animationClass = PlayerAnimationClasses[player.UserId]
 	local actionManager = PlayerActionManagers[player.UserId]
 
@@ -100,10 +91,10 @@ local function CreateCharacterLoadout(player, character)
 
 	PlayerGunClasses[player.UserId] = {}
 
-	for _, SlotName in ipairs(Slots) do
-		print("Creating gun class for player:", player.Name, "slot:", SlotName)
-		PlayerGunClasses[player.UserId][SlotName] =
-			GunClass.new(player, "Rifle", SlotName, animationClass, actionManager)
+	for _, slotName in ipairs(Slots) do
+		print("Creating gun class for player:", player.Name, "slot:", slotName)
+		PlayerGunClasses[player.UserId][slotName] =
+			GunClass.new(player, "Rifle", slotName, animationClass, actionManager)
 	end
 
 	SendLoadout(player)
@@ -117,25 +108,39 @@ local function OnPlayerAdded(player)
 	PlayerAnimationClasses[player.UserId] = AnimationClass.new(player)
 	PlayerActionManagers[player.UserId] = ActionManager.new()
 
-	player.CharacterAdded:Connect(function(character)
-		CreateCharacterLoadout(player, character)
-	end)
-
-	player.CharacterRemoving:Connect(function(character)
-		if LoadedCharacters[player.UserId] == character then
-			LoadedCharacters[player.UserId] = nil
-			DestroyPlayerGunClasses(player)
+	local function OnCharacterAdded(character)
+		if PlayerGunClasses[player.UserId] == nil then
+			CreateCharacterLoadout(player)
+			print("Created loadout for player:", player.Name)
 		end
-	end)
+
+		local humanoid = character:WaitForChild("Humanoid")
+		humanoid.Died:Connect(function()
+			PlayerActionManagers[player.UserId]:SetState("WeaponState", "Idle")
+			local gunClass = LoadoutService.GetEquippedGunClass(player)
+			if gunClass then
+				gunClass:OnUnequip()
+			end
+		end)
+	end
+
+	player.CharacterAdded:Connect(OnCharacterAdded)
 
 	if player.Character then
-		task.spawn(CreateCharacterLoadout, player, player.Character)
+		task.spawn(OnCharacterAdded, player.Character)
 	end
+
+	player.CharacterRemoving:Connect(function()
+		PlayerActionManagers[player.UserId]:SetState("WeaponState", "Idle")
+		local gunClass = LoadoutService.GetEquippedGunClass(player)
+		if gunClass then
+			gunClass:OnUnequip()
+		end
+	end)
 end
 
 local function OnPlayerRemoving(player)
 	DestroyPlayerGunClasses(player)
-	LoadedCharacters[player.UserId] = nil
 	PlayerAnimationClasses[player.UserId] = nil
 	PlayerActionManagers[player.UserId] = nil
 end
@@ -145,7 +150,7 @@ function LoadoutService:Init()
 		OnPlayerAdded(player)
 
 		if not PlayerGunClasses[player.UserId] and player.Character then
-			CreateCharacterLoadout(player, player.Character)
+			CreateCharacterLoadout(player)
 		else
 			SendLoadout(player)
 		end

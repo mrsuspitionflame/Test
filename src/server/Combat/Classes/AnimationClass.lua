@@ -15,15 +15,15 @@ function AnimationClass.new(player)
     return self
 end
 
-function AnimationClass:GetClass(ClassName)
-    if ClassName == "ViewModel" then
+function AnimationClass:GetClass(className)
+    if className == "ViewModel" then
         return self.ViewModelClass
     end
     return
 end
 
-function AnimationClass:OnEquip(WeaponName: string)
-    self.ViewModelClass:OnEquip(WeaponName)
+function AnimationClass:OnEquip(weaponName: string)
+    self.ViewModelClass:OnEquip(weaponName)
     --Other animations will be added later
 end
 
@@ -31,9 +31,9 @@ function AnimationClass:OnUnequip()
     self.ViewModelClass:OnUnequip()
 end
 
-function AnimationClass:GetAnimation(AnimationType: string, AnimationName: string)
-    if AnimationType == "ViewModel" then
-        return self.ViewModelClass:GetAnimation(AnimationName)
+function AnimationClass:GetAnimation(animationType: string, animationName: string)
+    if animationType == "ViewModel" then
+        return self.ViewModelClass:GetAnimation(animationName)
     end
     return
 end

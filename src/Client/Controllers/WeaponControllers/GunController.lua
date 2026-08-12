@@ -5,7 +5,7 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local Definitions = Shared:WaitForChild("Definitions")
-local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
+local gunSettings = require(Definitions:WaitForChild("GunSettings"))
 local RunService = game:GetService("RunService")
 
 local Trove = require(Packages:WaitForChild("Trove"))
@@ -19,27 +19,27 @@ local GunController = {}
 
 GunController.__index = GunController
 
-function GunController.new(GunName, SlotName, AnimationController, ActionManager, GUIController)
-	local GunInfo = GunDefinitions[GunName]
+function GunController.new(gunName, slotName, animationController, actionManager, guiController)
+	local gunInfo = gunSettings[gunName]
 
 	local self = setmetatable({
-		AnimationController = AnimationController,
-		ViewModelController = AnimationController:GetController("ViewModel"),
-		ActionManager = ActionManager,
-		GUIController = GUIController,
+		AnimationController = animationController,
+		ViewModelController = animationController:GetController("ViewModel"),
+		ActionManager = actionManager,
+		GUIController = guiController,
 
-		GunName = GunName,
-		SlotName = SlotName,
+		GunName = gunName,
+		SlotName = slotName,
 
-		Ammo = GunInfo.MagazineSize,
-		FireRate = GunInfo.FireRate,
-		MagazineSize = GunInfo.MagazineSize,
-		ReserveAmmo = GunInfo.ReserveAmmo,
-		ReloadSpeed = GunInfo.ReloadSpeed,
-		BulletsPerShot = GunInfo.BulletsPerShot,
-		Spread = GunInfo.Spread,
-		Range = GunInfo.Range,
-		FireMode = GunInfo.FireMode,
+		Ammo = gunInfo.MagazineSize,
+		FireRate = gunInfo.FireRate,
+		MagazineSize = gunInfo.MagazineSize,
+		ReserveAmmo = gunInfo.ReserveAmmo,
+		ReloadSpeed = gunInfo.ReloadSpeed,
+		BulletsPerShot = gunInfo.BulletsPerShot,
+		Spread = gunInfo.Spread,
+		Range = gunInfo.Range,
+		FireMode = gunInfo.FireMode,
 
 		Aiming = false,
 		Equipped = false,
@@ -56,8 +56,8 @@ function GunController:ShootEvent()
 		return
 	end
 
-	local Camera = workspace.CurrentCamera
-	local origin = Camera.CFrame
+	local camera = workspace.CurrentCamera
+	local origin = camera.CFrame
 
 	if self.ActionManager:GetState("WeaponState") == "Reloading" then
 		self.ReloadTrack:Stop(0)
@@ -97,7 +97,7 @@ function GunController:ShootEvent()
 
 	PacketManager.Combat.ShootRequest.send({
 		SlotName = self.SlotName,
-		CFrame = Camera.CFrame,
+		CFrame = camera.CFrame,
 		Seed = seed,
 	})
 	--other stuff like animations, recoil, etc
@@ -165,6 +165,7 @@ end
 
 function GunController:OnEquip()
 	UIS.MouseIconEnabled = false
+	print("Mouse icon is: " .. tostring(UIS.MouseIconEnabled))
 	self.GUIController:EquippedSlotChanged(self.SlotName)
 	self.Equipped = true
 	self.AnimationController:OnEquip(self.GunName)
@@ -179,19 +180,15 @@ function GunController:OnEquip()
 end
 
 function GunController:OnUnequip()
-	UIS.MouseIconEnabled = true
-	self.GUIController:UnequipWeapon()
 	self.Equipped = false
+	self.Aiming = false
+	self.TriggerHeld = false
+
+	UIS.MouseIconEnabled = true
+	self.ViewModelController:OnUnequip()
+	self.GUIController:OnUnequip()
+	self.AnimationController:OnUnequip()
 	self.Trove:Clean()
-	self.AnimationController:OnUnequip()
-
-	--other stuff like animations, etc
-end
-
-function GunController:Destroy()
-	self.AnimationController:OnUnequip()
-	self.GUIController:UnequipWeapon()
-	self.Trove:Destroy()
 end
 
 function GunController:bindAction(trove, actionName, callback, createTouchButton, ...)
@@ -201,7 +198,6 @@ function GunController:bindAction(trove, actionName, callback, createTouchButton
 		CAS:UnbindAction(actionName)
 	end)
 end
-
 
 function GunController:Init()
 	-- Equipped Connections
@@ -241,7 +237,6 @@ function GunController:Init()
 			end
 
 			self.TriggerHeld = true
-			self:ShootEvent()
 		end
 		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
 			self.TriggerHeld = false

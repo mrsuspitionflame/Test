@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Definitions = Shared:WaitForChild("Definitions")
-local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
+local gunSettings = require(Definitions:WaitForChild("GunSettings"))
 local GUIStorage = ReplicatedStorage:WaitForChild("GUIStorage")
 local CombatUI = GUIStorage:WaitForChild("CombatUI")
 local CombatUIsources = require(CombatUI:WaitForChild("CombatUIsources"))
@@ -21,29 +21,39 @@ function GUIController.new()
 	return self
 end
 
-function GUIController:InitializeSlot(GunName, SlotName)
-	local GunInfo = GunDefinitions[GunName]
-	CombatUIsources[SlotName].Ammo(GunInfo.MagazineSize)
-	CombatUIsources[SlotName].ReserveAmmo(GunInfo.ReserveAmmo)
-	CombatUIsources[SlotName].AmmoType(GunInfo.AmmoType)
+function GUIController:SetCombatUIEnabled(visible)
+	CombatUIsources.UIEnabled(visible)
+end
+
+function GUIController:InitializeSlot(gunName, slotName)
+	local gunInfo = gunSettings[gunName]
+	CombatUIsources[slotName].Ammo(gunInfo.MagazineSize)
+	CombatUIsources[slotName].ReserveAmmo(gunInfo.ReserveAmmo)
+	CombatUIsources[slotName].AmmoType(gunInfo.AmmoType)
 end
 
 function GUIController:EquippedSlotChanged(newSlot)
 	CombatUIsources.EquippedSlot(newSlot)
 end
 
-function GUIController:UnequipWeapon()
+function GUIController:OnUnequip()
 	CombatUIsources.EquippedSlot(nil)
 end
 
-function GUIController:UpdateAmmo(SlotName, NewAmmo, NewReserveAmmo)
-	if CombatUIsources[SlotName] then
-		CombatUIsources[SlotName].Ammo(NewAmmo)
-		CombatUIsources[SlotName].ReserveAmmo(NewReserveAmmo)
+function GUIController:UpdateAmmo(slotName, newAmmo, newReserveAmmo)
+	if CombatUIsources[slotName] then
+		CombatUIsources[slotName].Ammo(newAmmo)
+		CombatUIsources[slotName].ReserveAmmo(newReserveAmmo)
 	else
-		warn("Invalid slot name: " .. SlotName)
+		warn("Invalid slot name: " .. slotName)
 	end
 end
 
+function GUIController:Destroy()
+	if self.destroy then
+		self.destroy()
+		self.destroy = nil
+	end
+end
 
 return GUIController

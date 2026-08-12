@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Definitions = Shared:WaitForChild("Definitions")
-local GunDefinitions = require(Definitions:WaitForChild("GunDefinitions"))
+local gunSettings = require(Definitions:WaitForChild("GunSettings"))
 local RecoilSettings = require(Definitions:WaitForChild("RecoilSettings"))
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -25,14 +25,14 @@ function ViewModelController.new()
 	return self
 end
 
-function ViewModelController:OnEquip(GunName: string)
-	local GunInfo = GunDefinitions[GunName]
+function ViewModelController:OnEquip(gunName: string)
+	local gunInfo = gunSettings[gunName]
 
-	self.GunName = GunName
-	self.GunType = GunInfo.GunType
-	self.BindingName = "Update" .. GunName .. "ViewModel"
-	self.Handling = GunInfo.Handling
-	self.Stability = GunInfo.Stability
+	self.GunName = gunName
+	self.GunType = gunInfo.GunType
+	self.BindingName = "Update" .. gunName .. "ViewModel"
+	self.Handling = gunInfo.Handling
+	self.Stability = gunInfo.Stability
 	self.Aiming = false
 	self.Zooming = false
 	self.ZoomTween = nil
@@ -68,12 +68,12 @@ function ViewModelController:Recoil()
 	return
 end
 
-function ViewModelController:GetAnimation(AnimationName: string)
-	if AnimationName == "Recoil" then
+function ViewModelController:GetAnimation(animationName: string)
+	if animationName == "Recoil" then
 		return self.RecoilAnimation
-	elseif AnimationName == "Reload" then
+	elseif animationName == "Reload" then
 		return self.ReloadAnimation
-	elseif AnimationName == "Equip" then
+	elseif animationName == "Equip" then
 		print("Equip animation returned")
 		return self.EquipAnimation
 	end
@@ -201,28 +201,28 @@ end
 function ViewModelController:CreateViewModel()
 	self.ViewModel = self.Trove:Add(ClientViewModels:WaitForChild(self.GunName):Clone())
 	self.ViewModel.Name = self.GunName
-	local Camera = workspace.CurrentCamera
-	self.ViewModel.Parent = Camera
+	local camera = workspace.CurrentCamera
+	self.ViewModel.Parent = camera
 
-	local Humanoid = self.ViewModel:FindFirstChild("Humanoid")
-	local Animator = Humanoid:WaitForChild("Animator")
+	local humanoid = self.ViewModel:FindFirstChild("Humanoid")
+	local animator = humanoid:WaitForChild("Animator")
 	self.AimPart = self.ViewModel:FindFirstChild("AimPart")
-	local Animations = self.ViewModel:FindFirstChild("Animations")
+	local animations = self.ViewModel:FindFirstChild("Animations")
 	self.RecoilAnimation =
-		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
+		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
 	self.ReloadAnimation =
-		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
+		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
 	self.EquipAnimation =
-		self.Trove:Add(Animator:LoadAnimation(Animations:FindFirstChild("EquipAnimation" .. self.GunName)))
+		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("EquipAnimation" .. self.GunName)))
 	self.RayOrigin = self.ViewModel:FindFirstChild("RayOrigin")
 	self.Muzzle = self.RayOrigin:FindFirstChild("MuzzleAttachment")
 end
 
 function ViewModelController:HideServerViewModel()
 	local char = Player.Character or Player.CharacterAdded:Wait()
-	local ServerViewModel = char:WaitForChild(self.GunName .. "ServerViewModel")
+	local serverViewModel = char:WaitForChild(self.GunName .. "ServerViewModel")
 
-	for _, part in ServerViewModel:GetDescendants() do
+	for _, part in serverViewModel:GetDescendants() do
 		if part:IsA("BasePart") then
 			part.LocalTransparencyModifier = 1
 		elseif part:IsA("Decal") or part:IsA("Texture") then

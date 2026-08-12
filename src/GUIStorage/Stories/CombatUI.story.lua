@@ -19,45 +19,43 @@ local story = {
 
 			create("Frame")({
 				Name = "AbilityFrame",
-				Size = UDim2.fromScale(0.2, 1),
-				Position = UDim2.fromScale(0.02, 0.75),
+				Size = UDim2.fromScale(0.17, 1),
+				Position = UDim2.fromScale(0.02, 0.72),
 				BackgroundTransparency = 1,
 				Rotation = -2,
 
 				create("UIAspectRatioConstraint")({
-					AspectRatio = 2,
+					AspectRatio = 1.5,
 					DominantAxis = Enum.DominantAxis.Width,
 				}),
 
-				create("CanvasGroup")({
-					Name = "CombatHUD",
-					Size = UDim2.fromScale(1, 1),
-
-					GroupTransparency = 0,
-					BackgroundTransparency = 1,
-
-					AbilityUI(),
-				}),
+				AbilityUI(),
 			}),
 
 			create("Frame")({
 				Name = "GunFrame",
 				BackgroundTransparency = 1,
-				Size = UDim2.fromScale(0.2, 1),
-				Position = UDim2.fromScale(0.78, 0.71),
+				Size = UDim2.fromScale(0.23, 1),
+				Position = UDim2.fromScale(0.74, 0.7),
 				Rotation = 2,
 				create("UIAspectRatioConstraint")({
-					AspectRatio = 1.5,
+					AspectRatio = 2,
 					DominantAxis = Enum.DominantAxis.Width,
 				}),
-				create("CanvasGroup")({
-					Name = "CombatHUD",
-					Size = UDim2.fromScale(1, 1),
 
-					GroupTransparency = 0,
-					BackgroundTransparency = 1,
+				GunUI(),
+			}),
 
-					GunUI(),
+			create("Frame")({
+				Name = "GunReticalFrame",
+				Size = UDim2.fromScale(0.03, 1),
+				Position = UDim2.fromScale(0.5, 0.5),
+				BackgroundTransparency = 0.5,
+				AnchorPoint = Vector2.new(0.5, 0.5),
+
+				create("UIAspectRatioConstraint")({
+					AspectRatio = 1,
+					DominantAxis = Enum.DominantAxis.Width,
 				}),
 			}),
 		})
