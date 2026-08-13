@@ -4,14 +4,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
-local Definitions = Shared:WaitForChild("Definitions")
-local gunSettings = require(Definitions:WaitForChild("GunSettings"))
+local Settings = Shared:WaitForChild("Settings")
+local gunSettings = require(Settings:WaitForChild("GunSettings"))
 local RunService = game:GetService("RunService")
 
 local Trove = require(Packages:WaitForChild("Trove"))
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
 
-local PacketManager = require(Definitions:WaitForChild("PacketManager"))
+local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local seedGenerator = Random.new()
 
@@ -95,7 +95,7 @@ function GunController:ShootEvent()
 	local rayOrigin = self.ViewModelController:GetRayOrigin()
 	RaycastController.DrawRayResults(rayOrigin, rayResults)
 
-	PacketManager.Combat.ShootRequest.send({
+	PacketSettings.Combat.ShootRequest.send({
 		SlotName = self.SlotName,
 		CFrame = camera.CFrame,
 		Seed = seed,
@@ -124,7 +124,7 @@ function GunController:ReloadEvent()
 	self.ReloadTrack:Play(0)
 	self.ReloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
 
-	PacketManager.Combat.ReloadRequest.send({
+	PacketSettings.Combat.ReloadRequest.send({
 		SlotName = self.SlotName,
 	})
 	--other stuff like animations, etc
@@ -149,12 +149,12 @@ end
 
 function GunController:EquipOrUnequip()
 	if self.Equipped then
-		PacketManager.Combat.EquipRequest.send({
+		PacketSettings.Combat.EquipRequest.send({
 			SlotName = self.SlotName,
 			Action = "UnEquip",
 		})
 	else
-		PacketManager.Combat.EquipRequest.send({
+		PacketSettings.Combat.EquipRequest.send({
 			SlotName = self.SlotName,
 			Action = "Equip",
 		})
@@ -255,7 +255,7 @@ function GunController:Init()
 		if inputState == Enum.UserInputState.Begin then
 			self.Aiming = true
 			self.ViewModelController:OnAim("Start")
-			PacketManager.Combat.AimEvent.send({
+			PacketSettings.Combat.AimEvent.send({
 				SlotName = self.SlotName,
 				Aiming = true,
 			})
@@ -263,7 +263,7 @@ function GunController:Init()
 		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
 			self.Aiming = false
 			self.ViewModelController:AfterAim()
-			PacketManager.Combat.AimEvent.send({
+			PacketSettings.Combat.AimEvent.send({
 				SlotName = self.SlotName,
 				Aiming = false,
 			})

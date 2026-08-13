@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Definitions = Shared:WaitForChild("Definitions")
+local Settings = Shared:WaitForChild("Settings")
 local Effects = ReplicatedStorage:WaitForChild("Effects")
 local laserBeamEffect = Effects:WaitForChild("LaserBeamEffect")
 
@@ -8,7 +8,7 @@ local EnvironmentImpactEffect = Effects:WaitForChild("EnvironmentImpactEffect")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
-local PacketManager = require(Definitions:WaitForChild("PacketManager"))
+local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local RayCastController = {}
 
@@ -126,7 +126,7 @@ function RayCastController.ValidateVector3(value)
 end
 
 function RayCastController.Init()
-	PacketManager.Combat.ReplicateShotEvent.listen(function(data)
+	PacketSettings.Combat.ReplicateShotEvent.listen(function(data)
 		RayCastController.DrawRayResults(data.MuzzlePosition, data.RayResults)
 	end)
 end

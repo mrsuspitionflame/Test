@@ -11,7 +11,7 @@ ActionSettings.Weapon = {
 
 	Reload = {
 		BlockedStates = {
-			WeaponState = { "Firing", "Equipping" },
+			WeaponState = { "Firing", "Equipping", "Reloading" },
 			AbilityState = { "UsingAbility" },
 			MovementState = {},
 		},

@@ -2,10 +2,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local ByteNet = require(Packages:WaitForChild("Bytenet"))
 
-local PacketManager = {}
+local PacketSettings = {}
 
-PacketManager.Creation = ByteNet.defineNamespace("Creation", function()
-	return{
+PacketSettings.Creation = ByteNet.defineNamespace("Creation", function()
+	return {
 		CreateGunController = ByteNet.definePacket({
 			value = ByteNet.struct({
 				GunName = ByteNet.string,
@@ -19,7 +19,7 @@ PacketManager.Creation = ByteNet.defineNamespace("Creation", function()
 	}
 end)
 
-PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
+PacketSettings.Combat = ByteNet.defineNamespace("Combat", function()
 	return {
 		ShootRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
@@ -66,6 +66,7 @@ PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
 		}),
 
 		ReplicateShotEvent = ByteNet.definePacket({
+			reliabilityType = "unreliable",
 			value = ByteNet.struct({
 				MuzzlePosition = ByteNet.vec3,
 
@@ -80,4 +81,4 @@ PacketManager.Combat = ByteNet.defineNamespace("Combat", function()
 	}
 end)
 
-return PacketManager
+return PacketSettings

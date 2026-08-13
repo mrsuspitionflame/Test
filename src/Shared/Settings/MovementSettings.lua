@@ -1,0 +1,3 @@
+local MovementSettings = {}
+
+return MovementSettings

@@ -1,13 +1,13 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
-local Definitions = Shared:WaitForChild("Definitions")
-local gunSettings = require(Definitions:WaitForChild("GunSettings"))
+local Settings = Shared:WaitForChild("Settings")
+local gunSettings = require(Settings:WaitForChild("GunSettings"))
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 local Trove = require(Packages:WaitForChild("Trove"))
-local PacketManager = require(Definitions:WaitForChild("PacketManager"))
+local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local GunClass = {}
 GunClass.__index = GunClass
@@ -55,7 +55,7 @@ end
 
 function GunClass:OnEquip()
 	if not self:CanEquip() or self.Equipped then
-		PacketManager.Combat.EquipResult.sendTo({
+		PacketSettings.Combat.EquipResult.sendTo({
 			Action = "Equip",
 			SlotName = self.SlotName,
 			Accepted = false,
@@ -63,7 +63,7 @@ function GunClass:OnEquip()
 		return false
 	end
 
-	PacketManager.Combat.EquipResult.sendTo({
+	PacketSettings.Combat.EquipResult.sendTo({
 		Action = "Equip",
 		SlotName = self.SlotName,
 		Accepted = true,
@@ -97,7 +97,7 @@ function GunClass:OnEquip()
 
 			self.Ammo += AmmoToLoad
 			self.ReserveAmmo -= AmmoToLoad
-			PacketManager.Combat.AmmoUpdate.sendTo({
+			PacketSettings.Combat.AmmoUpdate.sendTo({
 				SlotName = self.SlotName,
 				Ammo = self.Ammo,
 				ReserveAmmo = self.ReserveAmmo,
@@ -114,7 +114,7 @@ end
 
 function GunClass:OnUnequip()
 	if not self.Equipped or not self:CanUnequip() then
-		PacketManager.Combat.EquipResult.sendTo({
+		PacketSettings.Combat.EquipResult.sendTo({
 			Action = "UnEquip",
 			SlotName = self.SlotName,
 			Accepted = false,
@@ -122,7 +122,7 @@ function GunClass:OnUnequip()
 		return false
 	end
 
-	PacketManager.Combat.EquipResult.sendTo({
+	PacketSettings.Combat.EquipResult.sendTo({
 		Action = "UnEquip",
 		SlotName = self.SlotName,
 		Accepted = true,
@@ -218,7 +218,7 @@ function GunClass:Shoot(origin, seed)
 	end
 
 	self.Ammo -= 1
-	PacketManager.Combat.AmmoUpdate.sendTo({
+	PacketSettings.Combat.AmmoUpdate.sendTo({
 		SlotName = self.SlotName,
 		Ammo = self.Ammo,
 	}, self.Player)
@@ -275,7 +275,7 @@ function GunClass:Shoot(origin, seed)
 		muzzlePosition = rayOrigin.Position
 	end
 
-	PacketManager.Combat.ReplicateShotEvent.sendToAllExcept({
+	PacketSettings.Combat.ReplicateShotEvent.sendToAllExcept({
 		MuzzlePosition = muzzlePosition,
 		RayResults = rayResults,
 	}, self.Player)
