@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Definitions = Shared:WaitForChild("Definitions")
-local ActionSettings = require(Definitions:WaitForChild("ActionSettings"))
+local Settings = Shared:WaitForChild("Settings")
+local ActionSettings = require(Settings:WaitForChild("ActionSettings"))
 
 
 local ActionController = {}

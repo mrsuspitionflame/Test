@@ -6,8 +6,8 @@ local Classes = Combat:WaitForChild("Classes")
 local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Definitions = Shared:WaitForChild("Definitions")
-local PacketManager = require(Definitions:WaitForChild("PacketManager"))
+local Settings = Shared:WaitForChild("Settings")
+local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 local Utility = Shared:WaitForChild("Utility")
 
 local GunClass = require(Classes:WaitForChild("GunClass"))
@@ -73,7 +73,7 @@ local function SendLoadout(player)
 	end
 
 	for slotName, gunClass in pairs(playerGunClasses) do
-		PacketManager.Creation.CreateGunController.sendTo({
+		PacketSettings.Creation.CreateGunController.sendTo({
 			GunName = gunClass.GunName,
 			SlotName = slotName,
 		}, player)
@@ -146,7 +146,7 @@ local function OnPlayerRemoving(player)
 end
 
 function LoadoutService:Init()
-	PacketManager.Creation.RequestLoadout.listen(function(_, player)
+	PacketSettings.Creation.RequestLoadout.listen(function(_, player)
 		OnPlayerAdded(player)
 
 		if not PlayerGunClasses[player.UserId] and player.Character then

@@ -2,16 +2,16 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Server = ServerScriptService:WaitForChild("Server")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Definitions = Shared:WaitForChild("Definitions")
+local Settings = Shared:WaitForChild("Settings")
 local Combat = Server:WaitForChild("Combat")
 local CombatServices = Combat:WaitForChild("CombatServices")
 local LoadoutService = require(CombatServices:WaitForChild("LoadoutService"))
-local PacketManager = require(Definitions:WaitForChild("PacketManager"))
+local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local GunService = {}
 
 function GunService:Init()
-	PacketManager.Combat.ShootRequest.listen(function(data, player)
+	PacketSettings.Combat.ShootRequest.listen(function(data, player)
 		local slotName = data.SlotName
 		local origin = data.CFrame
 		local seed = data.Seed
@@ -32,7 +32,7 @@ function GunService:Init()
 		gunClass:Shoot(origin, seed)
 	end)
 
-	PacketManager.Combat.ReloadRequest.listen(function(data, player)
+	PacketSettings.Combat.ReloadRequest.listen(function(data, player)
 		local slotName = data.SlotName
 
 		local gunClass = LoadoutService.GetGunClass(player, slotName)
@@ -44,7 +44,7 @@ function GunService:Init()
 		gunClass:Reload()
 	end)
 
-	PacketManager.Combat.EquipRequest.listen(function(data, player)
+	PacketSettings.Combat.EquipRequest.listen(function(data, player)
 		local slotName = data.SlotName
 		local action = data.Action
 
@@ -77,7 +77,7 @@ function GunService:Init()
 		end
 	end)
 
-	PacketManager.Combat.AimEvent.listen(function(data, player)
+	PacketSettings.Combat.AimEvent.listen(function(data, player)
 		local slotName = data.SlotName
 		local aiming = data.Aiming
 

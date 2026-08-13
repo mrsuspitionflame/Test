@@ -1,8 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Definitions = Shared:WaitForChild("Definitions")
-local gunSettings = require(Definitions:WaitForChild("GunSettings"))
-local RecoilSettings = require(Definitions:WaitForChild("RecoilSettings"))
+local Settings = Shared:WaitForChild("Settings")
+local gunSettings = require(Settings:WaitForChild("GunSettings"))
+local RecoilSettings = require(Settings:WaitForChild("RecoilSettings"))
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 

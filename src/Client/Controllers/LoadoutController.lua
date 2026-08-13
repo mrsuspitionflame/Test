@@ -3,7 +3,7 @@ local CAS = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
-local Definitions = Shared:WaitForChild("Definitions")
+local Settings = Shared:WaitForChild("Settings")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -17,7 +17,7 @@ local GunController = require(WeaponControllers:WaitForChild("GunController"))
 local AnimationController = require(CentralControllers:WaitForChild("AnimationController"))
 local GUIController = require(CentralControllers:WaitForChild("GUIController"))
 local ActionManager = require(Utility:WaitForChild("ActionManager"))
-local PacketManager = require(Definitions:WaitForChild("PacketManager"))
+local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local LoadoutController = {}
 
@@ -28,12 +28,11 @@ local Loadout = {
 }
 
 local gui = GUIController.new()
-
 local animation = AnimationController.new()
 local action = ActionManager.new()
 
 function LoadoutController.Init()
-	PacketManager.Creation.CreateGunController.listen(function(data)
+	PacketSettings.Creation.CreateGunController.listen(function(data)
 		if data.GunName and data.SlotName then
 			print("Received CreateGunController packet for gun:", data.GunName, "slot:", data.SlotName)
 			if Loadout[data.SlotName] == nil then
@@ -45,34 +44,26 @@ function LoadoutController.Init()
 	end)
 
 	LoadoutController.GunInits()
-	PacketManager.Creation.RequestLoadout.send()
+	PacketSettings.Creation.RequestLoadout.send()
 
-	Player.CharacterRemoving:Connect(function()
+	local function OnCharacterRemoved()
 		action:SetState("WeaponState", "Idle")
 		for _, controller in pairs(Loadout) do
 			if controller.Equipped then
 				controller:OnUnequip()
 			end
 		end
-
 		gui:SetCombatUIEnabled(false)
-	end)
+	end
 
 	local function OnCharacterAdded(character)
 		gui:SetCombatUIEnabled(true)
 
 		humanoid = character:WaitForChild("Humanoid")
-		humanoid.Died:Connect(function()
-			action:SetState("WeaponState", "Idle")
-			for _, controller in pairs(Loadout) do
-				if controller.Equipped then
-					controller:OnUnequip()
-				end
-			end
-			gui:SetCombatUIEnabled(false)
-		end)
+		humanoid.Died:Connect(OnCharacterRemoved)
 	end
 
+	Player.CharacterRemoving:Connect(OnCharacterRemoved)
 	Player.CharacterAdded:Connect(OnCharacterAdded)
 
 	if Player.Character then
@@ -81,7 +72,7 @@ function LoadoutController.Init()
 end
 
 function LoadoutController.GunInits()
-	PacketManager.Combat.AmmoUpdate.listen(function(data)
+	PacketSettings.Combat.AmmoUpdate.listen(function(data)
 		local controller = Loadout[data.SlotName]
 
 		if controller and controller.SlotName == data.SlotName then
@@ -89,7 +80,7 @@ function LoadoutController.GunInits()
 		end
 	end)
 
-	PacketManager.Combat.EquipResult.listen(function(data)
+	PacketSettings.Combat.EquipResult.listen(function(data)
 		local controller = Loadout[data.SlotName]
 
 		if controller and controller.SlotName == data.SlotName then
