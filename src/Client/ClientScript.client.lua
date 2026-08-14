@@ -4,6 +4,8 @@ local Utility = Shared:WaitForChild("Utility")
 local Client = script.Parent
 local Controllers = Client:WaitForChild("Controllers")
 local Player = game.Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
 
 local RaycastController = require(Utility:WaitForChild("RaycastController"))
 local LoadoutController = require(Controllers:WaitForChild("LoadoutController"))
@@ -23,4 +25,8 @@ Player.CameraMaxZoomDistance = 17
 
 RaycastController.Init()
 
-LoadoutController.Init()
+LoadoutController:Init()
+
+Humanoid.StateChanged:Connect(function(oldState, newState)
+    print("Humanoid state changed from:", oldState, "to:", newState)
+end)

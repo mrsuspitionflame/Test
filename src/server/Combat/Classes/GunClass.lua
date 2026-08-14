@@ -22,17 +22,17 @@ function GunClass.new(player, gunName, slotName, animationClass, actionManager)
 		GunName = gunName,
 		SlotName = slotName,
 
-		Damage = gunInfo.Damage,
-		MagazineSize = gunInfo.MagazineSize,
-		ReserveAmmo = gunInfo.ReserveAmmo,
-		FireRate = gunInfo.FireRate,
-		Ammo = gunInfo.MagazineSize,
-		Handling = gunInfo.Handling,
-		Stability = gunInfo.Stability,
-		ReloadSpeed = gunInfo.ReloadSpeed,
-		BulletsPerShot = gunInfo.BulletsPerShot,
-		Spread = gunInfo.Spread,
-		Range = gunInfo.Range,
+		Damage = gunInfo.DAMAGE,
+		MagazineSize = gunInfo.MAGAZINE_SIZE,
+		ReserveAmmo = gunInfo.RESERVE_AMMO,
+		FireRate = gunInfo.FIRE_RATE,
+		Ammo = gunInfo.MAGAZINE_SIZE,
+		Handling = gunInfo.HANDLING,
+		Stability = gunInfo.STABILITY,
+		ReloadSpeed = gunInfo.RELOAD_SPEED,
+		BulletsPerShot = gunInfo.BULLETS_PER_SHOT,
+		Spread = gunInfo.SPREAD,
+		Range = gunInfo.RANGE,
 
 		Equipped = false,
 		Aiming = false,
@@ -42,12 +42,21 @@ function GunClass.new(player, gunName, slotName, animationClass, actionManager)
 	self.Trove = Trove.new()
 
 	setmetatable(self, GunClass)
+
 	return self
 end
+
+-- Aiming logic
 
 function GunClass:SetAiming(isAiming)
 	self.Aiming = isAiming
 end
+
+function GunClass:StopAiming()
+	self.Aiming = false
+end
+
+-- Equipping and Unequipping logic
 
 function GunClass:CanEquip()
 	return self.ActionManager:TryAction("Weapon", "Equip")
@@ -75,23 +84,25 @@ function GunClass:OnEquip()
 	self.RecoilTrack = self.AnimationClass:GetAnimation("ViewModel", "Recoil")
 	self.EquipTrack = self.AnimationClass:GetAnimation("ViewModel", "Equip")
 
-	self.ActionManager:SetState("WeaponState", "Equipping")
+	self.ActionManager:SetState("WeaponState", "EQUIPPING")
 	self.EquipTrack:Play(0)
 
+	self:ConnectSignals()
+
 	self.Trove:Connect(self.EquipTrack.Stopped, function()
-		self.ActionManager:SetState("WeaponState", "Idle")
+		self.ActionManager:SetState("WeaponState", "IDLE")
 	end)
 
 	self.Trove:Connect(self.RecoilTrack.Stopped, function()
-		self.ActionManager:SetState("WeaponState", "Idle")
+		self.ActionManager:SetState("WeaponState", "IDLE")
 	end)
 
 	self.Trove:Connect(self.ReloadTrack.Stopped, function()
-		self.ActionManager:SetState("WeaponState", "Idle")
+		self.ActionManager:SetState("WeaponState", "IDLE")
 	end)
 
 	self.Trove:Connect(self.ReloadTrack:GetMarkerReachedSignal("ReloadComplete"), function()
-		if self.ActionManager:GetState("WeaponState") == "Reloading" then
+		if self.ActionManager:GetState("WeaponState") == "RELOADING" then
 			local MissingAmmo = self.MagazineSize - self.Ammo
 			local AmmoToLoad = math.min(MissingAmmo, self.ReserveAmmo)
 
@@ -104,7 +115,7 @@ function GunClass:OnEquip()
 			}, self.Player)
 		end
 	end)
-	-- Additional logic for equipping the gun can be added here
+	
 	return true
 end
 
@@ -135,6 +146,8 @@ function GunClass:OnUnequip()
 	return true
 end
 
+-- Reload logic
+
 function GunClass:CanReload()
 	local character = self.Player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -147,16 +160,22 @@ function GunClass:CanReload()
 		and self.ReserveAmmo > 0
 end
 
+function GunClass:CancelReload()
+	self.ReloadTrack:Stop(0)
+end
+
 function GunClass:Reload()
 	if not self:CanReload() then
 		return
 	end
 
-	self.ActionManager:SetState("WeaponState", "Reloading")
+	self.ActionManager:SetState("WeaponState", "RELOADING")
 
 	self.ReloadTrack:Play(0)
 	self.ReloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
 end
+
+-- Shooting logic
 
 function GunClass:CanShoot(origin, seed)
 	local character = self.Player.Character
@@ -213,23 +232,22 @@ function GunClass:Shoot(origin, seed)
 		return
 	end
 
-	if self.ActionManager:GetState("WeaponState") == "Reloading" then
-		self.ReloadTrack:Stop(0)
-	end
+	self.ActionManager:PerformAction("Weapon", "Fire")
+	self.ActionManager:SetState("WeaponState", "FIRING")
 
 	self.Ammo -= 1
+
 	PacketSettings.Combat.AmmoUpdate.sendTo({
 		SlotName = self.SlotName,
 		Ammo = self.Ammo,
 	}, self.Player)
-	self.ActionManager:SetState("WeaponState", "Firing")
+
 	self.lastShotTime = workspace:GetServerTimeNow()
 
 	self.RecoilTrack:Play(0)
 
 	local rayDirections
 	if self.Aiming then
-		print("Aiming, no spread")
 		rayDirections = RaycastController.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
 	else
 		rayDirections = RaycastController.GetRayDirections(
@@ -279,6 +297,22 @@ function GunClass:Shoot(origin, seed)
 		MuzzlePosition = muzzlePosition,
 		RayResults = rayResults,
 	}, self.Player)
+end
+
+-- Signal Connections
+
+function GunClass:ConnectSignals()
+	self.Trove:Add(self.ActionManager.CancelStateSignal:Connect(function(stateType, cancelledState)
+		if stateType == "WeaponState" then
+			if cancelledState == "RELOADING" then
+				self:CancelReload()
+			end
+		elseif stateType == "AimState" then
+			if cancelledState == "AIMING" then
+				self:StopAiming()
+			end
+		end
+	end))
 end
 
 function GunClass:Destroy()

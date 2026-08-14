@@ -1,77 +1,104 @@
-<<<<<<< HEAD
 local ActionSettings = {}
 
 ActionSettings.Weapon = {
 	Fire = {
 		BlockedStates = {
-			WeaponState = { "Equipping" },
-			AbilityState = { "UsingAbility" },
+			WeaponState = { "EQUIPPING" },
+			AbilityState = { "USING_ABILITY" },
 			MovementState = {},
 		},
+		CancelStates = {
+			WeaponState = {"RELOADING"},
+			AbilityState = {},
+			MovementState = {"SPRINTING"},
+		}
 	},
 
 	Reload = {
 		BlockedStates = {
-			WeaponState = { "Firing", "Equipping", "Reloading" },
-			AbilityState = { "UsingAbility" },
+			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
+			AbilityState = { "USING_ABILITY" },
 			MovementState = {},
 		},
+		CancelStates = {
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = {"SPRINTING"},
+		}
 	},
 
 	Equip = {
 		BlockedStates = {
 			WeaponState = {},
-			AbilityState = { "UsingAbility" },
+			AbilityState = { "USING_ABILITY" },
 			MovementState = {},
 		},
+		CancelStates = {
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = {},
+		}
 	},
 
 	UnEquip = {
 		BlockedStates = {
-			WeaponState = { "Firing", "Equipping", "Reloading" },
-			AbilityState = { "UsingAbility" },
+			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
+			AbilityState = { "USING_ABILITY" },
 			MovementState = {},
 		},
+		CancelStates = {
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = {},
+		}
+	},
+
+	Aim = {
+		BlockedStates = {
+			WeaponState = { "EQUIPPING", "RELOADING" },
+			AbilityState = { "USING_ABILITY" },
+			MovementState = {},
+		},
+		CancelStates = {
+			WeaponState = {"RELOADING"},
+			AbilityState = {},
+			MovementState = {"SPRINTING"},
+		}
 	},
 }
 
-return ActionSettings
-=======
-local ActionSettings = {}
-
-ActionSettings.Weapon = {
-	Fire = {
+ActionSettings.Movement = {
+	Slide = {
 		BlockedStates = {
-			WeaponState = { "Equipping" },
-			AbilityState = { "UsingAbility" },
-			MovementState = {},
+			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
+			AbilityState = { "USING_ABILITY" },
+			MovementState = { "SLIDING", "CROUCHING", "JUMPING", "FALLING" },
 		},
 	},
 
-	Reload = {
+	Sprint = {
 		BlockedStates = {
-			WeaponState = { "Firing", "Equipping", "Reloading" },
-			AbilityState = { "UsingAbility" },
-			MovementState = {},
+			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
+			AbilityState = {},
+			MovementState = { "SLIDING", "JUMPING", "FALLING" },
 		},
 	},
 
-	Equip = {
+	Crouch = {
 		BlockedStates = {
 			WeaponState = {},
-			AbilityState = { "UsingAbility" },
-			MovementState = {},
+			AbilityState = {},
+			MovementState = { "SLIDING", "JUMPING", "FALLING" },
 		},
 	},
 
-	UnEquip = {
+	Jump = {
 		BlockedStates = {
-			WeaponState = { "Firing", "Equipping", "Reloading" },
-			AbilityState = { "UsingAbility" },
-			MovementState = {},
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = { "SLIDING"},
 		},
 	},
 }
 
 return ActionSettings
->>>>>>> b31ea3b85905e4cb6fe1151d9f125d9094901613

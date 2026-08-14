@@ -1,22 +1,22 @@
 local RecoilSettings = {
 	AutoRifle = {
-		Stiffness = 120,
-		Damping = 18,
+		STIFFNESS = 120,
+		DAMPING = 18,
 	},
 
 	HandCannon = {
-		Stiffness = 90,
-		Damping = 15,
+		STIFFNESS = 90,
+		DAMPING = 15,
 	},
 
 	SMG = {
-		Stiffness = 150,
-		Damping = 22,
+		STIFFNESS = 150,
+		DAMPING = 22,
 	},
 
 	Sniper = {
-		Stiffness = 70,
-		Damping = 14,
+		STIFFNESS = 70,
+		DAMPING = 14,
 	},
 }
 

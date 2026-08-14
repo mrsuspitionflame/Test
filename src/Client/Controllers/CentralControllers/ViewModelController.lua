@@ -29,10 +29,10 @@ function ViewModelController:OnEquip(gunName: string)
 	local gunInfo = gunSettings[gunName]
 
 	self.GunName = gunName
-	self.GunType = gunInfo.GunType
+	self.GunType = gunInfo.GUN_TYPE
 	self.BindingName = "Update" .. gunName .. "ViewModel"
-	self.Handling = gunInfo.Handling
-	self.Stability = gunInfo.Stability
+	self.Handling = gunInfo.HANDLING
+	self.Stability = gunInfo.STABILITY
 	self.Aiming = false
 	self.Zooming = false
 	self.ZoomTween = nil
@@ -43,8 +43,8 @@ function ViewModelController:OnEquip(gunName: string)
 	self.RecoilVelocity = 0
 	self.PreviousRecoilAngle = 0
 	self.ZoomTrove = self.Trove:Extend()
-	self.Stiffness = RecoilSettings[self.GunType].Stiffness
-	self.Damping = RecoilSettings[self.GunType].Damping
+	self.Stiffness = RecoilSettings[self.GunType].STIFFNESS
+	self.Damping = RecoilSettings[self.GunType].DAMPING
 	self.RecoilAmount = RecoilSettings.GetRecoilAmount(self.GunType, self.Stability)
 
 	self.Trove:Add(function()

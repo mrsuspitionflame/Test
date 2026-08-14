@@ -1,9 +1,8 @@
-<<<<<<< HEAD
 local MovementSettings = {}
 
-return MovementSettings
-=======
-local MovementSettings = {}
+MovementSettings.Jump = {
+    JUMP_POWER = 40,
+    DOUBLE_JUMP_POWER = 44
+}
 
 return MovementSettings
->>>>>>> b31ea3b85905e4cb6fe1151d9f125d9094901613

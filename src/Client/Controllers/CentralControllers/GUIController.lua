@@ -27,9 +27,9 @@ end
 
 function GUIController:InitializeSlot(gunName, slotName)
 	local gunInfo = gunSettings[gunName]
-	CombatUIsources[slotName].Ammo(gunInfo.MagazineSize)
-	CombatUIsources[slotName].ReserveAmmo(gunInfo.ReserveAmmo)
-	CombatUIsources[slotName].AmmoType(gunInfo.AmmoType)
+	CombatUIsources[slotName].Ammo(gunInfo.MAGAZINE_SIZE)
+	CombatUIsources[slotName].ReserveAmmo(gunInfo.RESERVE_AMMO)
+	CombatUIsources[slotName].AmmoType(gunInfo.AMMO_TYPE)
 end
 
 function GUIController:EquippedSlotChanged(newSlot)

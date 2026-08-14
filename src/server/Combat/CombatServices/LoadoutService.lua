@@ -116,7 +116,7 @@ local function OnPlayerAdded(player)
 
 		local humanoid = character:WaitForChild("Humanoid")
 		humanoid.Died:Connect(function()
-			PlayerActionManagers[player.UserId]:SetState("WeaponState", "Idle")
+			PlayerActionManagers[player.UserId]:SetState("WeaponState", "IDLE")
 			local gunClass = LoadoutService.GetEquippedGunClass(player)
 			if gunClass then
 				gunClass:OnUnequip()
@@ -131,7 +131,6 @@ local function OnPlayerAdded(player)
 	end
 
 	player.CharacterRemoving:Connect(function()
-		PlayerActionManagers[player.UserId]:SetState("WeaponState", "Idle")
 		local gunClass = LoadoutService.GetEquippedGunClass(player)
 		if gunClass then
 			gunClass:OnUnequip()
