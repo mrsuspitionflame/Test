@@ -219,7 +219,7 @@ function GunController:StartAiming()
 	})
 end
 
-function GunController:StopAiming()
+function GunController:CancelAiming()
 	self.Aiming = false
 	self.ViewModelController:AfterAim()
 	PacketSettings.Combat.AimEvent.send({
@@ -296,7 +296,7 @@ function GunController:Init()
 			self:StartAiming()
 		end
 		if inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
-			self:StopAiming()
+			self:CancelAiming()
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.UserInputType.MouseButton2)
@@ -309,7 +309,7 @@ function GunController:Init()
 			end
 		elseif stateType == "AimState" then
 			if cancelledState == "AIMING" then
-				self:StopAiming()
+				self:CancelAiming()
 			end
 		end
 	end))
