@@ -20,6 +20,7 @@ ViewModelController.__index = ViewModelController
 function ViewModelController.new()
 	local self = setmetatable({
 		Trove = Trove.new(),
+		Equipped = false,
 	}, ViewModelController)
 
 	return self
@@ -27,6 +28,7 @@ end
 
 function ViewModelController:OnEquip(gunName: string)
 	local gunInfo = gunSettings[gunName]
+	self.Equipped = true
 
 	self.GunName = gunName
 	self.GunType = gunInfo.GUN_TYPE
@@ -54,6 +56,7 @@ function ViewModelController:OnEquip(gunName: string)
 end
 
 function ViewModelController:OnUnequip()
+	self.Equipped = false
 	self.Trove:Clean()
 end
 
@@ -76,6 +79,8 @@ function ViewModelController:GetAnimation(animationName: string)
 	elseif animationName == "Equip" then
 		print("Equip animation returned")
 		return self.EquipAnimation
+	elseif animationName == "Running" then
+		return self.RunningAnimation
 	end
 	return nil
 end
@@ -155,6 +160,14 @@ function ViewModelController:AfterAim()
 	self:ZoomCamera(80)
 end
 
+function ViewModelController:OnSprint()
+	self:ZoomCamera(90)
+end
+
+function ViewModelController:AfterSprint()
+	self:ZoomCamera(80)
+end
+
 function ViewModelController:UpdateViewModelAndSway(deltaTime: number)
 	-- Prevent unusually large jumps after lag spikes
 	deltaTime = math.min(deltaTime, 1 / 30)
@@ -208,12 +221,15 @@ function ViewModelController:CreateViewModel()
 	local animator = humanoid:WaitForChild("Animator")
 	self.AimPart = self.ViewModel:FindFirstChild("AimPart")
 	local animations = self.ViewModel:FindFirstChild("Animations")
+
 	self.RecoilAnimation =
 		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("RecoilAnimation" .. self.GunName)))
 	self.ReloadAnimation =
 		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("ReloadAnimation" .. self.GunName)))
 	self.EquipAnimation =
 		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("EquipAnimation" .. self.GunName)))
+	self.RunningAnimation =
+		self.Trove:Add(animator:LoadAnimation(animations:FindFirstChild("RunningAnimation" .. self.GunName)))
 	self.RayOrigin = self.ViewModel:FindFirstChild("RayOrigin")
 	self.Muzzle = self.RayOrigin:FindFirstChild("MuzzleAttachment")
 end

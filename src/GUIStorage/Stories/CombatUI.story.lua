@@ -20,7 +20,7 @@ local story = {
 			create("Frame")({
 				Name = "AbilityFrame",
 				Size = UDim2.fromScale(0.17, 1),
-				Position = UDim2.fromScale(0.02, 0.72),
+				Position = UDim2.fromScale(0.01, 0.75),
 				BackgroundTransparency = 1,
 				Rotation = -2,
 
@@ -36,7 +36,7 @@ local story = {
 				Name = "GunFrame",
 				BackgroundTransparency = 1,
 				Size = UDim2.fromScale(0.23, 1),
-				Position = UDim2.fromScale(0.74, 0.7),
+				Position = UDim2.fromScale(0.76, 0.72),
 				Rotation = 2,
 				create("UIAspectRatioConstraint")({
 					AspectRatio = 2,

@@ -8,10 +8,10 @@ ActionSettings.Weapon = {
 			MovementState = {},
 		},
 		CancelStates = {
-			WeaponState = {"RELOADING"},
+			WeaponState = { "RELOADING" },
 			AbilityState = {},
-			MovementState = {"SPRINTING"},
-		}
+			MovementState = { "SPRINTING" },
+		},
 	},
 
 	Reload = {
@@ -23,8 +23,8 @@ ActionSettings.Weapon = {
 		CancelStates = {
 			WeaponState = {},
 			AbilityState = {},
-			MovementState = {"SPRINTING"},
-		}
+			MovementState = { "SPRINTING" },
+		},
 	},
 
 	Equip = {
@@ -37,7 +37,7 @@ ActionSettings.Weapon = {
 			WeaponState = {},
 			AbilityState = {},
 			MovementState = {},
-		}
+		},
 	},
 
 	UnEquip = {
@@ -50,7 +50,7 @@ ActionSettings.Weapon = {
 			WeaponState = {},
 			AbilityState = {},
 			MovementState = {},
-		}
+		},
 	},
 
 	Aim = {
@@ -60,10 +60,10 @@ ActionSettings.Weapon = {
 			MovementState = {},
 		},
 		CancelStates = {
-			WeaponState = {"RELOADING"},
+			WeaponState = { "RELOADING" },
 			AbilityState = {},
-			MovementState = {"SPRINTING"},
-		}
+			MovementState = { "SPRINTING" },
+		},
 	},
 }
 
@@ -74,13 +74,24 @@ ActionSettings.Movement = {
 			AbilityState = { "USING_ABILITY" },
 			MovementState = { "SLIDING", "CROUCHING", "JUMPING", "FALLING" },
 		},
+		CancelStates = {
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = {},
+		},
 	},
 
 	Sprint = {
 		BlockedStates = {
 			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
 			AbilityState = {},
-			MovementState = { "SLIDING", "JUMPING", "FALLING" },
+			MovementState = { "SLIDING" },
+		},
+		CancelStates = {
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = {},
+			AimState = { "AIMING" },
 		},
 	},
 
@@ -90,13 +101,23 @@ ActionSettings.Movement = {
 			AbilityState = {},
 			MovementState = { "SLIDING", "JUMPING", "FALLING" },
 		},
+		CancelStates = {
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = {},
+		},
 	},
 
 	Jump = {
 		BlockedStates = {
 			WeaponState = {},
 			AbilityState = {},
-			MovementState = { "SLIDING"},
+			MovementState = { "SLIDING" },
+		},
+		CancelStates = {
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = {},
 		},
 	},
 }

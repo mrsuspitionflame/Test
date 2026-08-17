@@ -176,7 +176,7 @@ end
 
 function GunController:OnEquip()
 	UIS.MouseIconEnabled = false
-	print("Mouse icon set to: ".. tostring(UIS.MouseIconEnabled))
+	print("Mouse icon set to: " .. tostring(UIS.MouseIconEnabled))
 	self.GUIController:EquippedSlotChanged(self.SlotName)
 	self.Equipped = true
 	self.AnimationController:OnEquip(self.GunName)
@@ -192,7 +192,7 @@ end
 
 function GunController:OnUnequip()
 	UIS.MouseIconEnabled = true
-	print("Mouse icon set to: ".. tostring(UIS.MouseIconEnabled))
+	print("Mouse icon set to: " .. tostring(UIS.MouseIconEnabled))
 	self.Equipped = false
 	self.Aiming = false
 	self.TriggerHeld = false
@@ -206,6 +206,11 @@ end
 -- Aiming logic
 
 function GunController:StartAiming()
+	if not self.ActionManager:TryAction("Weapon", "Aim") then
+		return
+	end
+	self.ActionManager:PerformAction("Weapon", "Aim")
+	self.ActionManager:SetState("AimState", "AIMING")
 	self.Aiming = true
 	self.ViewModelController:OnAim("Start")
 	PacketSettings.Combat.AimEvent.send({
@@ -225,7 +230,7 @@ end
 
 -- Utility function
 
-function GunController:bindAction(actionName, callback, createTouchButton, ...)
+function GunController:BindAction(actionName, callback, createTouchButton, ...)
 	CAS:BindAction(actionName, callback, createTouchButton, ...)
 
 	self.Trove:Add(function()
@@ -260,7 +265,7 @@ function GunController:Init()
 		self.TriggerHeld = false
 	end)
 
-	self:bindAction("GunActivatedOrDeactivated", function(_, inputState)
+	self:BindAction("GunActivatedOrDeactivated", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			if self.FireMode == "Semi" then
 				self:ShootEvent()
@@ -279,14 +284,14 @@ function GunController:Init()
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.UserInputType.MouseButton1)
 
-	self:bindAction("ReloadEvent", function(_, inputState)
+	self:BindAction("ReloadEvent", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			self:ReloadEvent()
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.KeyCode.R)
 
-	self:bindAction("AimEvent", function(_, inputState)
+	self:BindAction("AimEvent", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			self:StartAiming()
 		end
