@@ -96,12 +96,12 @@ function MovementController:StartSprint()
 	self.SprintTrove:Add(self.Humanoid:GetPropertyChangedSignal("MoveDirection"):Connect(function()
 		if not self:CanSprint() then
 			print("Stopping sprint due to movement direction change")
-			self:StopSprint()
+			self:CancelSprint()
 		end
 	end))
 end
 
-function MovementController:StopSprint()
+function MovementController:CancelSprint()
 	print("Stopping sprint, resetting walk speed to default")
 	self.IsSprinting = false
 	self.Humanoid.WalkSpeed = MovementSettings.Sprint.DEFAULT_WALK_SPEED
@@ -156,7 +156,7 @@ function MovementController:Init()
 		if inputState == Enum.UserInputState.Begin then
 			self:StartSprint()
 		elseif inputState == Enum.UserInputState.End then
-			self:StopSprint()
+			self:CancelSprint()
 		end
 	end)
 
@@ -164,7 +164,7 @@ function MovementController:Init()
 		if stateType == "MovementState" then
 			if cancelledState == "SPRINTING" then
 				print("Sprint cancelled, stopping sprint")
-				self:StopSprint()
+				self:CancelSprint()
 			end
 		end
 	end))
