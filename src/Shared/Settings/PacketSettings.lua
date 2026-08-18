@@ -4,6 +4,16 @@ local ByteNet = require(Packages:WaitForChild("Bytenet"))
 
 local PacketSettings = {}
 
+PacketSettings.Character = ByteNet.defineNamespace("Character", function()
+	return {
+		HeadMovement = ByteNet.definePacket({
+			value = ByteNet.struct({
+				NeckC0 = ByteNet.cframe,
+			}),
+		}),
+	}
+end)
+
 PacketSettings.Creation = ByteNet.defineNamespace("Creation", function()
 	return {
 		CreateGunController = ByteNet.definePacket({
