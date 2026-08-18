@@ -18,7 +18,7 @@ local GunController = require(WeaponControllers:WaitForChild("GunController"))
 local AnimationController = require(CentralControllers:WaitForChild("AnimationController"))
 local MovementController = require(CentralControllers:WaitForChild("MovementController"))
 local GUIController = require(CentralControllers:WaitForChild("GUIController"))
-local ActionManager = require(Utility:WaitForChild("ActionManager"))
+local StateManager = require(Utility:WaitForChild("StateManager"))
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local LoadoutController = {}
@@ -31,8 +31,8 @@ local Loadout = {
 
 local gui = GUIController.new()
 local animation = AnimationController.new()
-local action = ActionManager.new()
-local movement = MovementController.new(action, animation)
+local stateManager = StateManager.new()
+local movement = MovementController.new(stateManager, animation)
 
 function LoadoutController:Init()
 	PacketSettings.Creation.CreateGunController.listen(function(data)
@@ -41,7 +41,7 @@ function LoadoutController:Init()
 			if Loadout[data.SlotName] == nil then
 				print("Creating GunController for gun:", data.GunName, "slot:", data.SlotName)
 				gui:InitializeSlot(data.GunName, data.SlotName)
-				Loadout[data.SlotName] = GunController.new(data.GunName, data.SlotName, animation, action, gui)
+				Loadout[data.SlotName] = GunController.new(data.GunName, data.SlotName, animation, stateManager, gui)
 			end
 		end
 	end)
@@ -49,7 +49,7 @@ function LoadoutController:Init()
 	PacketSettings.Creation.RequestLoadout.send()
 
 	local function OnCharacterRemoved()
-		action:SetState("WeaponState", "IDLE")
+		stateManager:SetState("WeaponState", "IDLE")
 		for _, controller in pairs(Loadout) do
 			if controller.Equipped then
 				controller:OnUnequip()

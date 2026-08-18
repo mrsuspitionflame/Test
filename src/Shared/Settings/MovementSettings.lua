@@ -7,8 +7,8 @@ MovementSettings.Jump = {
 }
 
 MovementSettings.Sprint = {
-	DEFAULT_WALK_SPEED = 20,
-	SPRINT_WALK_SPEED = 30,
+	DEFAULT_WALK_SPEED = 18,
+	SPRINT_WALK_SPEED = 28,
 }
 
 return MovementSettings

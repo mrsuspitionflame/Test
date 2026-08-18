@@ -12,7 +12,7 @@ local Utility = Shared:WaitForChild("Utility")
 
 local GunClass = require(Classes:WaitForChild("GunClass"))
 local AnimationClass = require(Classes:WaitForChild("AnimationClass"))
-local ActionManager = require(Utility:WaitForChild("ActionManager"))
+local StateManager = require(Utility:WaitForChild("StateManager"))
 
 local Slots = {
 	"KineticSlot",
@@ -24,7 +24,7 @@ local PlayerGunClasses = {}
 
 local PlayerAnimationClasses = {}
 
-local PlayerActionManagers = {}
+local PlayerStateManagers = {}
 
 local LoadoutService = {}
 
@@ -82,9 +82,9 @@ end
 
 local function CreateCharacterLoadout(player)
 	local animationClass = PlayerAnimationClasses[player.UserId]
-	local actionManager = PlayerActionManagers[player.UserId]
+	local stateManager = PlayerStateManagers[player.UserId]
 
-	if not animationClass or not actionManager then
+	if not animationClass or not stateManager then
 		warn(`Loadout dependencies missing for {player.Name}`)
 		return
 	end
@@ -94,7 +94,7 @@ local function CreateCharacterLoadout(player)
 	for _, slotName in ipairs(Slots) do
 		print("Creating gun class for player:", player.Name, "slot:", slotName)
 		PlayerGunClasses[player.UserId][slotName] =
-			GunClass.new(player, "Rifle", slotName, animationClass, actionManager)
+			GunClass.new(player, "Rifle", slotName, animationClass, stateManager)
 	end
 
 	SendLoadout(player)
@@ -106,7 +106,7 @@ local function OnPlayerAdded(player)
 	end
 
 	PlayerAnimationClasses[player.UserId] = AnimationClass.new(player)
-	PlayerActionManagers[player.UserId] = ActionManager.new()
+	PlayerStateManagers[player.UserId] = StateManager.new()
 
 	local function OnCharacterAdded(character)
 		if PlayerGunClasses[player.UserId] == nil then
@@ -116,7 +116,7 @@ local function OnPlayerAdded(player)
 
 		local humanoid = character:WaitForChild("Humanoid")
 		humanoid.Died:Connect(function()
-			PlayerActionManagers[player.UserId]:SetState("WeaponState", "IDLE")
+			PlayerStateManagers[player.UserId]:SetState("WeaponState", "IDLE")
 			local gunClass = LoadoutService.GetEquippedGunClass(player)
 			if gunClass then
 				gunClass:OnUnequip()
@@ -141,7 +141,7 @@ end
 local function OnPlayerRemoving(player)
 	DestroyPlayerGunClasses(player)
 	PlayerAnimationClasses[player.UserId] = nil
-	PlayerActionManagers[player.UserId] = nil
+	PlayerStateManagers[player.UserId] = nil
 end
 
 function LoadoutService:Init()

@@ -12,11 +12,11 @@ local MovementController = {}
 
 MovementController.__index = MovementController
 
-function MovementController.new(ActionManager, AnimationController)
+function MovementController.new(StateManager, AnimationController)
 	local self = setmetatable({}, MovementController)
 	self.Trove = Trove.new()
 	self.SprintTrove = self.Trove:Extend()
-	self.ActionManager = ActionManager
+	self.StateManager = StateManager
 	self.AnimationController = AnimationController
 	self.ViewModelController = AnimationController:GetController("ViewModel")
 	self.Character = nil
@@ -63,6 +63,12 @@ end
 
 function MovementController:Crouch() end
 
+function MovementController:CanSlide()
+	return self.IsSprinting
+		and self.Humanoid.FloorMaterial ~= Enum.Material.Air
+		and self.Humanoid.MoveDirection.Magnitude > 0
+end
+
 function MovementController:Slide() end
 
 function MovementController:CanSprint()
@@ -81,7 +87,7 @@ function MovementController:CanSprint()
 	return self.Humanoid.Health > 0
 		and MoveDirection.Magnitude > 0
 		and MoveDirection.Unit:Dot(LookVector.Unit) > dot
-		and self.ActionManager:TryAction("Movement", "Sprint")
+		and self.StateManager:TryAction("Movement", "Sprint")
 end
 
 function MovementController:StartSprint()
@@ -89,8 +95,8 @@ function MovementController:StartSprint()
 		return
 	end
 	self.IsSprinting = true
-	self.ActionManager:PerformAction("Movement", "Sprint")
-	self.ActionManager:SetState("MovementState", "SPRINTING")
+	self.StateManager:PerformAction("Movement", "Sprint")
+	self.StateManager:SetState("MovementState", "SPRINTING")
 	self.Humanoid.WalkSpeed = MovementSettings.Sprint.SPRINT_WALK_SPEED
 
 	self.SprintTrove:Add(self.Humanoid:GetPropertyChangedSignal("MoveDirection"):Connect(function()
@@ -108,7 +114,7 @@ function MovementController:CancelSprint()
 	self.SprintTrove:Clean()
 
 	if self.Humanoid.FloorMaterial ~= Enum.Material.Air then
-		self.ActionManager:SetState("MovementState", "IDLE")
+		self.StateManager:SetState("MovementState", "IDLE")
 	end
 end
 
@@ -125,9 +131,9 @@ function MovementController:Init()
 		if newState == Enum.HumanoidStateType.Landed then
 			self.DoubleJumpReady = true
 			if self.IsSprinting then
-				self.ActionManager:SetState("MovementState", "SPRINTING")
+				self.StateManager:SetState("MovementState", "SPRINTING")
 			else
-				self.ActionManager:SetState("MovementState", "IDLE")
+				self.StateManager:SetState("MovementState", "IDLE")
 			end
 
 			self.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
@@ -139,9 +145,9 @@ function MovementController:Init()
 				end
 			end)
 		elseif newState == Enum.HumanoidStateType.Jumping then
-			self.ActionManager:SetState("MovementState", "JUMPING")
+			self.StateManager:SetState("MovementState", "JUMPING")
 		elseif newState == Enum.HumanoidStateType.Freefall then
-			self.ActionManager:SetState("MovementState", "FALLING")
+			self.StateManager:SetState("MovementState", "FALLING")
 		end
 	end))
 
@@ -160,7 +166,7 @@ function MovementController:Init()
 		end
 	end)
 
-	self.Trove:Add(self.ActionManager.CancelStateSignal:Connect(function(stateType, cancelledState)
+	self.Trove:Add(self.StateManager.CancelStateSignal:Connect(function(stateType, cancelledState)
 		if stateType == "MovementState" then
 			if cancelledState == "SPRINTING" then
 				print("Sprint cancelled, stopping sprint")

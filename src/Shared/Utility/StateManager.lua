@@ -3,14 +3,14 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Signal = require(Packages:WaitForChild("Signal"))
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
-local ActionSettings = require(Settings:WaitForChild("ActionSettings"))
+local StateSettings = require(Settings:WaitForChild("StateSettings"))
 
-local ActionManager = {}
+local StateManager = {}
 
-ActionManager.__index = ActionManager
+StateManager.__index = StateManager
 
-function ActionManager.new()
-	local self = setmetatable({}, ActionManager)
+function StateManager.new()
+	local self = setmetatable({}, StateManager)
 
 	self.WeaponState = "IDLE"
 	self.AbilityState = "IDLE"
@@ -21,7 +21,7 @@ function ActionManager.new()
 	return self
 end
 
-function ActionManager:SetState(stateType, newState)
+function StateManager:SetState(stateType, newState)
 	if stateType == "WeaponState" then
 		self.WeaponState = newState
 	elseif stateType == "AbilityState" then
@@ -36,7 +36,7 @@ function ActionManager:SetState(stateType, newState)
 	print("State changed: " .. stateType .. " -> " .. newState)
 end
 
-function ActionManager:GetState(stateType)
+function StateManager:GetState(stateType)
 	if stateType == "WeaponState" then
 		return self.WeaponState
 	elseif stateType == "AbilityState" then
@@ -50,10 +50,10 @@ function ActionManager:GetState(stateType)
 	end
 end
 
-function ActionManager:TryAction(actionType, action)
-	local actionSettings = ActionSettings[actionType][action]
+function StateManager:TryAction(actionType, action)
+	local stateSettings = StateSettings[actionType][action]
 
-	for stateType, blockedStates in pairs(actionSettings.BlockedStates) do
+	for stateType, blockedStates in pairs(stateSettings.BlockedStates) do
 		local currentState = self:GetState(stateType)
 
 		for _, blockedState in ipairs(blockedStates) do
@@ -66,9 +66,9 @@ function ActionManager:TryAction(actionType, action)
 	return true
 end
 
-function ActionManager:PerformAction(actionType, action)
-	local actionSettings = ActionSettings[actionType][action]
-	for stateType, cancelStates in pairs(actionSettings.CancelStates) do
+function StateManager:PerformAction(actionType, action)
+	local stateSettings = StateSettings[actionType][action]
+	for stateType, cancelStates in pairs(stateSettings.CancelStates) do
 		local currentState = self:GetState(stateType)
 
 		for _, cancelledState in ipairs(cancelStates) do
@@ -79,8 +79,8 @@ function ActionManager:PerformAction(actionType, action)
 	end
 end
 
-function ActionManager:CancelState(stateType, cancelledState)
+function StateManager:CancelState(stateType, cancelledState)
 	self.CancelStateSignal:Fire(stateType, cancelledState)
 end
 
-return ActionManager
+return StateManager

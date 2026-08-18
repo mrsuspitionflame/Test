@@ -12,12 +12,12 @@ local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 local GunClass = {}
 GunClass.__index = GunClass
 
-function GunClass.new(player, gunName, slotName, animationClass, actionManager)
+function GunClass.new(player, gunName, slotName, animationClass, stateManager)
 	local gunInfo = gunSettings[gunName]
 	local self = {
 		AnimationClass = animationClass,
 		ViewModelClass = animationClass:GetClass("ViewModel"),
-		ActionManager = actionManager,
+		StateManager = stateManager,
 		Player = player,
 		GunName = gunName,
 		SlotName = slotName,
@@ -59,7 +59,7 @@ end
 -- Equipping and Unequipping logic
 
 function GunClass:CanEquip()
-	return self.ActionManager:TryAction("Weapon", "Equip")
+	return self.StateManager:TryAction("Weapon", "Equip")
 end
 
 function GunClass:OnEquip()
@@ -84,25 +84,25 @@ function GunClass:OnEquip()
 	self.RecoilTrack = self.AnimationClass:GetAnimation("ViewModel", "Recoil")
 	self.EquipTrack = self.AnimationClass:GetAnimation("ViewModel", "Equip")
 
-	self.ActionManager:SetState("WeaponState", "EQUIPPING")
+	self.StateManager:SetState("WeaponState", "EQUIPPING")
 	self.EquipTrack:Play(0)
 
 	self:ConnectSignals()
 
 	self.Trove:Connect(self.EquipTrack.Stopped, function()
-		self.ActionManager:SetState("WeaponState", "IDLE")
+		self.StateManager:SetState("WeaponState", "IDLE")
 	end)
 
 	self.Trove:Connect(self.RecoilTrack.Stopped, function()
-		self.ActionManager:SetState("WeaponState", "IDLE")
+		self.StateManager:SetState("WeaponState", "IDLE")
 	end)
 
 	self.Trove:Connect(self.ReloadTrack.Stopped, function()
-		self.ActionManager:SetState("WeaponState", "IDLE")
+		self.StateManager:SetState("WeaponState", "IDLE")
 	end)
 
 	self.Trove:Connect(self.ReloadTrack:GetMarkerReachedSignal("ReloadComplete"), function()
-		if self.ActionManager:GetState("WeaponState") == "RELOADING" then
+		if self.StateManager:GetState("WeaponState") == "RELOADING" then
 			local MissingAmmo = self.MagazineSize - self.Ammo
 			local AmmoToLoad = math.min(MissingAmmo, self.ReserveAmmo)
 
@@ -120,7 +120,7 @@ function GunClass:OnEquip()
 end
 
 function GunClass:CanUnequip()
-	return self.ActionManager:TryAction("Weapon", "UnEquip")
+	return self.StateManager:TryAction("Weapon", "UnEquip")
 end
 
 function GunClass:OnUnequip()
@@ -153,7 +153,7 @@ function GunClass:CanReload()
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 
 	return self.Equipped
-		and self.ActionManager:TryAction("Weapon", "Reload")
+		and self.StateManager:TryAction("Weapon", "Reload")
 		and humanoid ~= nil
 		and humanoid.Health > 0
 		and self.Ammo < self.MagazineSize
@@ -169,7 +169,7 @@ function GunClass:Reload()
 		return
 	end
 
-	self.ActionManager:SetState("WeaponState", "RELOADING")
+	self.StateManager:SetState("WeaponState", "RELOADING")
 
 	self.ReloadTrack:Play(0)
 	self.ReloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
@@ -184,7 +184,7 @@ function GunClass:CanShoot(origin, seed)
 		return false
 	end
 
-	if self.ActionManager:TryAction("Weapon", "Fire") == false then
+	if self.StateManager:TryAction("Weapon", "Fire") == false then
 		return false
 	end
 	if
@@ -232,8 +232,8 @@ function GunClass:Shoot(origin, seed)
 		return
 	end
 
-	self.ActionManager:PerformAction("Weapon", "Fire")
-	self.ActionManager:SetState("WeaponState", "FIRING")
+	self.StateManager:PerformAction("Weapon", "Fire")
+	self.StateManager:SetState("WeaponState", "FIRING")
 
 	self.Ammo -= 1
 
@@ -302,7 +302,7 @@ end
 -- Signal Connections
 
 function GunClass:ConnectSignals()
-	self.Trove:Add(self.ActionManager.CancelStateSignal:Connect(function(stateType, cancelledState)
+	self.Trove:Add(self.StateManager.CancelStateSignal:Connect(function(stateType, cancelledState)
 		if stateType == "WeaponState" then
 			if cancelledState == "RELOADING" then
 				self:CancelReload()

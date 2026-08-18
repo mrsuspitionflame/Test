@@ -1,6 +1,6 @@
-local ActionSettings = {}
+local StateSettings = {}
 
-ActionSettings.Weapon = {
+StateSettings.Weapon = {
 	Fire = {
 		BlockedStates = {
 			WeaponState = { "EQUIPPING" },
@@ -29,7 +29,7 @@ ActionSettings.Weapon = {
 
 	Equip = {
 		BlockedStates = {
-			WeaponState = {},
+			WeaponState = { "EQUIPPING" },
 			AbilityState = { "USING_ABILITY" },
 			MovementState = {},
 		},
@@ -67,7 +67,7 @@ ActionSettings.Weapon = {
 	},
 }
 
-ActionSettings.Movement = {
+StateSettings.Movement = {
 	Slide = {
 		BlockedStates = {
 			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
@@ -122,4 +122,4 @@ ActionSettings.Movement = {
 	},
 }
 
-return ActionSettings
+return StateSettings
