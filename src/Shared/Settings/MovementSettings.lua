@@ -11,4 +11,11 @@ MovementSettings.Sprint = {
 	SPRINT_WALK_SPEED = 28,
 }
 
+MovementSettings.Slide = {
+	MIN_START_SPEED = 20,
+	SLIDE_START_SPEED = 34,
+	SLIDE_END_SPEED = 20,
+	SLIDE_DURATION = 1,
+}
+
 return MovementSettings

@@ -16,6 +16,7 @@ function MovementController.new(StateManager, AnimationController)
 	local self = setmetatable({}, MovementController)
 	self.Trove = Trove.new()
 	self.SprintTrove = self.Trove:Extend()
+	self.SlideTrove = self.Trove:Extend()
 	self.StateManager = StateManager
 	self.AnimationController = AnimationController
 	self.ViewModelController = AnimationController:GetController("ViewModel")
@@ -24,6 +25,7 @@ function MovementController.new(StateManager, AnimationController)
 	self.HumanoidRootPart = nil
 
 	self.IsSprinting = false
+	self.IsSliding = false
 	return self
 end
 
@@ -54,8 +56,9 @@ end
 
 function MovementController:DoubleJump()
 	self.DoubleJumpReady = false
+	self.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+
 	local Velocity = self.HumanoidRootPart.AssemblyLinearVelocity
-	print("X: " .. Velocity.X .. ", Y: " .. Velocity.Y .. ", Z: " .. Velocity.Z)
 
 	self.HumanoidRootPart.AssemblyLinearVelocity =
 		Vector3.new(Velocity.X, MovementSettings.Jump.DOUBLE_JUMP_POWER, Velocity.Z)
@@ -64,12 +67,127 @@ end
 function MovementController:Crouch() end
 
 function MovementController:CanSlide()
+	if not self.Humanoid or not self.HumanoidRootPart then
+		return false
+	end
+
 	return self.IsSprinting
+		and self.StateManager:GetState("MovementState") == "SPRINTING"
+		and self.Humanoid.Health > 0
 		and self.Humanoid.FloorMaterial ~= Enum.Material.Air
-		and self.Humanoid.MoveDirection.Magnitude > 0
+		and self.Humanoid.MoveDirection.Magnitude > 0.1
+		and self.StateManager:TryAction("Movement", "Slide")
 end
 
-function MovementController:Slide() end
+function MovementController:StartSlide()
+	if not self:CanSlide() then
+		return
+	end
+
+	self.SlideTrove:Clean()
+
+	local Direction = self.Humanoid.MoveDirection.Unit
+	local SlideDirection = Vector3.new(Direction.X, 0, Direction.Z).Unit
+	local CurrentVelocity = self.HumanoidRootPart.AssemblyLinearVelocity
+	local HorizontalSpeed = Vector3.new(
+		CurrentVelocity.X,
+		0,
+		CurrentVelocity.Z
+	).Magnitude
+
+	local StartSpeed = math.max(HorizontalSpeed, MovementSettings.Slide.SLIDE_START_SPEED)
+	print("Starting slide with speed:", StartSpeed)
+
+	-- Change state immediately so StartSlide cannot run twice.
+	self.StateManager:PerformAction("Movement", "Slide")
+	self.StateManager:SetState("MovementState", "SLIDING")
+	self.IsSliding = true
+
+	self.Humanoid.AutoRotate = false
+	self.Humanoid.WalkSpeed = 0
+	self.Humanoid:Move(Vector3.zero, false)
+
+	local Attachment = Instance.new("Attachment")
+	Attachment.Name = "SlideAttachment"
+	Attachment.Parent = self.HumanoidRootPart
+	self.SlideTrove:Add(Attachment)
+
+	local LinearVelocity = Instance.new("LinearVelocity")
+	LinearVelocity.Name = "SlideVelocity"
+	LinearVelocity.Attachment0 = Attachment
+	LinearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+	LinearVelocity.VelocityConstraintMode =
+		Enum.VelocityConstraintMode.Plane
+
+	LinearVelocity.PrimaryTangentAxis = Vector3.xAxis
+	LinearVelocity.SecondaryTangentAxis = Vector3.zAxis
+
+	LinearVelocity.ForceLimitsEnabled = false
+
+	LinearVelocity.PlaneVelocity = Vector2.new(
+		SlideDirection.X * StartSpeed,
+		SlideDirection.Z * StartSpeed
+	)
+
+	LinearVelocity.Parent = self.HumanoidRootPart
+
+	self.SlideTrove:Add(LinearVelocity)
+
+	-- Play your slide animation here.
+
+	local elapsed = 0
+
+	self.SlideTrove:Add(RunService.Heartbeat:Connect(function(dt)
+		if not self.IsSliding then
+			return
+		end
+
+		elapsed += dt
+
+		if self.Humanoid.Health <= 0
+			or self.Humanoid.FloorMaterial == Enum.Material.Air
+			or elapsed >= MovementSettings.Slide.SLIDE_DURATION
+		then
+			self:CancelSlide()
+			return
+		end
+
+		local alpha = math.clamp(
+			elapsed / MovementSettings.Slide.SLIDE_DURATION,
+			0,
+			1
+		)
+
+		local speed = StartSpeed
+			+ (MovementSettings.Slide.SLIDE_END_SPEED - StartSpeed) * alpha
+		LinearVelocity.PlaneVelocity = Vector2.new(
+			SlideDirection.X * speed,
+			SlideDirection.Z * speed
+		)
+	end))
+end
+
+function MovementController:CancelSlide() 
+	if not self.IsSliding then
+		return
+	end
+
+	self.SlideTrove:Clean()
+	self.IsSliding = false
+
+	if not self.Humanoid or not self.HumanoidRootPart then
+		return
+	end
+
+	self.Humanoid.AutoRotate = true
+	self.Humanoid.WalkSpeed = MovementSettings.Sprint.DEFAULT_WALK_SPEED
+
+	if self.Humanoid.FloorMaterial == Enum.Material.Air then
+		self.StateManager:SetState("MovementState", "FALLING")
+	else
+		self.StateManager:SetState("MovementState", "IDLE")
+	end
+end
 
 function MovementController:CanSprint()
 	local MoveDirection = self.Humanoid.MoveDirection
@@ -80,7 +198,7 @@ function MovementController:CanSprint()
 	LookVector = Vector3.new(LookVector.X, 0, LookVector.Z)
 
 	if self.IsSprinting then
-		dot = 0
+		dot = 0.3
 	elseif self.IsSprinting == false then
 		dot = 0.7
 	end
@@ -108,7 +226,6 @@ function MovementController:StartSprint()
 end
 
 function MovementController:CancelSprint()
-	print("Stopping sprint, resetting walk speed to default")
 	self.IsSprinting = false
 	self.Humanoid.WalkSpeed = MovementSettings.Sprint.DEFAULT_WALK_SPEED
 	self.SprintTrove:Clean()
@@ -160,10 +277,20 @@ function MovementController:Init()
 
 	self:BindAction("Sprint", Enum.KeyCode.LeftShift, function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
-			self:StartSprint()
-		elseif inputState == Enum.UserInputState.End then
-			self:CancelSprint()
+			if self.IsSprinting and self.StateManager:GetState("MovementState") == "SPRINTING" then
+				self:CancelSprint()
+			else
+				self:StartSprint()
+			end
 		end
+		return Enum.ContextActionResult.Sink
+	end)
+
+	self:BindAction("Slide", Enum.KeyCode.LeftControl, function(_, inputState)
+		if inputState == Enum.UserInputState.Begin then
+			self:StartSlide()
+		end
+		return Enum.ContextActionResult.Sink
 	end)
 
 	self.Trove:Add(self.StateManager.CancelStateSignal:Connect(function(stateType, cancelledState)
@@ -171,6 +298,9 @@ function MovementController:Init()
 			if cancelledState == "SPRINTING" then
 				print("Sprint cancelled, stopping sprint")
 				self:CancelSprint()
+			elseif cancelledState == "SLIDING" then
+				print("Slide cancelled, stopping slide")
+				self:CancelSlide()
 			end
 		end
 	end))

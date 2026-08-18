@@ -77,7 +77,7 @@ StateSettings.Movement = {
 		CancelStates = {
 			WeaponState = {},
 			AbilityState = {},
-			MovementState = {},
+			MovementState = { "SPRINTING" },
 		},
 	},
 
@@ -112,7 +112,7 @@ StateSettings.Movement = {
 		BlockedStates = {
 			WeaponState = {},
 			AbilityState = {},
-			MovementState = { "SLIDING" },
+			MovementState = {},
 		},
 		CancelStates = {
 			WeaponState = {},
