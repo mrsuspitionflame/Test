@@ -11,13 +11,12 @@ local Player = Players.LocalPlayer
 local humanoid
 
 local Controllers = Client:WaitForChild("Controllers")
-local WeaponControllers = Controllers:WaitForChild("WeaponControllers")
-local CentralControllers = Controllers:WaitForChild("CentralControllers")
+local CombatControllers = Controllers:WaitForChild("CombatControllers")
 
-local GunController = require(WeaponControllers:WaitForChild("GunController"))
-local AnimationController = require(CentralControllers:WaitForChild("AnimationController"))
-local MovementController = require(CentralControllers:WaitForChild("MovementController"))
-local GUIController = require(CentralControllers:WaitForChild("GUIController"))
+local GunController = require(CombatControllers:WaitForChild("GunController"))
+local AnimationController = require(CombatControllers:WaitForChild("AnimationController"))
+local MovementController = require(CombatControllers:WaitForChild("MovementController"))
+local GUIController = require(CombatControllers:WaitForChild("GUIController"))
 local StateManager = require(Utility:WaitForChild("StateManager"))
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 

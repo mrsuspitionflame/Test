@@ -2,9 +2,9 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local StarterPlayerScripts = StarterPlayer:WaitForChild("StarterPlayerScripts")
 local Client = StarterPlayerScripts:WaitForChild("Client")
 local Controllers = Client:WaitForChild("Controllers")
-local CentralControllers = Controllers:WaitForChild("CentralControllers")
+local CombatControllers = Controllers:WaitForChild("CombatControllers")
 
-local ViewModelController = require(CentralControllers:WaitForChild("ViewModelController"))
+local ViewModelController = require(CombatControllers:WaitForChild("ViewModelController"))
 
 local AnimationController = {}
 

@@ -114,6 +114,10 @@ function ViewModelController:UpdateRecoil(deltaTime: number)
 	local angleChange = self.RecoilAngle - oldAngle
 
 	workspace.CurrentCamera.CFrame *= CFrame.Angles(math.rad(angleChange), 0, 0)
+
+	if math.abs(angleChange) > 5 then
+		warn("Large camera recoil jump:", angleChange, self.RecoilAngle, self.RecoilVelocity)
+	end
 end
 
 function ViewModelController:SetArmsTransparency(transparency)

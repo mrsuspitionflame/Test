@@ -1,13 +1,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Utility = Shared:WaitForChild("Utility")
+local Weapons = Shared:WaitForChild("Weapons")
 local Client = script.Parent
 local Controllers = Client:WaitForChild("Controllers")
 local Player = game.Players.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 
-local RaycastController = require(Utility:WaitForChild("RaycastController"))
+local Firing = Weapons:WaitForChild("Firing")
+local Hitscan = require(Firing:WaitForChild("Hitscan"))
 local LoadoutController = require(Controllers:WaitForChild("LoadoutController"))
 
 local StarterGui = game:GetService("StarterGui")
@@ -23,10 +24,10 @@ Player.CameraMode = Enum.CameraMode.Classic
 Player.CameraMinZoomDistance = 0
 Player.CameraMaxZoomDistance = 17
 
-RaycastController.Init()
+Hitscan:Init()
 
 LoadoutController:Init()
 
 Humanoid.StateChanged:Connect(function(oldState, newState)
-    print("Humanoid state changed from:", oldState, "to:", newState)
+	print("Humanoid state changed from:", oldState, "to:", newState)
 end)

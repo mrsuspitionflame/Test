@@ -10,7 +10,7 @@ local Workspace = game:GetService("Workspace")
 
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
-local RayCastController = {}
+local Hitscan = {}
 
 export type RayResult = {
 	Position: Vector3,
@@ -19,7 +19,7 @@ export type RayResult = {
 	Distance: number?,
 }
 
-function RayCastController.GetRayDirections(
+function Hitscan.GetRayDirections(
 	origin: CFrame,
 	numberOfRays: number,
 	spreadAngle: number,
@@ -38,7 +38,7 @@ function RayCastController.GetRayDirections(
 	return rays
 end
 
-function RayCastController.CastRays(origin: Vector3, directions: { Vector3 }, ignoreList: { Instance }, radius: number)
+function Hitscan.CastRays(origin: Vector3, directions: { Vector3 }, ignoreList: { Instance }, radius: number)
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.IgnoreWater = true
@@ -48,6 +48,7 @@ function RayCastController.CastRays(origin: Vector3, directions: { Vector3 }, ig
 	if radius > 0 then
 		for _, direction in directions do
 			local raycastResult = workspace:Spherecast(origin, direction, radius, params)
+
 			local rayResult: RayResult = {
 				Position = origin + direction,
 				Normal = direction.Unit,
@@ -65,13 +66,15 @@ function RayCastController.CastRays(origin: Vector3, directions: { Vector3 }, ig
 	else
 		for _, direction in directions do
 			local raycastResult = workspace:Raycast(origin, direction, params)
-
 			local rayResult = {
 				Position = origin + direction,
 				Normal = direction.Unit,
 			}
 
-			if raycastResult then
+			if raycastResult == nil then
+				rayResult.Position = origin + direction / 5
+				rayResult.Normal = (direction / 5).Unit
+			elseif raycastResult then
 				rayResult.Position = raycastResult.Position
 				rayResult.Normal = raycastResult.Normal
 				rayResult.Distance = raycastResult.Distance
@@ -84,7 +87,7 @@ function RayCastController.CastRays(origin: Vector3, directions: { Vector3 }, ig
 	return rayResults
 end
 
-function RayCastController.DrawRayResults(origin: Vector3, rayResults: { any })
+function Hitscan.DrawRayResults(origin: Vector3, rayResults: { any })
 	for _, rayResult in rayResults do
 		local distance = (origin - rayResult.Position).Magnitude
 		local tweenTime = distance / 200
@@ -95,10 +98,14 @@ function RayCastController.DrawRayResults(origin: Vector3, rayResults: { any })
 		laser.StartAttachment.Position = Vector3.zero
 		laser.EndAttachment.Position = Vector3.new(0, 0, -distance)
 		laser.Parent = Workspace
-		local tween = TweenService:Create(laser.StartAttachment, tweenInfo, { Position = laser.EndAttachment.Position })
+		local tween = TweenService:Create(laser.StartAttachment, tweenInfo, { Position = Vector3.new(0, 0, -distance) })
 		tween:Play()
 		tween.Completed:Once(function()
-			laser:Destroy()
+			laser.EndAttachment.Position = Vector3.new(0, 0, -distance)
+
+			task.delay(0.03, function()
+				laser:Destroy()
+			end)
 		end)
 
 		if rayResult.Instance then
@@ -108,14 +115,14 @@ function RayCastController.DrawRayResults(origin: Vector3, rayResults: { any })
 
 			impact.CircleEmitter:Emit(2)
 
-			task.delay(0.5, function()
+			task.delay(0.25, function()
 				impact:Destroy()
 			end)
 		end
 	end
 end
 
-function RayCastController.ValidateVector3(value)
+function Hitscan.ValidateVector3(value)
 	return typeof(value) == "Vector3"
 		and value.X == value.X
 		and value.Y == value.Y
@@ -125,9 +132,9 @@ function RayCastController.ValidateVector3(value)
 		and math.abs(value.Z) < math.huge
 end
 
-function RayCastController.Init()
+function Hitscan:Init()
 	PacketSettings.Combat.ReplicateShotEvent.listen(function(data)
-		RayCastController.DrawRayResults(data.MuzzlePosition, data.RayResults)
+		Hitscan.DrawRayResults(data.MuzzlePosition, data.RayResults)
 	end)
 end
-return RayCastController
+return Hitscan

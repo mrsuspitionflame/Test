@@ -3,13 +3,14 @@ local CAS = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Utility = Shared:WaitForChild("Utility")
+local Weapons = Shared:WaitForChild("Weapons")
 local Settings = Shared:WaitForChild("Settings")
 local gunSettings = require(Settings:WaitForChild("GunSettings"))
 local RunService = game:GetService("RunService")
 
 local Trove = require(Packages:WaitForChild("Trove"))
-local RaycastController = require(Utility:WaitForChild("RaycastController"))
+local Firing = Weapons:WaitForChild("Firing")
+local Hitscan = require(Firing:WaitForChild("Hitscan"))
 
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
@@ -73,9 +74,9 @@ function GunController:ShootEvent()
 	local rayDirections
 
 	if self.Aiming then
-		rayDirections = RaycastController.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
+		rayDirections = Hitscan.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
 	else
-		rayDirections = RaycastController.GetRayDirections(
+		rayDirections = Hitscan.GetRayDirections(
 			origin,
 			self.BulletsPerShot,
 			math.rad(self.Spread),
@@ -89,9 +90,9 @@ function GunController:ShootEvent()
 		game.Players.LocalPlayer.Character,
 	}
 
-	local rayResults = RaycastController.CastRays(origin.Position, rayDirections, ignoreList, 0)
+	local rayResults = Hitscan.CastRays(origin.Position, rayDirections, ignoreList, 0)
 	local rayOrigin = self.ViewModelController:GetRayOrigin()
-	RaycastController.DrawRayResults(rayOrigin, rayResults)
+	Hitscan.DrawRayResults(rayOrigin, rayResults)
 
 	PacketSettings.Combat.ShootRequest.send({
 		SlotName = self.SlotName,
@@ -201,7 +202,6 @@ function GunController:OnUnequip()
 	self.ViewModelController:OnUnequip()
 	self.GUIController:OnUnequip()
 	self.AnimationController:OnUnequip()
-	--self.StateManager:SetState("WeaponState", "IDLE")
 	self.Trove:Clean()
 end
 

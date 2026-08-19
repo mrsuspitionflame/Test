@@ -31,6 +31,10 @@
       "StarterPlayerScripts": {
           "Client": {
             "$path": "src/Client"
+          },
+
+          "ClientApplyHead": {
+            "$path": "src/HeadMovement/OtherClientHeadMovement.client.luau"
           }
       },
       "StarterCharacterScripts": {

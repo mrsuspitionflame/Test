@@ -56,7 +56,7 @@ end
 function ViewModelClass:GetRayOrigin()
 	local RayOrigin = self.ViewModel:FindFirstChild("RayOrigin")
 	if RayOrigin then
-		return RayOrigin
+		return RayOrigin.Position
 	else
 		return nil
 	end

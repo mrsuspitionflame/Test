@@ -1,10 +1,9 @@
 local Server = script.Parent
 local Combat = Server:WaitForChild("Combat")
-local CombatServices = Combat:WaitForChild("CombatServices")
+local InputHandlers = Combat:WaitForChild("InputHandlers")
 
-local GunService = require(CombatServices:WaitForChild("GunService"))
-local LoadoutService = require(CombatServices:WaitForChild("LoadoutService"))
+local GunHandler = require(InputHandlers:WaitForChild("GunHandler"))
+local LoadoutHandler = require(InputHandlers:WaitForChild("LoadoutHandler"))
 
-print("Initializing CombatService and LoadoutService...")
-GunService:Init()
-LoadoutService:Init()
+GunHandler:Init()
+LoadoutHandler:Init()

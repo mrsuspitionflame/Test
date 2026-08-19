@@ -26,16 +26,16 @@ local PlayerAnimationClasses = {}
 
 local PlayerStateManagers = {}
 
-local LoadoutService = {}
+local LoadoutHandler = {}
 
-function LoadoutService.GetGunClass(player, slotName)
+function LoadoutHandler.GetGunClass(player, slotName)
 	if PlayerGunClasses[player.UserId] then
 		return PlayerGunClasses[player.UserId][slotName]
 	end
 	return nil
 end
 
-function LoadoutService.GetEquippedGunClass(player)
+function LoadoutHandler.GetEquippedGunClass(player)
 	local playerGunClasses = PlayerGunClasses[player.UserId]
 
 	if not playerGunClasses then
@@ -117,7 +117,7 @@ local function OnPlayerAdded(player)
 		local humanoid = character:WaitForChild("Humanoid")
 		humanoid.Died:Connect(function()
 			PlayerStateManagers[player.UserId]:SetState("WeaponState", "IDLE")
-			local gunClass = LoadoutService.GetEquippedGunClass(player)
+			local gunClass = LoadoutHandler.GetEquippedGunClass(player)
 			if gunClass then
 				gunClass:OnUnequip()
 			end
@@ -131,7 +131,7 @@ local function OnPlayerAdded(player)
 	end
 
 	player.CharacterRemoving:Connect(function()
-		local gunClass = LoadoutService.GetEquippedGunClass(player)
+		local gunClass = LoadoutHandler.GetEquippedGunClass(player)
 		if gunClass then
 			gunClass:OnUnequip()
 		end
@@ -144,7 +144,7 @@ local function OnPlayerRemoving(player)
 	PlayerStateManagers[player.UserId] = nil
 end
 
-function LoadoutService:Init()
+function LoadoutHandler:Init()
 	PacketSettings.Creation.RequestLoadout.listen(function(_, player)
 		OnPlayerAdded(player)
 
@@ -163,4 +163,4 @@ function LoadoutService:Init()
 	end
 end
 
-return LoadoutService
+return LoadoutHandler

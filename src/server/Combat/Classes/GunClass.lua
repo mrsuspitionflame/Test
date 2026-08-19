@@ -1,9 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Utility = Shared:WaitForChild("Utility")
+local Weapons = Shared:WaitForChild("Weapons")
 local Settings = Shared:WaitForChild("Settings")
 local gunSettings = require(Settings:WaitForChild("GunSettings"))
-local RaycastController = require(Utility:WaitForChild("RaycastController"))
+local Firing = Weapons:WaitForChild("Firing")
+local Hitscan = require(Firing:WaitForChild("Hitscan"))
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 local Trove = require(Packages:WaitForChild("Trove"))
@@ -115,7 +116,7 @@ function GunClass:OnEquip()
 			}, self.Player)
 		end
 	end)
-	
+
 	return true
 end
 
@@ -188,8 +189,8 @@ function GunClass:CanShoot(origin, seed)
 		return false
 	end
 	if
-		not RaycastController.ValidateVector3(origin.Position)
-		or not RaycastController.ValidateVector3(origin.LookVector)
+		not Hitscan.ValidateVector3(origin.Position)
+		or not Hitscan.ValidateVector3(origin.LookVector)
 	then
 		return false
 	end
@@ -248,9 +249,9 @@ function GunClass:Shoot(origin, seed)
 
 	local rayDirections
 	if self.Aiming then
-		rayDirections = RaycastController.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
+		rayDirections = Hitscan.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
 	else
-		rayDirections = RaycastController.GetRayDirections(
+		rayDirections = Hitscan.GetRayDirections(
 			origin,
 			self.BulletsPerShot,
 			math.rad(self.Spread),
@@ -263,7 +264,7 @@ function GunClass:Shoot(origin, seed)
 		self.Player.Character,
 	}
 
-	local rayResults = RaycastController.CastRays(origin.Position, rayDirections, ignoreList, 0)
+	local rayResults = Hitscan.CastRays(origin.Position, rayDirections, ignoreList, 0)
 
 	for _, rayResult in rayResults do
 		local hitInstance = rayResult.Instance
@@ -283,18 +284,9 @@ function GunClass:Shoot(origin, seed)
 	end
 
 	local rayOrigin = self.ViewModelClass:GetRayOrigin()
-	local muzzle = rayOrigin and rayOrigin:FindFirstChild("MuzzleAttachment", true)
-
-	local muzzlePosition = origin.Position
-
-	if muzzle and muzzle:IsA("Attachment") then
-		muzzlePosition = muzzle.WorldPosition
-	elseif rayOrigin and rayOrigin:IsA("BasePart") then
-		muzzlePosition = rayOrigin.Position
-	end
 
 	PacketSettings.Combat.ReplicateShotEvent.sendToAllExcept({
-		MuzzlePosition = muzzlePosition,
+		MuzzlePosition = rayOrigin,
 		RayResults = rayResults,
 	}, self.Player)
 end

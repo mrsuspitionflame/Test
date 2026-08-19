@@ -1,0 +1,43 @@
+{
+  "name": "Test",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/Shared"
+      },
+      "Packages": {
+        "$path": "Packages"
+      },
+      "GUIStorage": {
+        "$path": "src/GUIStorage"
+      }
+    },
+
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/Server"
+      },
+      "HeadMovement": {
+        "$path": "src/HeadMovement/ServerHeadMovement.server.luau"
+      },
+      "ServerPackages": {
+        "$path": "ServerPackages"
+      }
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+          "Client": {
+            "$path": "src/Client"
+          }
+      },
+      "StarterCharacterScripts": {
+          "HeadMovement": {
+            "$path": "src/HeadMovement/ClientHeadMovement.client.luau"
+          }
+      }
+    }
+  }
+}

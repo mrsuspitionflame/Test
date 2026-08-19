@@ -7,7 +7,16 @@ local PacketSettings = {}
 PacketSettings.Character = ByteNet.defineNamespace("Character", function()
 	return {
 		HeadMovement = ByteNet.definePacket({
+			reliabilityType = "unreliable",
 			value = ByteNet.struct({
+				NeckC0 = ByteNet.cframe,
+			}),
+		}),
+
+		ApplyHeadMovement = ByteNet.definePacket({
+			reliabilityType = "unreliable",
+			value = ByteNet.struct({
+				Player = ByteNet.inst,
 				NeckC0 = ByteNet.cframe,
 			}),
 		}),
@@ -28,7 +37,6 @@ PacketSettings.Creation = ByteNet.defineNamespace("Creation", function()
 		}),
 	}
 end)
-
 
 PacketSettings.Combat = ByteNet.defineNamespace("Combat", function()
 	return {
