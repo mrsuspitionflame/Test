@@ -3,14 +3,13 @@ local CAS = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Weapons = Shared:WaitForChild("Weapons")
+local Utility = Shared:WaitForChild("Utility")
 local Settings = Shared:WaitForChild("Settings")
 local gunSettings = require(Settings:WaitForChild("GunSettings"))
 local RunService = game:GetService("RunService")
 
 local Trove = require(Packages:WaitForChild("Trove"))
-local Firing = Weapons:WaitForChild("Firing")
-local Hitscan = require(Firing:WaitForChild("Hitscan"))
+local RaycastService = require(Utility:WaitForChild("RaycastService"))
 
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
@@ -41,6 +40,7 @@ function GunController.new(gunName, slotName, animationController, stateManager,
 		Spread = gunInfo.SPREAD,
 		Range = gunInfo.RANGE,
 		FireMode = gunInfo.FIRE_MODE,
+		Radius = gunInfo.BULLET_RADIUS,
 
 		Aiming = false,
 		Equipped = false,
@@ -74,15 +74,10 @@ function GunController:ShootEvent()
 	local rayDirections
 
 	if self.Aiming then
-		rayDirections = Hitscan.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
+		rayDirections = RaycastService:GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
 	else
-		rayDirections = Hitscan.GetRayDirections(
-			origin,
-			self.BulletsPerShot,
-			math.rad(self.Spread),
-			seed,
-			self.Range * 10
-		)
+		rayDirections =
+			RaycastService:GetRayDirections(origin, self.BulletsPerShot, math.rad(self.Spread), seed, self.Range * 10)
 	end
 
 	local ignoreList = {
@@ -90,11 +85,11 @@ function GunController:ShootEvent()
 		game.Players.LocalPlayer.Character,
 	}
 
-	local rayResults = Hitscan.CastRays(origin.Position, rayDirections, ignoreList, 0)
+	local rayResults = RaycastService:CastRays(origin.Position, rayDirections, ignoreList, self.Radius)
 	local rayOrigin = self.ViewModelController:GetRayOrigin()
-	Hitscan.DrawRayResults(rayOrigin, rayResults)
+	RaycastService:DrawRayResults(rayOrigin, rayResults)
 
-	PacketSettings.Combat.ShootRequest.send({
+	PacketSettings.Combat.Weapon.ShootRequest.send({
 		SlotName = self.SlotName,
 		CFrame = camera.CFrame,
 		Seed = seed,
@@ -125,7 +120,7 @@ function GunController:ReloadEvent()
 	self.ReloadTrack:Play(0)
 	self.ReloadTrack:AdjustSpeed(1 + (self.ReloadSpeed - 50) / 100)
 
-	PacketSettings.Combat.ReloadRequest.send({
+	PacketSettings.Combat.Weapon.ReloadRequest.send({
 		SlotName = self.SlotName,
 	})
 	--other stuff like animations, etc
@@ -160,12 +155,12 @@ end
 function GunController:EquipOrUnequip()
 	if self.Equipped then
 		print(self.SlotName)
-		PacketSettings.Combat.EquipRequest.send({
+		PacketSettings.Combat.Weapon.EquipRequest.send({
 			SlotName = self.SlotName,
 			Action = "UnEquip",
 		})
 	else
-		PacketSettings.Combat.EquipRequest.send({
+		PacketSettings.Combat.Weapon.EquipRequest.send({
 			SlotName = self.SlotName,
 			Action = "Equip",
 		})
@@ -215,7 +210,7 @@ function GunController:StartAiming()
 	self.StateManager:SetState("AimState", "AIMING")
 	self.Aiming = true
 	self.ViewModelController:OnAim("Start")
-	PacketSettings.Combat.AimEvent.send({
+	PacketSettings.Combat.Weapon.AimEvent.send({
 		SlotName = self.SlotName,
 		Aiming = true,
 	})
@@ -224,7 +219,7 @@ end
 function GunController:CancelAiming()
 	self.Aiming = false
 	self.ViewModelController:AfterAim()
-	PacketSettings.Combat.AimEvent.send({
+	PacketSettings.Combat.Weapon.AimEvent.send({
 		SlotName = self.SlotName,
 		Aiming = false,
 	})

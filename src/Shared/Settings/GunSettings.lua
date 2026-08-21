@@ -13,6 +13,7 @@ local GunSettings = {
 		STABILITY = 99,
 		RELOAD_SPEED = 25,
 		BULLETS_PER_SHOT = 1,
+		BULLET_RADIUS = 1,
 		SPREAD = 2,
 	},
 }

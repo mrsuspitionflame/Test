@@ -1,10 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Weapons = Shared:WaitForChild("Weapons")
+local Utility = Shared:WaitForChild("Utility")
 local Settings = Shared:WaitForChild("Settings")
 local gunSettings = require(Settings:WaitForChild("GunSettings"))
-local Firing = Weapons:WaitForChild("Firing")
-local Hitscan = require(Firing:WaitForChild("Hitscan"))
+local RaycastService = require(Utility:WaitForChild("RaycastService"))
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 local Trove = require(Packages:WaitForChild("Trove"))
@@ -34,6 +33,7 @@ function GunClass.new(player, gunName, slotName, animationClass, stateManager)
 		BulletsPerShot = gunInfo.BULLETS_PER_SHOT,
 		Spread = gunInfo.SPREAD,
 		Range = gunInfo.RANGE,
+		Radius = gunInfo.BULLET_RADIUS,
 
 		Equipped = false,
 		Aiming = false,
@@ -65,7 +65,7 @@ end
 
 function GunClass:OnEquip()
 	if not self:CanEquip() or self.Equipped then
-		PacketSettings.Combat.EquipResult.sendTo({
+		PacketSettings.Combat.Weapon.EquipResult.sendTo({
 			Action = "Equip",
 			SlotName = self.SlotName,
 			Accepted = false,
@@ -73,7 +73,7 @@ function GunClass:OnEquip()
 		return false
 	end
 
-	PacketSettings.Combat.EquipResult.sendTo({
+	PacketSettings.Combat.Weapon.EquipResult.sendTo({
 		Action = "Equip",
 		SlotName = self.SlotName,
 		Accepted = true,
@@ -109,7 +109,7 @@ function GunClass:OnEquip()
 
 			self.Ammo += AmmoToLoad
 			self.ReserveAmmo -= AmmoToLoad
-			PacketSettings.Combat.AmmoUpdate.sendTo({
+			PacketSettings.Combat.Weapon.AmmoUpdate.sendTo({
 				SlotName = self.SlotName,
 				Ammo = self.Ammo,
 				ReserveAmmo = self.ReserveAmmo,
@@ -126,7 +126,7 @@ end
 
 function GunClass:OnUnequip()
 	if not self.Equipped or not self:CanUnequip() then
-		PacketSettings.Combat.EquipResult.sendTo({
+		PacketSettings.Combat.Weapon.EquipResult.sendTo({
 			Action = "UnEquip",
 			SlotName = self.SlotName,
 			Accepted = false,
@@ -134,7 +134,7 @@ function GunClass:OnUnequip()
 		return false
 	end
 
-	PacketSettings.Combat.EquipResult.sendTo({
+	PacketSettings.Combat.Weapon.EquipResult.sendTo({
 		Action = "UnEquip",
 		SlotName = self.SlotName,
 		Accepted = true,
@@ -188,10 +188,7 @@ function GunClass:CanShoot(origin, seed)
 	if self.StateManager:TryAction("Weapon", "Fire") == false then
 		return false
 	end
-	if
-		not Hitscan.ValidateVector3(origin.Position)
-		or not Hitscan.ValidateVector3(origin.LookVector)
-	then
+	if not RaycastService:ValidateVector3(origin.Position) or not RaycastService:ValidateVector3(origin.LookVector) then
 		return false
 	end
 
@@ -238,7 +235,7 @@ function GunClass:Shoot(origin, seed)
 
 	self.Ammo -= 1
 
-	PacketSettings.Combat.AmmoUpdate.sendTo({
+	PacketSettings.Combat.Weapon.AmmoUpdate.sendTo({
 		SlotName = self.SlotName,
 		Ammo = self.Ammo,
 	}, self.Player)
@@ -249,22 +246,17 @@ function GunClass:Shoot(origin, seed)
 
 	local rayDirections
 	if self.Aiming then
-		rayDirections = Hitscan.GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
+		rayDirections = RaycastService:GetRayDirections(origin, self.BulletsPerShot, 0, seed, self.Range * 10)
 	else
-		rayDirections = Hitscan.GetRayDirections(
-			origin,
-			self.BulletsPerShot,
-			math.rad(self.Spread),
-			seed,
-			self.Range * 10
-		)
+		rayDirections =
+			RaycastService:GetRayDirections(origin, self.BulletsPerShot, math.rad(self.Spread), seed, self.Range * 10)
 	end
 
 	local ignoreList = {
 		self.Player.Character,
 	}
 
-	local rayResults = Hitscan.CastRays(origin.Position, rayDirections, ignoreList, 0)
+	local rayResults = RaycastService:CastRays(origin.Position, rayDirections, ignoreList, self.Radius)
 
 	for _, rayResult in rayResults do
 		local hitInstance = rayResult.Instance
@@ -285,7 +277,7 @@ function GunClass:Shoot(origin, seed)
 
 	local rayOrigin = self.ViewModelClass:GetRayOrigin()
 
-	PacketSettings.Combat.ReplicateShotEvent.sendToAllExcept({
+	PacketSettings.Combat.Replicate.ReplicateShotEvent.sendToAllExcept({
 		MuzzlePosition = rayOrigin,
 		RayResults = rayResults,
 	}, self.Player)

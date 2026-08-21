@@ -4,14 +4,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local Combat = Server:WaitForChild("Combat")
-local InputHandlers = Combat:WaitForChild("InputHandlers")
-local LoadoutHandler = require(InputHandlers:WaitForChild("LoadoutHandler"))
+local LoadoutHandler = require(Combat:WaitForChild("LoadoutHandler"))
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local GunHandler = {}
 
 function GunHandler:Init()
-	PacketSettings.Combat.ShootRequest.listen(function(data, player)
+	PacketSettings.Combat.Weapon.ShootRequest.listen(function(data, player)
 		local slotName = data.SlotName
 		local origin = data.CFrame
 		local seed = data.Seed
@@ -20,7 +19,7 @@ function GunHandler:Init()
 			return
 		end
 
-		local gunClass = LoadoutHandler.GetGunClass(player, data.SlotName)
+		local gunClass = LoadoutHandler:GetGunClass(player, data.SlotName)
 
 		if not gunClass or not gunClass.Equipped then
 			return
@@ -28,10 +27,10 @@ function GunHandler:Init()
 		gunClass:Shoot(origin, seed)
 	end)
 
-	PacketSettings.Combat.ReloadRequest.listen(function(data, player)
+	PacketSettings.Combat.Weapon.ReloadRequest.listen(function(data, player)
 		local slotName = data.SlotName
 
-		local gunClass = LoadoutHandler.GetGunClass(player, slotName)
+		local gunClass = LoadoutHandler:GetGunClass(player, slotName)
 
 		if not gunClass or not gunClass.Equipped then
 			return
@@ -40,7 +39,7 @@ function GunHandler:Init()
 		gunClass:Reload()
 	end)
 
-	PacketSettings.Combat.EquipRequest.listen(function(data, player)
+	PacketSettings.Combat.Weapon.EquipRequest.listen(function(data, player)
 		local slotName = data.SlotName
 		local action = data.Action
 
@@ -51,14 +50,14 @@ function GunHandler:Init()
 			return
 		end
 
-		local gunClass = LoadoutHandler.GetGunClass(player, slotName)
+		local gunClass = LoadoutHandler:GetGunClass(player, slotName)
 
 		if not gunClass then
 			return
 		end
 
 		if action == "Equip" then
-			local equippedGunClass = LoadoutHandler.GetEquippedGunClass(player)
+			local equippedGunClass = LoadoutHandler:GetEquippedGunClass(player)
 
 			if equippedGunClass and equippedGunClass ~= gunClass then
 				if not equippedGunClass:OnUnequip() then
@@ -72,11 +71,11 @@ function GunHandler:Init()
 		end
 	end)
 
-	PacketSettings.Combat.AimEvent.listen(function(data, player)
+	PacketSettings.Combat.Weapon.AimEvent.listen(function(data, player)
 		local slotName = data.SlotName
 		local aiming = data.Aiming
 
-		local gunClass = LoadoutHandler.GetGunClass(player, slotName)
+		local gunClass = LoadoutHandler:GetGunClass(player, slotName)
 
 		if not gunClass or not gunClass.Equipped then
 			return

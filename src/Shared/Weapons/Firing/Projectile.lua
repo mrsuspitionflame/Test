@@ -1,5 +1,0 @@
-
-
-local Projectile = {}
-
-return Projectile

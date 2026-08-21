@@ -1,10 +1,4 @@
-local StarterPlayer = game:GetService("StarterPlayer")
-local StarterPlayerScripts = StarterPlayer:WaitForChild("StarterPlayerScripts")
-local Client = StarterPlayerScripts:WaitForChild("Client")
-local Controllers = Client:WaitForChild("Controllers")
-local CombatControllers = Controllers:WaitForChild("CombatControllers")
-
-local ViewModelController = require(CombatControllers:WaitForChild("ViewModelController"))
+local ViewModelController = require(script.Parent:WaitForChild("ViewModelController"))
 
 local AnimationController = {}
 

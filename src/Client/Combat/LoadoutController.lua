@@ -1,4 +1,5 @@
-local Client = script.Parent.Parent
+local Combat = script.Parent
+local Client = Combat.Parent
 local CAS = game:GetService("ContextActionService")
 local UIS = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,13 +11,13 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local humanoid
 
-local Controllers = Client:WaitForChild("Controllers")
-local CombatControllers = Controllers:WaitForChild("CombatControllers")
+local Controllers = Combat:WaitForChild("Controllers")
 
-local GunController = require(CombatControllers:WaitForChild("GunController"))
-local AnimationController = require(CombatControllers:WaitForChild("AnimationController"))
-local MovementController = require(CombatControllers:WaitForChild("MovementController"))
-local GUIController = require(CombatControllers:WaitForChild("GUIController"))
+local AbilityController = require(Controllers:WaitForChild("AbilityController"))
+local GunController = require(Controllers:WaitForChild("GunController"))
+local AnimationController = require(Controllers:WaitForChild("AnimationController"))
+local MovementController = require(Controllers:WaitForChild("MovementController"))
+local GUIController = require(Controllers:WaitForChild("GUIController"))
 local StateManager = require(Utility:WaitForChild("StateManager"))
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
@@ -27,6 +28,8 @@ local Loadout = {
 	EnergySlot = nil,
 	HeavySlot = nil,
 }
+
+local Ability = nil
 
 local gui = GUIController.new()
 local animation = AnimationController.new()
@@ -45,7 +48,14 @@ function LoadoutController:Init()
 		end
 	end)
 
-	PacketSettings.Creation.RequestLoadout.send()
+	PacketSettings.Creation.CreateAbilityController.listen(function(data)
+		if data then
+			print("Received CreateAbilityController packet for ability:", data.Grenade)
+			Ability = AbilityController.new(data, animation, stateManager, gui)
+		end
+	end)
+
+	PacketSettings.Creation.RequestPlayerData.send()
 
 	local function OnCharacterRemoved()
 		stateManager:SetState("WeaponState", "IDLE")
@@ -75,7 +85,7 @@ function LoadoutController:Init()
 end
 
 function LoadoutController:GunInits()
-	PacketSettings.Combat.AmmoUpdate.listen(function(data)
+	PacketSettings.Combat.Weapon.AmmoUpdate.listen(function(data)
 		local controller = Loadout[data.SlotName]
 
 		if controller and controller.SlotName == data.SlotName then
@@ -83,7 +93,7 @@ function LoadoutController:GunInits()
 		end
 	end)
 
-	PacketSettings.Combat.EquipResult.listen(function(data)
+	PacketSettings.Combat.Weapon.EquipResult.listen(function(data)
 		local controller = Loadout[data.SlotName]
 
 		if controller and controller.SlotName == data.SlotName then

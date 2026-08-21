@@ -32,13 +32,52 @@ PacketSettings.Creation = ByteNet.defineNamespace("Creation", function()
 			}),
 		}),
 
-		RequestLoadout = ByteNet.definePacket({
+		CreateAbilityController = ByteNet.definePacket({
+			value = ByteNet.struct({
+				Grenade = ByteNet.string,
+			}),
+		}),
+
+		RequestPlayerData = ByteNet.definePacket({
 			value = ByteNet.nothing,
 		}),
 	}
 end)
 
-PacketSettings.Combat = ByteNet.defineNamespace("Combat", function()
+PacketSettings.Combat = {}
+
+PacketSettings.Combat.Replicate = ByteNet.defineNamespace("CombatReplicate", function()
+	return {
+		ReplicateShotEvent = ByteNet.definePacket({
+			reliabilityType = "unreliable",
+			value = ByteNet.struct({
+				MuzzlePosition = ByteNet.vec3,
+
+				RayResults = ByteNet.array(ByteNet.struct({
+					Position = ByteNet.vec3,
+					Normal = ByteNet.vec3,
+					Instance = ByteNet.optional(ByteNet.inst),
+					Distance = ByteNet.optional(ByteNet.float32),
+				})),
+			}),
+		}),
+
+		ReplicateAbilityEvent = ByteNet.definePacket({
+			reliabilityType = "unreliable",
+			value = ByteNet.struct({
+				AbilityType = ByteNet.string,
+				AbilityName = ByteNet.string,
+				ActionType = ByteNet.string,
+				Player = ByteNet.optional(ByteNet.inst),
+				ProjectileID = ByteNet.optional(ByteNet.string),
+				Origin = ByteNet.optional(ByteNet.vec3),
+				Direction = ByteNet.optional(ByteNet.vec3),
+			}),
+		}),
+	}
+end)
+
+PacketSettings.Combat.Weapon = ByteNet.defineNamespace("CombatWeapon", function()
 	return {
 		ShootRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
@@ -83,18 +122,25 @@ PacketSettings.Combat = ByteNet.defineNamespace("Combat", function()
 				Aiming = ByteNet.bool,
 			}),
 		}),
+	}
+end)
 
-		ReplicateShotEvent = ByteNet.definePacket({
-			reliabilityType = "unreliable",
+PacketSettings.Combat.Ability = {}
+PacketSettings.Combat.Ability.Grenade = ByteNet.defineNamespace("GrenadeAbility", function()
+	return {
+		GrenadeHeld = ByteNet.definePacket({
 			value = ByteNet.struct({
-				MuzzlePosition = ByteNet.vec3,
+				Origin = ByteNet.optional(ByteNet.vec3),
+				Direction = ByteNet.optional(ByteNet.vec3),
+				ProjectileId = ByteNet.optional(ByteNet.string),
+			}),
+		}),
 
-				RayResults = ByteNet.array(ByteNet.struct({
-					Position = ByteNet.vec3,
-					Normal = ByteNet.vec3,
-					Instance = ByteNet.optional(ByteNet.inst),
-					Distance = ByteNet.optional(ByteNet.float32),
-				})),
+		GrenadeReleased = ByteNet.definePacket({
+			value = ByteNet.struct({
+				Origin = ByteNet.optional(ByteNet.vec3),
+				Direction = ByteNet.optional(ByteNet.vec3),
+				ProjectileID = ByteNet.optional(ByteNet.string),
 			}),
 		}),
 	}
