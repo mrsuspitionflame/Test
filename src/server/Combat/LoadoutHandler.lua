@@ -116,23 +116,14 @@ end
 local function CreateWeaponClasses(player, data)
 	for _, slotName in ipairs(Slots) do
 		print("Creating weapon class for player:", player.Name, "slot:", slotName)
-<<<<<<< HEAD
-		data.Weapons[slotName] = WeaponClass.new(player, "HandCannon", slotName, data.Animation, data.StateManager)
-=======
 		data.Weapons[slotName] = WeaponClass.new(player, "HandCannon", slotName, data.StateManager)
->>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 	end
 end
 
 local function CreateAbilityController(player, data)
 	print("Creating ability class for player:", player.Name)
-<<<<<<< HEAD
-	data.Animation:CreateAbilityViewModel({ Grenade = "SolarGrenade" })
-	data.Ability = AbilityClass.new(player, { Grenade = "SolarGrenade" }, data.StateManager, data.Animation)
-=======
 	local AbilityInfo = { Grenade = "SolarGrenade" }
 	data.Ability = AbilityClass.new(player, AbilityInfo, data.StateManager)
->>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 end
 
 local function CleanupCharacter(player, character)
