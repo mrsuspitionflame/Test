@@ -11,8 +11,6 @@ local SolarGrenadeEffect = SolarGrenade:WaitForChild("SolarGrenadeAttachment")
 
 local SimulateProjectileServer = require(Handlers:WaitForChild("SimulateProjectile(Server)"))
 
-local Debris = game:GetService("Debris")
-
 local SolarGrenade = {}
 
 SolarGrenade.__index = SolarGrenade

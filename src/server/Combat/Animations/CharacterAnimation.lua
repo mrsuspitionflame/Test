@@ -1,1 +1,0 @@
--- Character animation implementation will be added here.
