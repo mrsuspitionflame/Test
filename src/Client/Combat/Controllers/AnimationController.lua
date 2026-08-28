@@ -45,7 +45,7 @@ function AnimationController:OnEquip(WeaponInfo)
 end
 
 function AnimationController:OnUnequip()
-	self.ViewModelController:OnUnequip()
+	self.ViewModelAnimation:OnUnequip()
 end
 
 function AnimationController:CreateAbilityViewModel(data)

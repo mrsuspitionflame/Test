@@ -27,6 +27,8 @@ local Loadout = {
 	HeavySlot = nil,
 }
 
+local StoredSlot = nil
+
 local Ability = nil
 
 local gui = GUIController.new()
