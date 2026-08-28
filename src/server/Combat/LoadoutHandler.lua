@@ -240,11 +240,6 @@ local function DestroyPlayerData(player)
 
 	CleanupCharacter(player, data.Character)
 	data.Trove:Destroy()
-<<<<<<< HEAD
-	data.Animation:OnUnequip()
-
-=======
->>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 	for _, weaponClass in pairs(data.Weapons) do
 		weaponClass:Destroy()
 	end
