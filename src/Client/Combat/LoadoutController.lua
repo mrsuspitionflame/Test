@@ -14,7 +14,7 @@ local humanoid
 local Controllers = Combat:WaitForChild("Controllers")
 
 local AbilityController = require(Controllers:WaitForChild("AbilityController"))
-local GunController = require(Controllers:WaitForChild("GunController"))
+local WeaponController = require(Controllers:WaitForChild("WeaponController"))
 local AnimationController = require(Controllers:WaitForChild("AnimationController"))
 local MovementController = require(Controllers:WaitForChild("MovementController"))
 local GUIController = require(Controllers:WaitForChild("GUIController"))
@@ -29,6 +29,8 @@ local Loadout = {
 	HeavySlot = nil,
 }
 
+local StoredSlot = nil
+
 local Ability = nil
 
 local gui = GUIController.new()
@@ -37,20 +39,19 @@ local stateManager = StateManager.new()
 local movement = MovementController.new(stateManager, animation)
 
 function LoadoutController:Init()
-	PacketSettings.Creation.CreateGunController.listen(function(data)
-		if data.GunName and data.SlotName then
-			print("Received CreateGunController packet for gun:", data.GunName, "slot:", data.SlotName)
+	PacketSettings.Creation.CreateWeaponController.listen(function(data)
+		if data.WeaponName and data.SlotName then
 			if Loadout[data.SlotName] == nil then
-				print("Creating GunController for gun:", data.GunName, "slot:", data.SlotName)
-				gui:InitializeSlot(data.GunName, data.SlotName)
-				Loadout[data.SlotName] = GunController.new(data.GunName, data.SlotName, animation, stateManager, gui)
+				gui:InitializeSlot(data.WeaponName, data.SlotName)
+				Loadout[data.SlotName] =
+					WeaponController.new(data.WeaponName, data.SlotName, animation, stateManager, gui)
 			end
 		end
 	end)
 
 	PacketSettings.Creation.CreateAbilityController.listen(function(data)
 		if data then
-			print("Received CreateAbilityController packet for ability:", data.Grenade)
+			animation:CreateAbilityViewModel(data)
 			Ability = AbilityController.new(data, animation, stateManager, gui)
 		end
 	end)
@@ -81,10 +82,10 @@ function LoadoutController:Init()
 		task.spawn(OnCharacterAdded, Player.Character)
 	end
 
-	self:GunInits()
+	self:InitializeWeapons()
 end
 
-function LoadoutController:GunInits()
+function LoadoutController:InitializeWeapons()
 	PacketSettings.Combat.Weapon.AmmoUpdate.listen(function(data)
 		local controller = Loadout[data.SlotName]
 
@@ -99,10 +100,8 @@ function LoadoutController:GunInits()
 		if controller and controller.SlotName == data.SlotName then
 			if data.Accepted then
 				if data.Action == "Equip" then
-					UIS.MouseIconEnabled = false
 					controller:OnEquip()
 				elseif data.Action == "UnEquip" then
-					UIS.MouseIconEnabled = true
 					controller:OnUnequip()
 				end
 			else

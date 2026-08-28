@@ -4,7 +4,7 @@ local CombatUIsources = require(CombatUI:WaitForChild("CombatUIsources"))
 local Vide = require(ReplicatedStorage.Packages.Vide)
 
 local AbilityUI = require(CombatUI.AbilityUI)
-local GunUI = require(CombatUI.GunUI)
+local WeaponUI = require(CombatUI.WeaponUI)
 
 local create = Vide.create
 
@@ -51,7 +51,7 @@ local function App()
 				}),
 
 				create("Frame")({
-					Name = "GunFrame",
+					Name = "WeaponFrame",
 					BackgroundTransparency = 1,
 					Size = UDim2.fromScale(0.23, 1),
 					Position = UDim2.fromScale(0.76, 0.72),
@@ -61,7 +61,7 @@ local function App()
 						DominantAxis = Enum.DominantAxis.Width,
 					}),
 
-					GunUI(),
+					WeaponUI(),
 				}),
 			}),
 		}),

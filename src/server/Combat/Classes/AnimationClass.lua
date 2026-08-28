@@ -2,51 +2,74 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Server = ServerScriptService:WaitForChild("Server")
 local Combat = Server:WaitForChild("Combat")
 local Classes = Combat:WaitForChild("Classes")
+local Animations = Classes.Parent:WaitForChild("Animations")
 
-local ViewModelClass = require(Classes:WaitForChild("ViewModelClass"))
+local ViewModelAnimation = require(Animations:WaitForChild("ViewModelAnimation"))
 
 local AnimationClass = {}
 
+AnimationClass.__index = AnimationClass
+
 function AnimationClass.new(player)
-    local self = setmetatable({}, { __index = AnimationClass })
+	local self = setmetatable({}, AnimationClass)
+	self.Player = player
 
-    self.ViewModelClass = ViewModelClass.new(player)
+	self.ViewModelAnimations = {
+		AbilityAnimations = {},
+		WeaponAnimations = {},
+		MovementAnimations = {},
+	}
 
-    return self
+	self.CharacterAnimations = {
+		AbilityAnimations = {},
+		CharacterAnimations = {},
+		MovementAnimations = {},
+	}
+
+	self.ViewModelAnimation = ViewModelAnimation.new(self)
+	--self.CharacterAnimation = CharacterAnimation.new(self)
+
+	return self
 end
 
 function AnimationClass:GetClass(className)
-    if className == "ViewModel" then
-        return self.ViewModelClass
-    end
-    return
+	if className == "ViewModel" then
+		return self.ViewModelAnimation
+	end
+	return
 end
 
-function AnimationClass:OnEquip(weaponName: string)
-    self.ViewModelClass:OnEquip(weaponName)
-    --Other animations will be added later
+function AnimationClass:OnEquip(WeaponInfo)
+	self.ViewModelAnimation:OnEquip(WeaponInfo)
+	--Other animations will be added later
 end
 
 function AnimationClass:OnUnequip()
-    self.ViewModelClass:OnUnequip()
+	self.ViewModelAnimation:OnUnequip()
 end
 
-function AnimationClass:GetAnimation(animationType: string, animationName: string)
-    if animationType == "ViewModel" then
-        return self.ViewModelClass:GetAnimation(animationName)
-    end
-    return
+function AnimationClass:GetAnimation(data)
+	if data.AnimationType == "ViewModel" then
+		if data.AnimationLocation == "AbilityAnimations" then
+			return self.ViewModelAnimations.AbilityAnimations[data.AbilityName][string.upper(data.AnimationName)]
+		elseif data.AnimationLocation == "WeaponAnimations" then
+			return self.ViewModelAnimations.WeaponAnimations[string.upper(data.AnimationName)]
+		end
+	end
+	return
 end
 
+function AnimationClass:CreateAbilityViewModel(data)
+	self.ViewModelAnimation:CreateAbilityViewModel(data)
+end
 
---ViewModelClass functions
+-- ViewModelAnimation functions
 
 function AnimationClass:Recoil()
-    self.ViewModelClass:Recoil()
-    return
+	return
 end
 
 function AnimationClass:GetRayOrigin()
-    return self.ViewModelClass:GetRayOrigin()
+	return self.ViewModelAnimation:GetRayOrigin()
 end
 return AnimationClass

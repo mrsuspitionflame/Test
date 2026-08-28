@@ -1,6 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
+local AbilitySettings = require(Settings:WaitForChild("AbilitySettings"))
+
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
 
@@ -13,26 +15,49 @@ local AbilityClass = {}
 AbilityClass.__index = AbilityClass
 
 function AbilityClass.new(player, AbilityInfo, stateManager, animationController)
-	local self = setmetatable({}, AbilityClass)
+	local self = setmetatable({
+		Trove = Trove.new(),
 
-	self.Player = player
-	self.StateManager = stateManager
-	self.AnimationController = animationController
+		Player = player,
+		StateManager = stateManager,
+		AnimationController = animationController,
+	}, AbilityClass)
 
-	self.Grenade = require(Grenades:WaitForChild(AbilityInfo.Grenade))
+	self.AbilityInfo = {
+		GrenadeInfo = table.clone(AbilitySettings.Grenade[AbilityInfo.Grenade]),
+	}
 
-	self.Trove = Trove.new()
+	self.Grenade = require(Grenades:WaitForChild(AbilityInfo.Grenade)).new(self)
+
+	self:Init()
 	return self
 end
 
-function AbilityClass:GrenadeHeld(data)
-	print("AbilityClass:GrenadeHeld called for player:", self.Player.Name)
-	self.Grenade:Held(data, self.Player)
+function AbilityClass:Destroy()
+	self.Trove:Destroy()
 end
 
-function AbilityClass:GrenadeReleased(data)
-	print("AbilityClass:GrenadeReleased called for player:", self.Player.Name)
-	self.Grenade:Released(data, self.Player)
+function AbilityClass:GetAnimations()
+	self.Animations = {
+		Grenade = {
+			Held = self.AnimationController:GetAnimation({
+				AnimationType = "ViewModel",
+				AnimationLocation = "AbilityAnimations",
+				AnimationName = "Held",
+				AbilityName = "Grenade",
+			}),
+			Released = self.AnimationController:GetAnimation({
+				AnimationType = "ViewModel",
+				AnimationLocation = "AbilityAnimations",
+				AnimationName = "Released",
+				AbilityName = "Grenade",
+			}),
+		},
+	}
+end
+
+function AbilityClass:Init()
+	self:GetAnimations()
 end
 
 return AbilityClass

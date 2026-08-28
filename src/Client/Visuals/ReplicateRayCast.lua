@@ -9,7 +9,7 @@ local ReplicateRayCast = {}
 
 function ReplicateRayCast:Init()
 	PacketSettings.Combat.Replicate.ReplicateShotEvent.listen(function(data)
-		RaycastService:DrawRayResults(data.MuzzlePosition, data.RayResults)
+		RaycastService:DrawRayResults(data.RayOrigin, data.RayResults)
 	end)
 end
 

@@ -12,12 +12,14 @@ StateManager.__index = StateManager
 function StateManager.new()
 	local self = setmetatable({}, StateManager)
 
-	self.WeaponState = "IDLE"
+	self.WeaponState = "UNEQUIPPED"
+	self.EquippedState = "UNEQUIPPED"
 	self.AbilityState = "IDLE"
 	self.MovementState = "IDLE"
 	self.AimState = "IDLE"
 
 	self.CancelStateSignal = Signal.new()
+	self.ReEquipWeaponSignal = Signal.new()
 	return self
 end
 
@@ -30,6 +32,8 @@ function StateManager:SetState(stateType, newState)
 		self.MovementState = newState
 	elseif stateType == "AimState" then
 		self.AimState = newState
+	elseif stateType == "EquippedState" then
+		self.EquippedState = newState
 	else
 		error("Invalid state type: " .. tostring(stateType))
 	end
@@ -45,6 +49,8 @@ function StateManager:GetState(stateType)
 		return self.MovementState
 	elseif stateType == "AimState" then
 		return self.AimState
+	elseif stateType == "EquippedState" then
+		return self.EquippedState
 	else
 		error("Invalid state type: " .. tostring(stateType))
 	end
@@ -68,6 +74,7 @@ end
 
 function StateManager:PerformAction(actionType, action)
 	local stateSettings = StateSettings[actionType][action]
+
 	for stateType, cancelStates in pairs(stateSettings.CancelStates) do
 		local currentState = self:GetState(stateType)
 
@@ -81,6 +88,10 @@ end
 
 function StateManager:CancelState(stateType, cancelledState)
 	self.CancelStateSignal:Fire(stateType, cancelledState)
+end
+
+function StateManager:ReEquipWeapon()
+	self.ReEquipWeaponSignal:Fire()
 end
 
 return StateManager

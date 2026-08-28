@@ -11,7 +11,7 @@ local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 local Utility = Shared:WaitForChild("Utility")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
-local GunClass = require(Classes:WaitForChild("GunClass"))
+local WeaponClass = require(Classes:WaitForChild("WeaponClass"))
 local AbilityClass = require(Classes:WaitForChild("AbilityClass"))
 local AnimationClass = require(Classes:WaitForChild("AnimationClass"))
 local StateManager = require(Utility:WaitForChild("StateManager"))
@@ -32,46 +32,46 @@ function LoadoutHandler:GetAbilityClass(player)
 	return data and data.Ability or nil
 end
 
-function LoadoutHandler:GetGunClass(player, slotName)
+function LoadoutHandler:GetWeaponClass(player, slotName)
 	local data = PlayerData[player.UserId]
-	return data and data.Guns[slotName] or nil
+	return data and data.Weapons[slotName] or nil
 end
 
-function LoadoutHandler:GetEquippedGunClass(player)
+function LoadoutHandler:GetEquippedWeaponClass(player)
 	local data = PlayerData[player.UserId]
 
 	if not data then
 		return nil
 	end
 
-	for _, gunClass in pairs(data.Guns) do
-		if gunClass.Equipped then
-			return gunClass
+	for _, weaponClass in pairs(data.Weapons) do
+		if weaponClass.Equipped then
+			return weaponClass
 		end
 	end
 
 	return nil
 end
 
-local function UnequipPlayerGuns(player, data)
+local function UnequipPlayerWeapons(player, data)
 	data.StateManager:SetState("WeaponState", "IDLE")
 
-	local gunClass = LoadoutHandler:GetEquippedGunClass(player)
-	if gunClass then
-		gunClass:OnUnequip()
+	local weaponClass = LoadoutHandler:GetEquippedWeaponClass(player)
+	if weaponClass then
+		weaponClass:OnUnequip()
 	end
 end
 
-local function SendGunController(player)
+local function SendWeaponControllers(player)
 	local data = PlayerData[player.UserId]
 
 	if not data then
 		return
 	end
 
-	for slotName, gunClass in pairs(data.Guns) do
-		PacketSettings.Creation.CreateGunController.sendTo({
-			GunName = gunClass.GunName,
+	for slotName, weaponClass in pairs(data.Weapons) do
+		PacketSettings.Creation.CreateWeaponController.sendTo({
+			WeaponName = weaponClass.WeaponName,
 			SlotName = slotName,
 		}, player)
 	end
@@ -89,15 +89,16 @@ local function SendAbilityController(player)
 	}, player)
 end
 
-local function CreateGunController(player, data)
+local function CreateWeaponClasses(player, data)
 	for _, slotName in ipairs(Slots) do
-		print("Creating gun class for player:", player.Name, "slot:", slotName)
-		data.Guns[slotName] = GunClass.new(player, "Rifle", slotName, data.Animation, data.StateManager)
+		print("Creating weapon class for player:", player.Name, "slot:", slotName)
+		data.Weapons[slotName] = WeaponClass.new(player, "HandCannon", slotName, data.Animation, data.StateManager)
 	end
 end
 
 local function CreateAbilityController(player, data)
 	print("Creating ability class for player:", player.Name)
+	data.Animation:CreateAbilityViewModel({ Grenade = "SolarGrenade" })
 	data.Ability = AbilityClass.new(player, { Grenade = "SolarGrenade" }, data.StateManager, data.Animation)
 end
 
@@ -110,7 +111,7 @@ local function CleanupCharacter(player, character)
 
 	data.Character = nil
 	data.CharacterTrove:Clean()
-	UnequipPlayerGuns(player, data)
+	UnequipPlayerWeapons(player, data)
 end
 
 local function OnCharacterAdded(player, character)
@@ -132,6 +133,40 @@ local function OnCharacterAdded(player, character)
 	end)
 end
 
+local function ConnectLoadoutSignals(player, data)
+	data.Trove:Connect(data.StateManager.CancelStateSignal, function(stateType, cancelledState)
+		if stateType ~= "EquippedState" or cancelledState ~= "EQUIPPED" then
+			return
+		end
+
+		local weaponClass = LoadoutHandler:GetEquippedWeaponClass(player)
+
+		if not weaponClass then
+			return
+		end
+
+		data.StoredSlot = weaponClass.SlotName
+		weaponClass:OnUnequip()
+	end)
+
+	data.Trove:Connect(data.StateManager.ReEquipWeaponSignal, function()
+		local slotName = data.StoredSlot
+
+		if not slotName then
+			return
+		end
+
+		local weaponClass = data.Weapons[slotName]
+
+		if not weaponClass or weaponClass.Equipped then
+			return
+		end
+
+		data.StoredSlot = nil
+		weaponClass:OnEquip()
+	end)
+end
+
 local function CreatePlayerData(player)
 	local userId = player.UserId
 	local data = PlayerData[userId]
@@ -141,7 +176,7 @@ local function CreatePlayerData(player)
 	end
 
 	data = {
-		Guns = {},
+		Weapons = {},
 		Ability = nil,
 		Animation = AnimationClass.new(player),
 		StateManager = StateManager.new(),
@@ -151,7 +186,8 @@ local function CreatePlayerData(player)
 	data.CharacterTrove = data.Trove:Extend()
 	PlayerData[userId] = data
 
-	CreateGunController(player, data)
+	CreateWeaponClasses(player, data)
+	ConnectLoadoutSignals(player, data)
 	CreateAbilityController(player, data)
 
 	data.Trove:Connect(player.CharacterAdded, function(character)
@@ -181,8 +217,8 @@ local function DestroyPlayerData(player)
 	data.Trove:Destroy()
 	data.Animation:OnUnequip()
 
-	for _, gunClass in pairs(data.Guns) do
-		gunClass:Destroy()
+	for _, weaponClass in pairs(data.Weapons) do
+		weaponClass:Destroy()
 	end
 
 	PlayerData[userId] = nil
@@ -191,7 +227,7 @@ end
 function LoadoutHandler:Init()
 	PacketSettings.Creation.RequestPlayerData.listen(function(_, player)
 		CreatePlayerData(player)
-		SendGunController(player)
+		SendWeaponControllers(player)
 		SendAbilityController(player)
 	end)
 

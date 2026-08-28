@@ -18,4 +18,16 @@ MovementSettings.Slide = {
 	SLIDE_DURATION = 1,
 }
 
+MovementSettings.Walk = {
+	DEFAULT_WALK_SPEED = 18,
+}
+
+MovementSettings.AnimationIds = {
+	JUMP = "rbxassetid://75048322796577",
+	FALL = "rbxassetid://75162449762383",
+	SPRINT = "rbxassetid://103808337174171",
+	WALK = "rbxassetid://122597034453437",
+	-- Add more later
+}
+
 return MovementSettings

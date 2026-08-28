@@ -7,22 +7,79 @@ local Grenades = Abilities:WaitForChild("Grenades")
 local HTTPService = game:GetService("HttpService")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
+local Player = game.Players.LocalPlayer
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Settings = Shared:WaitForChild("Settings")
+local AbilitySettings = require(Settings:WaitForChild("AbilitySettings"))
 
 local AbilityController = {}
 
 AbilityController.__index = AbilityController
 
 function AbilityController.new(AbilityInfo, animationController, stateManager, guiController)
-	local self = setmetatable({}, AbilityController)
-	self.Trove = Trove.new()
+	local self = setmetatable({
+		Trove = Trove.new(),
 
-	self.Grenade = require(Grenades:WaitForChild(AbilityInfo.Grenade))
+		AnimationController = animationController,
+		StateManager = stateManager,
+		GUIController = guiController,
 
-	self.AnimationController = animationController
-	self.StateManager = stateManager
-	self.GUIController = guiController
+		Animations = nil,
+	}, AbilityController)
+
+	self.AbilityInfo = {
+		GrenadeInfo = table.clone(AbilitySettings.Grenade[AbilityInfo.Grenade]),
+	}
+
+	self.Grenade = require(Grenades:WaitForChild(AbilityInfo.Grenade)).new(self)
+
 	self:Init()
 	return self
+end
+
+function AbilityController:Init()
+	self:GetAnimations()
+	self:BindActions()
+end
+
+function AbilityController:GetAnimations()
+	self.Animations = {
+		Grenade = {
+			Held = self.AnimationController:GetAnimation({
+				AnimationType = "ViewModel",
+				AnimationLocation = "AbilityAnimations",
+				AnimationName = "Held",
+				AbilityName = "Grenade",
+			}),
+			Released = self.AnimationController:GetAnimation({
+				AnimationType = "ViewModel",
+				AnimationLocation = "AbilityAnimations",
+				AnimationName = "Released",
+				AbilityName = "Grenade",
+			}),
+		},
+	}
+end
+
+function AbilityController:IsFirstPerson()
+	local camera = workspace.CurrentCamera
+
+	if not camera then
+		return false
+	end
+
+	if Player.CameraMode == Enum.CameraMode.LockFirstPerson then
+		return true
+	end
+
+	local cameraDistance = (camera.CFrame.Position - camera.Focus.Position).Magnitude
+
+	return cameraDistance <= 1
+end
+
+function AbilityController:Destroy()
+	self.Trove:Destroy()
 end
 
 function AbilityController:BindAction(actionName, callback, createTouchButton, ...)
@@ -33,24 +90,15 @@ function AbilityController:BindAction(actionName, callback, createTouchButton, .
 	end)
 end
 
-function AbilityController:Init()
+function AbilityController:BindActions()
 	self:BindAction("GrenadeAbility", function(_, inputState)
+		if not self:IsFirstPerson() then
+			return
+		end
 		if inputState == Enum.UserInputState.Begin then
-			local data = {
-				ProjectileID = HTTPService:GenerateGUID(false),
-				Direction = workspace.CurrentCamera.CFrame.LookVector,
-				Origin = workspace.CurrentCamera.CFrame.Position + workspace.CurrentCamera.CFrame.LookVector * -3,
-				Player = game.Players.LocalPlayer,
-			}
-			self.Grenade:Held(data, false)
+			self.Grenade:Held()
 		elseif inputState == Enum.UserInputState.End then
-			local data = {
-				ProjectileID = HTTPService:GenerateGUID(false),
-				Direction = workspace.CurrentCamera.CFrame.LookVector,
-				Origin = workspace.CurrentCamera.CFrame.Position + workspace.CurrentCamera.CFrame.LookVector * -3,
-				Player = game.Players.LocalPlayer,
-			}
-			self.Grenade:Released(data, false)
+			self.Grenade:Released()
 		elseif inputState == Enum.UserInputState.Cancel then
 			self.Grenade:Cancelled()
 		end
@@ -58,6 +106,9 @@ function AbilityController:Init()
 	end, false, Enum.KeyCode.Q)
 
 	self:BindAction("MeleeAbility", function(_, inputState)
+		if not self:IsFirstPerson() then
+			return
+		end
 		if inputState == Enum.UserInputState.Begin then
 			--thing
 		end
@@ -65,6 +116,9 @@ function AbilityController:Init()
 	end, false, Enum.KeyCode.C)
 
 	self:BindAction("ClassAbility", function(_, inputState)
+		if not self:IsFirstPerson() then
+			return
+		end
 		if inputState == Enum.UserInputState.Begin then
 			--thing
 		end

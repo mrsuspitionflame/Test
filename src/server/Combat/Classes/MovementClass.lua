@@ -1,0 +1,3 @@
+local MovementClass = {}
+
+return MovementClass

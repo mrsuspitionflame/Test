@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
-local gunSettings = require(Settings:WaitForChild("GunSettings"))
+local weaponSettings = require(Settings:WaitForChild("WeaponSettings"))
 local GUIStorage = ReplicatedStorage:WaitForChild("GUIStorage")
 local CombatUI = GUIStorage:WaitForChild("CombatUI")
 local CombatUIsources = require(CombatUI:WaitForChild("CombatUIsources"))
@@ -25,11 +25,11 @@ function GUIController:SetCombatUIEnabled(visible)
 	CombatUIsources.UIEnabled(visible)
 end
 
-function GUIController:InitializeSlot(gunName, slotName)
-	local gunInfo = gunSettings[gunName]
-	CombatUIsources[slotName].Ammo(gunInfo.MAGAZINE_SIZE)
-	CombatUIsources[slotName].ReserveAmmo(gunInfo.RESERVE_AMMO)
-	CombatUIsources[slotName].AmmoType(gunInfo.AMMO_TYPE)
+function GUIController:InitializeSlot(weaponName, slotName)
+	local weaponInfo = weaponSettings[weaponName]
+	CombatUIsources[slotName].Ammo(weaponInfo.MAGAZINE_SIZE)
+	CombatUIsources[slotName].ReserveAmmo(weaponInfo.RESERVE_AMMO)
+	CombatUIsources[slotName].AmmoType(weaponInfo.AMMO_TYPE)
 end
 
 function GUIController:EquippedSlotChanged(newSlot)

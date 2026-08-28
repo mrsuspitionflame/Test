@@ -56,3 +56,13 @@ RS.RenderStepped:Connect(function(dt)
 		})
 	end
 end)
+
+PacketSettings.Character.ApplyHeadMovement.listen(function(data)
+	local character = data.Player.Character
+	local torso = character and character:FindFirstChild("Torso")
+	local neck = torso and torso:FindFirstChild("Neck")
+
+	if neck then
+		neck.C0 = data.NeckC0
+	end
+end)
