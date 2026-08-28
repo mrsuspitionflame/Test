@@ -1,7 +1,5 @@
 local Combat = script.Parent
-local Client = Combat.Parent
 local CAS = game:GetService("ContextActionService")
-local UIS = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
@@ -71,6 +69,7 @@ function LoadoutController:Init()
 	local function OnCharacterAdded(character)
 		gui:SetCombatUIEnabled(true)
 		movement:OnCharacterAdded(character)
+
 		humanoid = character:WaitForChild("Humanoid")
 		humanoid.Died:Connect(OnCharacterRemoved)
 	end
@@ -101,8 +100,10 @@ function LoadoutController:InitializeWeapons()
 			if data.Accepted then
 				if data.Action == "Equip" then
 					controller:OnEquip()
+					movement:OnWeaponEquip()
 				elseif data.Action == "UnEquip" then
 					controller:OnUnequip()
+					movement:OnWeaponUnequip()
 				end
 			else
 				warn("Equip/Unequip action was not accepted for slot:", data.SlotName)

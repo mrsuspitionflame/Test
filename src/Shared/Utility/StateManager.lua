@@ -19,11 +19,18 @@ function StateManager.new()
 	self.AimState = "IDLE"
 
 	self.CancelStateSignal = Signal.new()
+	self.StateChangedSignal = Signal.new()
 	self.ReEquipWeaponSignal = Signal.new()
 	return self
 end
 
 function StateManager:SetState(stateType, newState)
+	local oldState = self:GetState(stateType)
+
+	if oldState == newState then
+		return
+	end
+
 	if stateType == "WeaponState" then
 		self.WeaponState = newState
 	elseif stateType == "AbilityState" then
@@ -38,6 +45,7 @@ function StateManager:SetState(stateType, newState)
 		error("Invalid state type: " .. tostring(stateType))
 	end
 	print("State changed: " .. stateType .. " -> " .. newState)
+	self.StateChangedSignal:Fire(stateType, newState, oldState)
 end
 
 function StateManager:GetState(stateType)

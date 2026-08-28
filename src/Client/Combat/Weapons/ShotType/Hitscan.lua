@@ -4,8 +4,6 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local RaycastService = require(Utility:WaitForChild("RaycastService"))
 
-local SeedGenerator = Random.new()
-
 local Hitscan = {}
 
 Hitscan.__index = Hitscan
@@ -17,15 +15,6 @@ function Hitscan.new(WeaponController)
 	self.WeaponInfo = WeaponController.WeaponInfo
 
 	return self
-end
-
-function Hitscan:GetShotData()
-	local Camera = workspace.CurrentCamera
-
-	return {
-		Origin = Camera.CFrame,
-		Seed = SeedGenerator:NextInteger(0, 2 ^ 31 - 1),
-	}
 end
 
 function Hitscan:Fire(ShotData)
@@ -51,7 +40,7 @@ function Hitscan:Fire(ShotData)
 
 	local rayResults =
 		RaycastService:CastRays(Origin.Position, rayDirections, ignoreList, self.WeaponInfo.BULLET_RADIUS)
-	local rayOrigin = self.WeaponController.AnimationController.ViewModelAnimation:GetRayOrigin()
+	local rayOrigin = self.WeaponController.AnimationController.ViewModelController:GetRayOrigin()
 
 	RaycastService:DrawRayResults(rayOrigin, rayResults)
 end

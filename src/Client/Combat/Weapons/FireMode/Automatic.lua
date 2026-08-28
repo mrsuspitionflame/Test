@@ -1,10 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 
-local Trove = require(Packages:WaitForChild("Trove"))
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
+
+local SeedGenerator = Random.new()
 
 local RS = game:GetService("RunService")
 
@@ -18,28 +18,55 @@ function Automatic.new(WeaponController)
 	self.WeaponController = WeaponController
 	self.WeaponInfo = WeaponController.WeaponInfo
 
-	self.Trove = Trove.new()
+	self.StateManager = WeaponController.StateManager
+
+	self.Trove = WeaponController.Trove:Extend()
 
 	self.LastTimeFired = workspace:GetServerTimeNow()
 
 	return self
 end
 
-function Automatic:OnUnequip()
-	self.Trove:Clean()
-end
-
 function Automatic:Cancelled()
 	self.Trove:Clean()
 end
 
+function Automatic:OnUnequip()
+	self.Trove:Clean()
+end
+
 function Automatic:Released()
+	PacketSettings.Combat.Weapon.FireRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Released",
+	})
+
+	self.WeaponController.StateManager:SetState("WeaponState", "IDLE")
+
 	self.Trove:Clean()
 end
 
 function Automatic:Held()
-	self.Trove:Clean()
+	local Camera = workspace.CurrentCamera
 
+	local Origin = Camera.CFrame
+	local Seed = SeedGenerator:NextInteger(0, 2 ^ 31 - 1)
+
+	PacketSettings.Combat.Weapon.FireRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Held",
+		Origin = Origin,
+		Seed = Seed,
+	})
+
+	if not self:CanFire() then
+		return
+	end
+
+	self.WeaponController.StateManager:PerformAction("Weapon", "Fire")
+	self.WeaponController.StateManager:SetState("WeaponState", "FIRING")
+
+	self.Trove:Clean()
 	self.Trove:Connect(RS.Heartbeat, function()
 		self:Fire()
 	end)
@@ -60,27 +87,43 @@ function Automatic:Fire()
 		return
 	end
 
-	print(workspace:GetServerTimeNow())
-
 	local ShotType = self.WeaponController.ShotType
-	local ShotData = ShotType:GetShotData()
+
+	local Camera = workspace.CurrentCamera
+
+	local Origin = Camera.CFrame
+	local Seed = SeedGenerator:NextInteger(0, 2 ^ 31 - 1)
 
 	PacketSettings.Combat.Weapon.FireRequest.send({
 		SlotName = self.WeaponController.SlotName,
 		Action = "Fire",
-		Origin = ShotData.Origin,
-		Seed = ShotData.Seed,
+		Origin = Origin,
+		Seed = Seed,
 	})
 
 	self.LastTimeFired = workspace:GetServerTimeNow()
 
-	self.WeaponController.StateManager:PerformAction("Weapon", "Fire")
-	self.WeaponController.StateManager:SetState("WeaponState", "FIRING")
+	self.WeaponController.Animations.FIRE.VIEWMODEL:Play(0)
+	self.WeaponController.Animations.FIRE.CHARACTER:Play(0)
+	self.WeaponController.AnimationController.CameraController:Recoil()
 
-	self.WeaponController.Animations.Fire:Play(0)
-	self.WeaponController.AnimationController.ViewModelAnimation:Recoil()
+	local Muzzle = self.WeaponController.AnimationController.ViewModelController:GetMuzzle()
+	if Muzzle then
+		local FlashEmitter = Muzzle:FindFirstChild("FlashEmitter")
+		local CircleEmitter = Muzzle:FindFirstChild("CircleEmitter")
 
-	ShotType:Fire(ShotData)
+		if FlashEmitter then
+			FlashEmitter:Emit(1)
+		end
+		if CircleEmitter then
+			CircleEmitter:Emit(1)
+		end
+	end
+
+	ShotType:Fire({
+		Origin = Origin,
+		Seed = Seed,
+	})
 end
 
 return Automatic

@@ -29,7 +29,7 @@ function SolarGrenade.new(AbilityController)
 
 	self.AbilityController = AbilityController
 	self.StateManager = AbilityController.StateManager
-	self.ViewModelAnimation = AbilityController.AnimationController.ViewModelAnimation
+	self.ViewModelController = AbilityController.AnimationController.ViewModelController
 	self.GrenadeInfo = self.AbilityController.AbilityInfo.GrenadeInfo
 
 	self.Trove = self.AbilityController.Trove:Extend()
@@ -50,9 +50,10 @@ function SolarGrenade:Held()
 	self.StateManager:SetState("AbilityState", "USING_GRENADE")
 
 	local Animations = self.AbilityController.Animations
-	local GrenadeHeldAnimation = Animations.Grenade.Held
+	local GrenadeHeldAnimation = Animations.Grenade.HELD.VIEWMODEL
+	local GrenadeCharacterAnimation = Animations.Grenade.HELD.CHARACTER
 
-	self.ViewModelAnimation:ShowAbilityViewModel()
+	self.ViewModelController:ShowAbilityViewModel()
 	self:AttachSolarGrenade()
 
 	self.Trove:Add(GrenadeHeldAnimation:GetMarkerReachedSignal("CastSolarGrenade"):Connect(function()
@@ -63,16 +64,16 @@ function SolarGrenade:Held()
 	self.Trove:Add(GrenadeHeldAnimation.Stopped:Connect(function()
 		self.StateManager:SetState("AbilityState", "IDLE")
 		self:DetachSolarGrenade()
-		self.ViewModelAnimation:HideAbilityViewModel()
-		self.StateManager:ReEquipWeapon()
+		self.ViewModelController:HideAbilityViewModel()
 		self.Trove:Clean()
 	end))
 
 	GrenadeHeldAnimation:Play(0)
+	GrenadeCharacterAnimation:Play(0)
 end
 
 function SolarGrenade:AttachSolarGrenade()
-	local LeftArm = self.ViewModelAnimation.AbilityViewModel:FindFirstChild("Left Arm")
+	local LeftArm = self.ViewModelController.AbilityViewModel:FindFirstChild("Left Arm")
 	local LeftGripAttachment = LeftArm:FindFirstChild("LeftGripAttachment")
 
 	if LeftGripAttachment then
@@ -89,7 +90,7 @@ function SolarGrenade:AttachSolarGrenade()
 end
 
 function SolarGrenade:DetachSolarGrenade()
-	local LeftArm = self.ViewModelAnimation.AbilityViewModel:FindFirstChild("Left Arm")
+	local LeftArm = self.ViewModelController.AbilityViewModel:FindFirstChild("Left Arm")
 
 	if LeftArm:FindFirstChild("SolarGrenadeAttachment") then
 		local solarGrenade = LeftArm:FindFirstChild("SolarGrenadeAttachment")

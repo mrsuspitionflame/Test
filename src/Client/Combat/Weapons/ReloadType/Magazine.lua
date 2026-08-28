@@ -30,8 +30,14 @@ function Magazine:Held()
 
 	local Animations = self.WeaponController.Animations
 
-	Animations.Reload:Play(0)
-	Animations.Reload:AdjustSpeed(1 + (self.WeaponInfo.RELOAD_SPEED - 50) / 100)
+	local ReloadSpeed = 1 + (self.WeaponInfo.RELOAD_SPEED - 50) / 100
+
+	self.WeaponController.Trove:Connect(self.WeaponController.Animations.RELOAD.VIEWMODEL.Stopped, function()
+		self.WeaponController.StateManager:SetState("WeaponState", "IDLE")
+	end)
+
+	Animations.RELOAD.VIEWMODEL:Play(0, 1, ReloadSpeed)
+	Animations.RELOAD.CHARACTER:Play(0, 1, ReloadSpeed)
 end
 
 function Magazine:Released() end
@@ -44,13 +50,19 @@ function Magazine:CanReload()
 end
 
 function Magazine:Cancelled()
+	PacketSettings.Combat.Weapon.ReloadRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Cancelled",
+	})
 	local Animations = self.WeaponController.Animations
-	Animations.Reload:Stop(0)
+	Animations.RELOAD.VIEWMODEL:Stop(0)
+	Animations.RELOAD.CHARACTER:Stop(0)
 end
 
 function Magazine:OnUnequip()
 	local Animations = self.WeaponController.Animations
-	Animations.Reload:Stop(0)
+	Animations.RELOAD.VIEWMODEL:Stop(0)
+	Animations.RELOAD.CHARACTER:Stop(0)
 end
 
 return Magazine

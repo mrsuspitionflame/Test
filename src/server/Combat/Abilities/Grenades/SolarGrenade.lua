@@ -1,18 +1,21 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Settings = Shared:WaitForChild("Settings")
-local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
-local AbilitySettings = require(Settings:WaitForChild("AbilitySettings"))
-local GrenadeInfo = AbilitySettings.Grenade.SolarGrenade
-
 local Combat = script:FindFirstAncestor("Combat")
 local Handlers = Combat:WaitForChild("Handlers")
 
+<<<<<<< HEAD
 local Effects = ReplicatedStorage:WaitForChild("Effects")
 local Abilities = Effects:WaitForChild("Abilities")
 local Grenade = Abilities:WaitForChild("Grenade")
 local SolarGrenadeEffects = Grenade:WaitForChild("SolarGrenade")
 local SolarGrenadeAttachment = SolarGrenadeEffects:WaitForChild("SolarGrenadeAttachment")
+=======
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Effects = ReplicatedStorage:WaitForChild("Effects")
+local Abilities = Effects:WaitForChild("Abilities")
+local Grenade = Abilities:WaitForChild("Grenade")
+local SolarGrenade = Grenade:WaitForChild("SolarGrenade")
+
+local SolarGrenadeEffect = SolarGrenade:WaitForChild("SolarGrenadeAttachment")
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 
 local SimulateProjectileServer = require(Handlers:WaitForChild("SimulateProjectile(Server)"))
 
@@ -27,6 +30,7 @@ function SolarGrenade.new(AbilityClass)
 
 	self.AbilityClass = AbilityClass
 	self.StateManager = AbilityClass.StateManager
+<<<<<<< HEAD
 	self.ViewModelAnimation = AbilityClass.AnimationController.ViewModelAnimation
 	self.GrenadeInfo = AbilityClass.AbilityInfo.GrenadeInfo
 	self.Player = AbilityClass.Player
@@ -34,6 +38,13 @@ function SolarGrenade.new(AbilityClass)
 	self.Trove = AbilityClass.Trove:Extend()
 
 	self.CanCast = false
+=======
+	self.GrenadeInfo = AbilityClass.AbilityInfo.GrenadeInfo
+	self.Player = AbilityClass.Player
+
+	self.CanCast = false
+	self.CastTrove = self.AbilityClass.Trove:Extend()
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 
 	return self
 end
@@ -46,6 +57,7 @@ function SolarGrenade:Held()
 	self.StateManager:PerformAction("Ability", "Grenade")
 	self.StateManager:SetState("AbilityState", "USING_GRENADE")
 
+<<<<<<< HEAD
 	self:SetRightArmTransparency(1)
 
 	local Animations = self.AbilityClass.Animations
@@ -110,14 +122,32 @@ function SolarGrenade:DetachSolarGrenade()
 		end
 		Debris:AddItem(solarGrenade, 1)
 	end
+=======
+	self.CanCast = true
+
+	self:AttachSolarGrenade()
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 end
 
 function SolarGrenade:Cast(data)
 	if self.CanCast == false then
+<<<<<<< HEAD
 		print("Cant cast")
 		return
 	end
 	self.CanCast = false
+=======
+		return
+	end
+	self.CanCast = false
+
+	self.CastTrove:Clean()
+	self.CastTrove:Add(task.delay(self.GrenadeInfo.CAST_DURATION, function()
+		self:DetachSolarGrenade()
+		self.StateManager:SetState("AbilityState", "IDLE")
+		self.StateManager:ReEquipWeapon()
+	end))
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 
 	SimulateProjectileServer:CreateProjectile({
 		Id = data.ProjectileId,
@@ -135,9 +165,48 @@ function SolarGrenade:Cast(data)
 end
 
 function SolarGrenade:Released() end
+<<<<<<< HEAD
 
 function SolarGrenade:Cancelled() end
 
 function SolarGrenade:OnHit(result) end
+=======
+
+function SolarGrenade:Cancelled()
+	self.CanCast = false
+	self.StateManager:SetState("AbilityState", "IDLE")
+	self.StateManager:ReEquipWeapon()
+end
+
+function SolarGrenade:OnHit(result) end
+
+function SolarGrenade:AttachSolarGrenade()
+	local LeftArm = self.Player.Character:FindFirstChild("Left Arm", true)
+
+	local AbilityGripAttachment = LeftArm:WaitForChild("AbilityGripAttachment")
+	self.SolarGrenadeAttachment = SolarGrenadeEffect:Clone()
+
+	self.SolarGrenadeAttachment.Parent = LeftArm
+	self.SolarGrenadeAttachment.WorldCFrame = AbilityGripAttachment.WorldCFrame
+
+	for _, v in pairs(self.SolarGrenadeAttachment:GetChildren()) do
+		if v:IsA("ParticleEmitter") then
+			v.Enabled = true
+		end
+	end
+end
+
+function SolarGrenade:DetachSolarGrenade()
+	for _, v in pairs(self.SolarGrenadeAttachment:GetChildren()) do
+		if v:IsA("ParticleEmitter") then
+			v.Enabled = false
+		end
+	end
+	if self.SolarGrenadeAttachment then
+		self.SolarGrenadeAttachment:Destroy()
+		self.SolarGrenadeAttachment = nil
+	end
+end
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 
 return SolarGrenade

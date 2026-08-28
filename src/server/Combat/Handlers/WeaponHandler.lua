@@ -20,7 +20,11 @@ function WeaponHandler:Init()
 			typeof(SlotName) ~= "string"
 			or typeof(Action) ~= "string"
 			or (Origin ~= nil and typeof(Origin) ~= "CFrame")
+<<<<<<< HEAD
 			or (Origin ~= nil and typeof(Seed) ~= "number")
+=======
+			or (Seed ~= nil and typeof(Seed) ~= "number")
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 		then
 			return
 		end

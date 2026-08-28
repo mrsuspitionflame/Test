@@ -60,23 +60,7 @@ function WeaponController:SetAmmo(ammo, reserveAmmo)
 end
 
 function WeaponController:GetAnimations()
-	self.Animations = {
-		Reload = self.AnimationController:GetAnimation({
-			AnimationType = "ViewModel",
-			AnimationLocation = "WeaponAnimations",
-			AnimationName = "Reload",
-		}),
-		Fire = self.AnimationController:GetAnimation({
-			AnimationType = "ViewModel",
-			AnimationLocation = "WeaponAnimations",
-			AnimationName = "Fire",
-		}),
-		Equip = self.AnimationController:GetAnimation({
-			AnimationType = "ViewModel",
-			AnimationLocation = "WeaponAnimations",
-			AnimationName = "Equip",
-		}),
-	}
+	self.Animations = self.AnimationController:GetAnimation("Weapon")
 end
 
 function WeaponController:OnEquip()
@@ -96,6 +80,16 @@ function WeaponController:OnEquip()
 	self.AnimationController:OnEquip(self.WeaponInfo)
 	self:GetAnimations()
 
+	self.Animations.IDLE.VIEWMODEL.Looped = true
+	self.Animations.IDLE.CHARACTER.Looped = true
+
+	self.Animations.IDLE.VIEWMODEL:Play(0.15, 1, 0.1)
+	self.Animations.IDLE.CHARACTER:Play(0.15, 1, 0.1)
+
+	local EquipSpeed = 1 + (self.WeaponInfo.HANDLING - 50) / 100
+	self.Animations.EQUIP.VIEWMODEL:Play(0, 1, EquipSpeed)
+	self.Animations.EQUIP.CHARACTER:Play(0, 1, EquipSpeed)
+
 	self:Init()
 end
 
@@ -112,9 +106,13 @@ function WeaponController:OnUnequip()
 
 	self.Equipped = false
 
+	self.Animations.IDLE.VIEWMODEL:Stop(0.15)
+	self.Animations.IDLE.CHARACTER:Stop(0.15)
+
 	self.Firing:OnUnequip()
-	self.Aiming:OnUnequip()
 	self.Reloading:OnUnequip()
+	self.Aiming:OnUnequip()
+
 	self.Trove:Clean()
 	self.AnimationController:OnUnequip()
 	self.GUIController:OnUnequip()
@@ -145,21 +143,9 @@ function WeaponController:BindAction(actionName, callback, createTouchButton, ..
 end
 
 function WeaponController:Init()
-	-- Equipped Connections
-	self.Trove:Connect(self.Animations.Fire.Stopped, function()
-		print(workspace:GetServerTimeNow())
+	self.Trove:Connect(self.Animations.EQUIP.VIEWMODEL.Stopped, function()
 		self.StateManager:SetState("WeaponState", "IDLE")
 	end)
-
-	self.Trove:Connect(self.Animations.Reload.Stopped, function()
-		self.StateManager:SetState("WeaponState", "IDLE")
-	end)
-
-	self.Trove:Connect(self.Animations.Equip.Stopped, function()
-		self.StateManager:SetState("WeaponState", "IDLE")
-	end)
-
-	self.Animations.Equip:Play(0)
 
 	self:BindAction("Firing", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then

@@ -13,7 +13,6 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 local WeaponClass = require(Classes:WaitForChild("WeaponClass"))
 local AbilityClass = require(Classes:WaitForChild("AbilityClass"))
-local AnimationClass = require(Classes:WaitForChild("AnimationClass"))
 local StateManager = require(Utility:WaitForChild("StateManager"))
 local Trove = require(Packages:WaitForChild("Trove"))
 
@@ -26,6 +25,31 @@ local Slots = {
 local PlayerData = {}
 
 local LoadoutHandler = {}
+
+local function addAttachment(parent, name, position, orientation)
+	local existing = parent:FindFirstChild(name)
+	if existing then
+		return existing
+	end
+
+	local attachment = Instance.new("Attachment")
+	attachment.Name = name
+	attachment.Position = position or Vector3.zero
+	attachment.Orientation = orientation or Vector3.zero
+	attachment.Parent = parent
+
+	return attachment
+end
+
+local function setupCharacter(character)
+	local rightHand = character:FindFirstChild("RightHand") or character:WaitForChild("Right Arm")
+
+	local leftHand = character:FindFirstChild("LeftHand") or character:WaitForChild("Left Arm")
+
+	addAttachment(rightHand, "WeaponGripAttachment", Vector3.new(0, -0.65, -0.5), Vector3.new(0, 0, 0))
+
+	addAttachment(leftHand, "AbilityGripAttachment", Vector3.new(0, -1.2, 0), Vector3.new(0, 0, 0))
+end
 
 function LoadoutHandler:GetAbilityClass(player)
 	local data = PlayerData[player.UserId]
@@ -92,14 +116,23 @@ end
 local function CreateWeaponClasses(player, data)
 	for _, slotName in ipairs(Slots) do
 		print("Creating weapon class for player:", player.Name, "slot:", slotName)
+<<<<<<< HEAD
 		data.Weapons[slotName] = WeaponClass.new(player, "HandCannon", slotName, data.Animation, data.StateManager)
+=======
+		data.Weapons[slotName] = WeaponClass.new(player, "HandCannon", slotName, data.StateManager)
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 	end
 end
 
 local function CreateAbilityController(player, data)
 	print("Creating ability class for player:", player.Name)
+<<<<<<< HEAD
 	data.Animation:CreateAbilityViewModel({ Grenade = "SolarGrenade" })
 	data.Ability = AbilityClass.new(player, { Grenade = "SolarGrenade" }, data.StateManager, data.Animation)
+=======
+	local AbilityInfo = { Grenade = "SolarGrenade" }
+	data.Ability = AbilityClass.new(player, AbilityInfo, data.StateManager)
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 end
 
 local function CleanupCharacter(player, character)
@@ -122,6 +155,8 @@ local function OnCharacterAdded(player, character)
 
 	data.CharacterTrove:Clean()
 	data.Character = character
+
+	setupCharacter(character)
 
 	local humanoid = character:WaitForChild("Humanoid", 10)
 	if not humanoid or PlayerData[player.UserId] ~= data or data.Character ~= character then
@@ -178,7 +213,6 @@ local function CreatePlayerData(player)
 	data = {
 		Weapons = {},
 		Ability = nil,
-		Animation = AnimationClass.new(player),
 		StateManager = StateManager.new(),
 		Trove = Trove.new(),
 		Character = nil,
@@ -215,12 +249,14 @@ local function DestroyPlayerData(player)
 
 	CleanupCharacter(player, data.Character)
 	data.Trove:Destroy()
+<<<<<<< HEAD
 	data.Animation:OnUnequip()
 
+=======
+>>>>>>> 5c8ad66679672e18c3d4fd2ac633e85f4a1ec669
 	for _, weaponClass in pairs(data.Weapons) do
 		weaponClass:Destroy()
 	end
-
 	PlayerData[userId] = nil
 end
 

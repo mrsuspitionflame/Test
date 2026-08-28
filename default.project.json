@@ -19,9 +19,6 @@
       "Server": {
         "$path": "src/Server"
       },
-      "HeadMovement": {
-        "$path": "src/HeadMovement/ServerHeadMovement.server.luau"
-      },
       "ServerPackages": {
         "$path": "ServerPackages"
       }
@@ -34,9 +31,7 @@
           }
       },
       "StarterCharacterScripts": {
-          "HeadMovement": {
-            "$path": "src/HeadMovement/ClientHeadMovement.client.luau"
-          }
+        "$path": "src/ClientCharacter"
       }
     }
   }

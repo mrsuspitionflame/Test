@@ -20,22 +20,44 @@ local WeaponSettings = {
 		BASE_RECOIL = 200,
 		STIFFNESS = 90,
 		DAMPING = 15,
+
 		RELOAD_SPEED = 25,
-		RELOAD_DURATION = 2.5,
+		RELOAD_DURATION = 0.5,
+
+		EQUIP_DURATION = 0.5,
+
 		BULLETS_PER_SHOT = 1,
 		BULLET_RADIUS = 1,
 		SPREAD = 2,
 
 		ANIMATION_IDS = {
-			ViewModel = {
-				FIRE = "rbxassetid://86681368059916",
-				RELOAD = "rbxassetid://103958258470632",
-				EQUIP = "rbxassetid://87420884077266",
+			FIRE = {
+				VIEWMODEL = "rbxassetid://88702775679148",
+				CHARACTER = "rbxassetid://89904110536643",
 			},
-			Character = {
-				FIRE = "rbxassetid://86681368059916",
-				RELOAD = "rbxassetid://103958258470632",
-				EQUIP = "rbxassetid://87420884077266",
+			RELOAD = {
+				VIEWMODEL = "rbxassetid://132550775897445",
+				CHARACTER = "rbxassetid://130289391434673",
+			},
+			EQUIP = {
+				VIEWMODEL = "rbxassetid://120968739308160",
+				CHARACTER = "rbxassetid://116711246131231",
+			},
+			IDLE = {
+				VIEWMODEL = "rbxassetid://122677278312794",
+				CHARACTER = "rbxassetid://135394958155506",
+			},
+			JUMP = {
+				VIEWMODEL = "rbxassetid://137370128498588",
+			},
+			WALK = {
+				VIEWMODEL = "rbxassetid://130082404602417",
+			},
+			SPRINT = {
+				VIEWMODEL = "rbxassetid://84670668880316",
+			},
+			SLIDE = {
+				VIEWMODEL = "rbxassetid://135607630494819",
 			},
 		},
 	},

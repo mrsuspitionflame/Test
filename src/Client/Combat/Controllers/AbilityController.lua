@@ -44,22 +44,7 @@ function AbilityController:Init()
 end
 
 function AbilityController:GetAnimations()
-	self.Animations = {
-		Grenade = {
-			Held = self.AnimationController:GetAnimation({
-				AnimationType = "ViewModel",
-				AnimationLocation = "AbilityAnimations",
-				AnimationName = "Held",
-				AbilityName = "Grenade",
-			}),
-			Released = self.AnimationController:GetAnimation({
-				AnimationType = "ViewModel",
-				AnimationLocation = "AbilityAnimations",
-				AnimationName = "Released",
-				AbilityName = "Grenade",
-			}),
-		},
-	}
+	self.Animations = self.AnimationController:GetAnimation("Ability")
 end
 
 function AbilityController:IsFirstPerson()

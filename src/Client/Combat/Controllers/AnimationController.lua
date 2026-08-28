@@ -1,6 +1,7 @@
 local Animations = script.Parent.Parent:WaitForChild("Animations")
-local ViewModelAnimation = require(Animations:WaitForChild("ViewModelAnimation"))
-local CharacterAnimation = require(Animations:WaitForChild("CharacterAnimation"))
+local ViewModelController = require(Animations:WaitForChild("ViewModelController"))
+local AnimationLoader = require(Animations:WaitForChild("AnimationLoader"))
+local CameraController = require(Animations:WaitForChild("CameraController"))
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
@@ -13,56 +14,42 @@ function AnimationController.new()
 
 	self.Trove = Trove.new()
 
-	self.ViewModelAnimations = {
-		AbilityAnimations = {},
-		WeaponAnimations = {},
-		MovementAnimations = {},
-	}
+	self.AbilityTrove = self.Trove:Extend()
+	self.WeaponTrove = self.Trove:Extend()
+	self.MovementTrove = self.Trove:Extend()
 
-	self.CharacterAnimations = {
-		AbilityAnimations = {},
-		CharacterAnimations = {},
-		MovementAnimations = {},
-	}
+	self.AbilityAnimations = {}
+	self.WeaponAnimations = {}
+	self.MovementAnimations = {}
 
-	self.ViewModelAnimation = ViewModelAnimation.new(self)
-	--self.CharacterAnimation = CharacterAnimation.new(self)
+	self.AnimationLoader = AnimationLoader.new(self)
+	self.CameraController = CameraController.new(self)
+	self.ViewModelController = ViewModelController.new(self)
 
 	return self
 end
 
-function AnimationController:GetController(controllerName)
-	if controllerName == "ViewModel" then
-		return self.ViewModelAnimation
+function AnimationController:GetAnimation(AnimationType)
+	if AnimationType == "Weapon" then
+		return self.WeaponAnimations
+	elseif AnimationType == "Ability" then
+		return self.AbilityAnimations
+	elseif AnimationType == "Movement" then
+		return self.MovementAnimations
 	end
-	return
-end
-
-function AnimationController:GetAnimation(data)
-	if data.AnimationType == "ViewModel" then
-		if data.AnimationLocation == "AbilityAnimations" then
-			return self.ViewModelAnimations.AbilityAnimations[data.AbilityName][string.upper(data.AnimationName)]
-		elseif data.AnimationLocation == "WeaponAnimations" then
-			return self.ViewModelAnimations.WeaponAnimations[string.upper(data.AnimationName)]
-		end
-	end
-	return
+	return nil
 end
 
 function AnimationController:OnEquip(WeaponInfo)
-	self.ViewModelAnimation:OnEquip(WeaponInfo)
+	self.ViewModelController:OnEquip(WeaponInfo)
 end
 
 function AnimationController:OnUnequip()
 	self.ViewModelAnimation:OnUnequip()
 end
 
-function AnimationController:StartSprint() end
-
-function AnimationController:StopSprint() end
-
 function AnimationController:CreateAbilityViewModel(data)
-	self.ViewModelAnimation:CreateAbilityViewModel(data)
+	self.ViewModelController:CreateAbilityViewModel(data)
 end
 
 return AnimationController

@@ -26,7 +26,7 @@ function ADS:Held()
 	self.WeaponController.StateManager:PerformAction("Weapon", "Aim")
 	self.WeaponController.StateManager:SetState("AimState", "AIMING")
 
-	self.WeaponController.AnimationController.ViewModelAnimation:StartAim()
+	self.WeaponController.AnimationController.CameraController:StartAim()
 end
 
 function ADS:Released()
@@ -36,7 +36,7 @@ function ADS:Released()
 	})
 
 	self.WeaponController.StateManager:SetState("AimState", "IDLE")
-	self.WeaponController.AnimationController.ViewModelAnimation:StopAim()
+	self.WeaponController.AnimationController.CameraController:StopAim()
 end
 
 function ADS:OnUnequip()
@@ -46,7 +46,7 @@ function ADS:OnUnequip()
 	})
 
 	self.WeaponController.StateManager:SetState("AimState", "IDLE")
-	self.WeaponController.AnimationController.ViewModelAnimation:StopAim()
+	self.WeaponController.AnimationController.CameraController:StopAim()
 end
 
 function ADS:CanAim()

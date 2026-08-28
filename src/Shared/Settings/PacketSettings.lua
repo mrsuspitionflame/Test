@@ -6,18 +6,20 @@ local PacketSettings = {}
 
 PacketSettings.Character = ByteNet.defineNamespace("Character", function()
 	return {
-		HeadMovement = ByteNet.definePacket({
+		UpperBodyAim = ByteNet.definePacket({
 			reliabilityType = "unreliable",
 			value = ByteNet.struct({
-				NeckC0 = ByteNet.cframe,
+				Pitch = ByteNet.float32,
+				Yaw = ByteNet.float32,
 			}),
 		}),
 
-		ApplyHeadMovement = ByteNet.definePacket({
+		ApplyUpperBodyAim = ByteNet.definePacket({
 			reliabilityType = "unreliable",
 			value = ByteNet.struct({
 				Player = ByteNet.inst,
-				NeckC0 = ByteNet.cframe,
+				Pitch = ByteNet.float32,
+				Yaw = ByteNet.float32,
 			}),
 		}),
 	}
