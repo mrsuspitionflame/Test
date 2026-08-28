@@ -6,18 +6,20 @@ local PacketSettings = {}
 
 PacketSettings.Character = ByteNet.defineNamespace("Character", function()
 	return {
-		HeadMovement = ByteNet.definePacket({
+		UpperBodyAim = ByteNet.definePacket({
 			reliabilityType = "unreliable",
 			value = ByteNet.struct({
-				NeckC0 = ByteNet.cframe,
+				Pitch = ByteNet.float32,
+				Yaw = ByteNet.float32,
 			}),
 		}),
 
-		ApplyHeadMovement = ByteNet.definePacket({
+		ApplyUpperBodyAim = ByteNet.definePacket({
 			reliabilityType = "unreliable",
 			value = ByteNet.struct({
 				Player = ByteNet.inst,
-				NeckC0 = ByteNet.cframe,
+				Pitch = ByteNet.float32,
+				Yaw = ByteNet.float32,
 			}),
 		}),
 	}
@@ -25,9 +27,9 @@ end)
 
 PacketSettings.Creation = ByteNet.defineNamespace("Creation", function()
 	return {
-		CreateGunController = ByteNet.definePacket({
+		CreateWeaponController = ByteNet.definePacket({
 			value = ByteNet.struct({
-				GunName = ByteNet.string,
+				WeaponName = ByteNet.string,
 				SlotName = ByteNet.string,
 			}),
 		}),
@@ -51,7 +53,7 @@ PacketSettings.Combat.Replicate = ByteNet.defineNamespace("CombatReplicate", fun
 		ReplicateShotEvent = ByteNet.definePacket({
 			reliabilityType = "unreliable",
 			value = ByteNet.struct({
-				MuzzlePosition = ByteNet.vec3,
+				RayOrigin = ByteNet.vec3,
 
 				RayResults = ByteNet.array(ByteNet.struct({
 					Position = ByteNet.vec3,
@@ -77,9 +79,18 @@ PacketSettings.Combat.Replicate = ByteNet.defineNamespace("CombatReplicate", fun
 	}
 end)
 
-PacketSettings.Combat.Weapon = ByteNet.defineNamespace("CombatWeapon", function()
+PacketSettings.Combat.Weapon = ByteNet.defineNamespace("Weapon", function()
 	return {
-		ShootRequest = ByteNet.definePacket({
+		FireRequest = ByteNet.definePacket({
+			value = ByteNet.struct({
+				Action = ByteNet.string, -- "Held", "Released", "Cancelled", "Fire"
+				SlotName = ByteNet.string,
+				Origin = ByteNet.optional(ByteNet.cframe),
+				Seed = ByteNet.optional(ByteNet.int32),
+			}),
+		}),
+
+		ShotRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
 				SlotName = ByteNet.string,
 				CFrame = ByteNet.cframe,
@@ -89,6 +100,7 @@ PacketSettings.Combat.Weapon = ByteNet.defineNamespace("CombatWeapon", function(
 
 		ReloadRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
+				Action = ByteNet.string,
 				SlotName = ByteNet.string,
 			}),
 		}),
@@ -116,31 +128,23 @@ PacketSettings.Combat.Weapon = ByteNet.defineNamespace("CombatWeapon", function(
 			}),
 		}),
 
-		AimEvent = ByteNet.definePacket({
+		AimRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
 				SlotName = ByteNet.string,
-				Aiming = ByteNet.bool,
+				Action = ByteNet.string,
 			}),
 		}),
 	}
 end)
 
-PacketSettings.Combat.Ability = {}
-PacketSettings.Combat.Ability.Grenade = ByteNet.defineNamespace("GrenadeAbility", function()
+PacketSettings.Combat.Ability = ByteNet.defineNamespace("Ability", function()
 	return {
-		GrenadeHeld = ByteNet.definePacket({
+		GrenadeRequest = ByteNet.definePacket({
 			value = ByteNet.struct({
+				Action = ByteNet.string,
 				Origin = ByteNet.optional(ByteNet.vec3),
 				Direction = ByteNet.optional(ByteNet.vec3),
 				ProjectileId = ByteNet.optional(ByteNet.string),
-			}),
-		}),
-
-		GrenadeReleased = ByteNet.definePacket({
-			value = ByteNet.struct({
-				Origin = ByteNet.optional(ByteNet.vec3),
-				Direction = ByteNet.optional(ByteNet.vec3),
-				ProjectileID = ByteNet.optional(ByteNet.string),
 			}),
 		}),
 	}

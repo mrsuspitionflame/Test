@@ -3,7 +3,7 @@ local GUIStorage = ReplicatedStorage:WaitForChild("GUIStorage")
 local CombatUI = GUIStorage:WaitForChild("CombatUI")
 
 local AbilityUI = require(CombatUI:WaitForChild("AbilityUI"))
-local GunUI = require(CombatUI:WaitForChild("GunUI"))
+local WeaponUI = require(CombatUI:WaitForChild("WeaponUI"))
 
 local Vide = require(game.ReplicatedStorage.Packages.Vide)
 local create = Vide.create
@@ -33,7 +33,7 @@ local story = {
 			}),
 
 			create("Frame")({
-				Name = "GunFrame",
+				Name = "WeaponFrame",
 				BackgroundTransparency = 1,
 				Size = UDim2.fromScale(0.23, 1),
 				Position = UDim2.fromScale(0.76, 0.72),
@@ -43,11 +43,11 @@ local story = {
 					DominantAxis = Enum.DominantAxis.Width,
 				}),
 
-				GunUI(),
+				WeaponUI(),
 			}),
 
 			create("Frame")({
-				Name = "GunReticalFrame",
+				Name = "WeaponReticleFrame",
 				Size = UDim2.fromScale(0.03, 1),
 				Position = UDim2.fromScale(0.5, 0.5),
 				BackgroundTransparency = 0.5,

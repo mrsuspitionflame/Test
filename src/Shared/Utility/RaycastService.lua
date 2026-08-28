@@ -46,7 +46,6 @@ function RaycastService:CastRays(origin: Vector3, directions: { Vector3 }, ignor
 
 	local rayResults = {}
 	if radius > 0 then
-		print("Casting sphere rays with radius")
 		for _, direction in directions do
 			local raycastResult = workspace:Spherecast(origin, radius, direction, params)
 
@@ -99,7 +98,7 @@ function RaycastService:DrawRayResults(origin: Vector3, rayResults: { any })
 
 		local laser = laserBeamEffect:Clone()
 		laser.CFrame = CFrame.lookAt(origin, rayResult.Position)
-		laser.StartAttachment.Position = Vector3.zero
+		laser.StartAttachment.Position = Vector3.new(0, 0, 0)
 		laser.EndAttachment.Position = Vector3.new(0, 0, -distance)
 		laser.Parent = Workspace
 		local tween = TweenService:Create(laser.StartAttachment, tweenInfo, { Position = Vector3.new(0, 0, -distance) })
@@ -107,7 +106,7 @@ function RaycastService:DrawRayResults(origin: Vector3, rayResults: { any })
 		tween.Completed:Once(function()
 			laser.EndAttachment.Position = Vector3.new(0, 0, -distance)
 
-			task.delay(0.03, function()
+			task.delay(0.05, function()
 				laser:Destroy()
 			end)
 		end)
@@ -124,16 +123,6 @@ function RaycastService:DrawRayResults(origin: Vector3, rayResults: { any })
 			end)
 		end
 	end
-end
-
-function RaycastService:ValidateVector3(value)
-	return typeof(value) == "Vector3"
-		and value.X == value.X
-		and value.Y == value.Y
-		and value.Z == value.Z
-		and math.abs(value.X) < math.huge
-		and math.abs(value.Y) < math.huge
-		and math.abs(value.Z) < math.huge
 end
 
 return RaycastService

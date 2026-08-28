@@ -77,7 +77,7 @@ function SimulateProjectileServer:Init()
 			if result then
 				projectile.Position += displacement.Unit * result.Distance
 
-				removeProjectile(id, { Position = result.Position, Normal = result.Normal })
+				removeProjectile(id, result)
 				continue
 			end
 

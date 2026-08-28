@@ -19,9 +19,6 @@
       "Server": {
         "$path": "src/Server"
       },
-      "HeadMovement": {
-        "$path": "src/HeadMovement/ServerHeadMovement.server.luau"
-      },
       "ServerPackages": {
         "$path": "ServerPackages"
       }
@@ -30,17 +27,11 @@
     "StarterPlayer": {
       "StarterPlayerScripts": {
           "Client": {
-            "$path": "src/Client"
-          },
-
-          "ClientApplyHead": {
-            "$path": "src/HeadMovement/OtherClientHeadMovement.client.luau"
+            "$path": "src/Client" 
           }
       },
       "StarterCharacterScripts": {
-          "HeadMovement": {
-            "$path": "src/HeadMovement/ClientHeadMovement.client.luau"
-          }
+        "$path": "src/ClientCharacter"
       }
     }
   }

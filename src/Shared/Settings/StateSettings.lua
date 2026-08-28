@@ -1,10 +1,27 @@
 local StateSettings = {}
 
+StateSettings.Ability = {
+	Grenade = {
+		BlockedStates = {
+			WeaponState = { "EQUIPPING", "FIRING", "RELOADING" },
+			AbilityState = { "USING_GRENADE" },
+			MovementState = {},
+		},
+		CancelStates = {
+			WeaponState = {},
+			AbilityState = {},
+			MovementState = { "SPRINTING" },
+			EquippedState = { "EQUIPPED" },
+			AimState = { "AIMING" },
+		},
+	},
+}
+
 StateSettings.Weapon = {
 	Fire = {
 		BlockedStates = {
 			WeaponState = { "EQUIPPING" },
-			AbilityState = { "USING_ABILITY" },
+			AbilityState = { "USING_GRENADE" },
 			MovementState = {},
 		},
 		CancelStates = {
@@ -17,7 +34,7 @@ StateSettings.Weapon = {
 	Reload = {
 		BlockedStates = {
 			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
-			AbilityState = { "USING_ABILITY" },
+			AbilityState = { "USING_GRENADE" },
 			MovementState = {},
 		},
 		CancelStates = {
@@ -30,7 +47,7 @@ StateSettings.Weapon = {
 	Equip = {
 		BlockedStates = {
 			WeaponState = { "EQUIPPING" },
-			AbilityState = { "USING_ABILITY" },
+			AbilityState = { "USING_GRENADE" },
 			MovementState = {},
 		},
 		CancelStates = {
@@ -43,7 +60,7 @@ StateSettings.Weapon = {
 	UnEquip = {
 		BlockedStates = {
 			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
-			AbilityState = { "USING_ABILITY" },
+			AbilityState = {},
 			MovementState = {},
 		},
 		CancelStates = {
@@ -56,7 +73,7 @@ StateSettings.Weapon = {
 	Aim = {
 		BlockedStates = {
 			WeaponState = { "EQUIPPING", "RELOADING" },
-			AbilityState = { "USING_ABILITY" },
+			AbilityState = { "USING_GRENADE" },
 			MovementState = {},
 		},
 		CancelStates = {
@@ -71,7 +88,7 @@ StateSettings.Movement = {
 	Slide = {
 		BlockedStates = {
 			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
-			AbilityState = { "USING_ABILITY" },
+			AbilityState = { "USING_GRENADE" },
 			MovementState = { "SLIDING", "CROUCHING", "JUMPING", "FALLING" },
 		},
 		CancelStates = {
@@ -85,7 +102,7 @@ StateSettings.Movement = {
 		BlockedStates = {
 			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
 			AbilityState = {},
-			MovementState = { "SLIDING" },
+			MovementState = { "SLIDING", "JUMPING", "FALLING" },
 		},
 		CancelStates = {
 			WeaponState = {},

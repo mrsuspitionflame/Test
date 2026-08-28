@@ -1,63 +1,149 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
+local HTTPService = game:GetService("HttpService")
+local Player = game.Players.LocalPlayer
 local Client = script:FindFirstAncestor("Client")
 local Visuals = Client:WaitForChild("Visuals")
+local UIS = game:GetService("UserInputService")
 
 local Effects = ReplicatedStorage:WaitForChild("Effects")
 local Abilities = Effects:WaitForChild("Abilities")
 local Grenade = Abilities:WaitForChild("Grenade")
-local Hit = Grenade:WaitForChild("Hit")
-local Projectile = Grenade:WaitForChild("Projectile")
+local SolarGrenadeEffects = Grenade:WaitForChild("SolarGrenade")
+local Hit = SolarGrenadeEffects:WaitForChild("Hit")
+local Projectile = SolarGrenadeEffects:WaitForChild("Projectile")
+local SolarGrenadeAttachment = SolarGrenadeEffects:WaitForChild("SolarGrenadeAttachment")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
-local AbilitySettings = require(Settings:WaitForChild("AbilitySettings"))
-local GrenadeInfo = AbilitySettings.Grenade.SolarGrenade
 
 local SimulateProjectileClient = require(Visuals:WaitForChild("SimulateProjectile(Client)"))
 
 local SolarGrenade = {}
 
-function SolarGrenade:Held(data, replicate)
-	print("Held")
-	if not replicate then
-		PacketSettings.Combat.Ability.Grenade.GrenadeHeld.send({})
-	end
-	return
+SolarGrenade.__index = SolarGrenade
+
+function SolarGrenade.new(AbilityController)
+	local self = setmetatable({}, SolarGrenade)
+
+	self.AbilityController = AbilityController
+	self.StateManager = AbilityController.StateManager
+	self.ViewModelController = AbilityController.AnimationController.ViewModelController
+	self.GrenadeInfo = self.AbilityController.AbilityInfo.GrenadeInfo
+
+	self.Trove = self.AbilityController.Trove:Extend()
+
+	return self
 end
 
-function SolarGrenade:Released(data, replicate)
-	print("Released")
+function SolarGrenade:Held()
+	if not self.AbilityController.StateManager:TryAction("Ability", "Grenade") then
+		return
+	end
+
+	PacketSettings.Combat.Ability.GrenadeRequest.send({
+		Action = "Held",
+	})
+
+	self.StateManager:PerformAction("Ability", "Grenade")
+	self.StateManager:SetState("AbilityState", "USING_GRENADE")
+
+	local Animations = self.AbilityController.Animations
+	local GrenadeHeldAnimation = Animations.Grenade.HELD.VIEWMODEL
+	local GrenadeCharacterAnimation = Animations.Grenade.HELD.CHARACTER
+
+	self.ViewModelController:ShowAbilityViewModel()
+	self:AttachSolarGrenade()
+
+	self.Trove:Add(GrenadeHeldAnimation:GetMarkerReachedSignal("CastSolarGrenade"):Connect(function()
+		self:Cast()
+		self:DetachSolarGrenade()
+	end))
+
+	self.Trove:Add(GrenadeHeldAnimation.Stopped:Connect(function()
+		self.StateManager:SetState("AbilityState", "IDLE")
+		self:DetachSolarGrenade()
+		self.ViewModelController:HideAbilityViewModel()
+		self.Trove:Clean()
+	end))
+
+	GrenadeHeldAnimation:Play(0)
+	GrenadeCharacterAnimation:Play(0)
+end
+
+function SolarGrenade:AttachSolarGrenade()
+	local LeftArm = self.ViewModelController.AbilityViewModel:FindFirstChild("Left Arm")
+	local LeftGripAttachment = LeftArm:FindFirstChild("LeftGripAttachment")
+
+	if LeftGripAttachment then
+		local solarGrenade = SolarGrenadeAttachment:Clone()
+		solarGrenade.Parent = LeftArm
+		solarGrenade.WorldCFrame = LeftGripAttachment.WorldCFrame
+
+		for _, descendant in solarGrenade:GetDescendants() do
+			if descendant:IsA("ParticleEmitter") then
+				descendant.Enabled = true
+			end
+		end
+	end
+end
+
+function SolarGrenade:DetachSolarGrenade()
+	local LeftArm = self.ViewModelController.AbilityViewModel:FindFirstChild("Left Arm")
+
+	if LeftArm:FindFirstChild("SolarGrenadeAttachment") then
+		local solarGrenade = LeftArm:FindFirstChild("SolarGrenadeAttachment")
+		for _, descendant in solarGrenade:GetDescendants() do
+			if descendant:IsA("ParticleEmitter") then
+				descendant.Enabled = false
+			end
+		end
+		Debris:AddItem(solarGrenade, 1)
+	end
+end
+
+function SolarGrenade:Cast()
+	local ProjectileID = HTTPService:GenerateGUID(false)
+	local Direction = workspace.CurrentCamera.CFrame.LookVector
+	local Origin = workspace.CurrentCamera.CFrame.Position + workspace.CurrentCamera.CFrame.LookVector * -1
+
+	PacketSettings.Combat.Ability.GrenadeRequest.send({
+		Action = "Cast",
+		Origin = Origin,
+		Direction = Direction,
+		ProjectileId = ProjectileID,
+	})
+
 	local projectile = Projectile:Clone()
 	projectile.Parent = workspace
 
 	SimulateProjectileClient:CreateProjectile({
-		Id = data.ProjectileID,
-		Origin = data.Origin,
-		Direction = data.Direction,
-		Speed = GrenadeInfo.SPEED,
-		Gravity = Vector3.new(0, GrenadeInfo.GRAVITY, 0),
-		Radius = GrenadeInfo.RADIUS,
-		MaxDistance = GrenadeInfo.MAX_DISTANCE,
+		Id = ProjectileID,
+		Origin = Origin,
+		Direction = Direction,
+		Speed = self.GrenadeInfo.SPEED,
+		Gravity = Vector3.new(0, self.GrenadeInfo.GRAVITY, 0),
+		Radius = self.GrenadeInfo.RADIUS,
+		MaxDistance = self.GrenadeInfo.MAX_DISTANCE,
 		Projectile = projectile,
 		OnHit = function(result)
 			self:OnHit(result)
 		end,
-		IgnoreList = { data.Player.Character, workspace.CurrentCamera },
+		IgnoreList = { Player.Character, workspace.CurrentCamera },
 	})
-
-	if not replicate then
-		PacketSettings.Combat.Ability.Grenade.GrenadeReleased.send({
-			Origin = data.Origin,
-			Direction = data.Direction,
-			ProjectileID = data.ProjectileID,
-		})
-	end
 end
 
-function SolarGrenade:Cancelled()
-	print("Cancelled")
+function SolarGrenade:Released() end
+
+function SolarGrenade:Cancelled() end
+
+function SolarGrenade:SetEmitterTransparency(part)
+	for _, descendant in part:GetDescendants() do
+		if descendant:IsA("ParticleEmitter") then
+			descendant.Enabled = false
+		end
+	end
 end
 
 function SolarGrenade:OnHit(result)
@@ -66,7 +152,10 @@ function SolarGrenade:OnHit(result)
 	hit.Position = result.Position
 	hit.Parent = workspace
 
-	Debris:AddItem(hit, GrenadeInfo.LAST_DURATION)
+	task.delay(self.GrenadeInfo.LAST_DURATION, function()
+		self:SetEmitterTransparency(hit)
+		Debris:AddItem(hit, 1)
+	end)
 end
 
 return SolarGrenade

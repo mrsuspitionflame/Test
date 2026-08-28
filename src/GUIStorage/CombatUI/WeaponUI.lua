@@ -18,9 +18,9 @@ local GetAmmoColor = function(AmmoType)
 	end
 end
 
-local function CreateGunSlot(Guninfo)
+local function CreateWeaponSlot(weaponInfo)
 	local isEquipped = function()
-		return CombatUIsources.EquippedSlot() == Guninfo.SlotName
+		return CombatUIsources.EquippedSlot() == weaponInfo.SlotName
 	end
 
 	local targetSize = function()
@@ -32,11 +32,11 @@ local function CreateGunSlot(Guninfo)
 	end
 
 	local slotNumber = function()
-		if Guninfo.SlotName == "KineticSlot" then
+		if weaponInfo.SlotName == "KineticSlot" then
 			return "1"
-		elseif Guninfo.SlotName == "EnergySlot" then
+		elseif weaponInfo.SlotName == "EnergySlot" then
 			return "2"
-		elseif Guninfo.SlotName == "HeavySlot" then
+		elseif weaponInfo.SlotName == "HeavySlot" then
 			return "3"
 		else
 			return ""
@@ -46,17 +46,17 @@ local function CreateGunSlot(Guninfo)
 	local animatedSize = spring(targetSize, 0.25, 0.85)
 
 	return create("Frame")({
-		Name = `{Guninfo.SlotName}Slot`,
+		Name = `{weaponInfo.SlotName}Slot`,
 		Size = animatedSize,
 
 		LayoutOrder = function()
-			return if isEquipped() then 0 else Guninfo.DefaultOrder
+			return if isEquipped() then 0 else weaponInfo.DefaultOrder
 		end,
 
 		BackgroundTransparency = 1,
 
 		create("Frame")({
-			Name = "GunInfoFrame",
+			Name = "WeaponInfoFrame",
 			Size = UDim2.fromScale(0.75, 1),
 			Position = UDim2.fromScale(0.25, 0),
 			BackgroundTransparency = 1,
@@ -73,7 +73,7 @@ local function CreateGunSlot(Guninfo)
 				Size = UDim2.fromScale(0.01, 1),
 				Position = UDim2.fromScale(0, 0),
 				BackgroundColor3 = function()
-					return GetAmmoColor(Guninfo.AmmoColor())
+					return GetAmmoColor(weaponInfo.AmmoColor())
 				end,
 			}),
 
@@ -92,7 +92,7 @@ local function CreateGunSlot(Guninfo)
 				TextColor3 = Color3.fromRGB(255, 255, 255),
 				TextScaled = true,
 				Text = function()
-					return tostring(Guninfo.Ammo())
+					return tostring(weaponInfo.Ammo())
 				end,
 				TextXAlignment = Enum.TextXAlignment.Center,
 				TextYAlignment = Enum.TextYAlignment.Center,
@@ -106,7 +106,7 @@ local function CreateGunSlot(Guninfo)
 				TextColor3 = Color3.fromRGB(255, 255, 255),
 				TextScaled = true,
 				Text = function()
-					return tostring(Guninfo.ReserveAmmo())
+					return tostring(weaponInfo.ReserveAmmo())
 				end,
 				TextXAlignment = Enum.TextXAlignment.Center,
 				TextYAlignment = Enum.TextYAlignment.Center,
@@ -159,9 +159,9 @@ local function CreateGunSlot(Guninfo)
 	})
 end
 
-local function GunUI()
+local function WeaponUI()
 	return create("Frame")({
-		Name = "GunFrame",
+		Name = "WeaponFrame",
 		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
 
@@ -180,7 +180,7 @@ local function GunUI()
 			Padding = UDim.new(0.05, 0),
 		}),
 
-		CreateGunSlot({
+		CreateWeaponSlot({
 			SlotName = "KineticSlot",
 			Ammo = CombatUIsources.KineticSlot.Ammo,
 			ReserveAmmo = CombatUIsources.KineticSlot.ReserveAmmo,
@@ -188,7 +188,7 @@ local function GunUI()
 			DefaultOrder = 1,
 		}),
 
-		CreateGunSlot({
+		CreateWeaponSlot({
 			SlotName = "EnergySlot",
 			Ammo = CombatUIsources.EnergySlot.Ammo,
 			ReserveAmmo = CombatUIsources.EnergySlot.ReserveAmmo,
@@ -196,7 +196,7 @@ local function GunUI()
 			DefaultOrder = 2,
 		}),
 
-		CreateGunSlot({
+		CreateWeaponSlot({
 			SlotName = "HeavySlot",
 			Ammo = CombatUIsources.HeavySlot.Ammo,
 			ReserveAmmo = CombatUIsources.HeavySlot.ReserveAmmo,
@@ -206,4 +206,4 @@ local function GunUI()
 	})
 end
 
-return GunUI
+return WeaponUI
