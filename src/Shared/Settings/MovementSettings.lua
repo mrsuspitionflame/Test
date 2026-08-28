@@ -29,7 +29,6 @@ local MovementSettings = {
 		SPRINT = "rbxassetid://122472086522812",
 		SLIDE = "rbxassetid://87397276095774",
 	},
-	THING = "rbxassetid://123456789012345",
 }
 
 return MovementSettings
