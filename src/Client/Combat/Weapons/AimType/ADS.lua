@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
+local StateSettings = require(Settings:WaitForChild("StateSettings"))
 
 local ADS = {}
 
@@ -11,6 +12,14 @@ function ADS.new(WeaponController)
 	local self = setmetatable({}, ADS)
 	self.WeaponController = WeaponController
 	return self
+end
+
+function ADS:CancelStates()
+	for stateType, states in pairs(StateSettings.Weapon.Aim.CancelStates) do
+		for _, state in ipairs(states) do
+			self.WeaponController.CombatClasses:CancelState(stateType, state)
+		end
+	end
 end
 
 function ADS:Held()
@@ -23,7 +32,7 @@ function ADS:Held()
 		Action = "Held",
 	})
 
-	self.WeaponController.StateManager:PerformAction("Weapon", "Aim")
+	self:CancelStates()
 	self.WeaponController.StateManager:SetState("AimState", "AIMING")
 
 	self.WeaponController.AnimationController.CameraController:StartAim()
@@ -36,6 +45,19 @@ function ADS:Released()
 	})
 
 	self.WeaponController.StateManager:SetState("AimState", "IDLE")
+	self.WeaponController.AnimationController.CameraController:StopAim()
+end
+
+function ADS:Cancelled()
+	PacketSettings.Combat.Weapon.AimRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Cancelled",
+	})
+
+	if self.WeaponController.StateManager:GetState("AimState") == "AIMING" then
+		self.WeaponController.StateManager:SetState("AimState", "IDLE")
+	end
+
 	self.WeaponController.AnimationController.CameraController:StopAim()
 end
 

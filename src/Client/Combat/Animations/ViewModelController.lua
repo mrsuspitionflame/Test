@@ -14,15 +14,56 @@ ViewModelController.__index = ViewModelController
 
 function ViewModelController.new(AnimationController)
 	local self = setmetatable({}, ViewModelController)
-	self.AnimationController = AnimationController
 
+	self.AnimationController = AnimationController
+	self.StateManager = AnimationController.StateManager
 	self.AnimationLoader = AnimationController.AnimationLoader
 	self.CameraController = AnimationController.CameraController
-
 	self.WeaponTrove = AnimationController.WeaponTrove
 	self.AbilityTrove = AnimationController.AbilityTrove
-	self.MovementTrove = AnimationController.MovementTrove
+
+	AnimationController.Trove:Add(self.StateManager.StateChangedSignal:Connect(function(stateType, newState)
+		if stateType == "MovementState" then
+			self:UpdateMovementAnimations(newState)
+		end
+	end))
 	return self
+end
+
+function ViewModelController:UpdateMovementAnimations(newState)
+	local animations = self.AnimationController.WeaponAnimations
+	local walk = animations.WALK and animations.WALK.VIEWMODEL
+	local sprint = animations.SPRINT and animations.SPRINT.VIEWMODEL
+	local jump = animations.JUMP and animations.JUMP.VIEWMODEL
+	local idle = animations.IDLE and animations.IDLE.VIEWMODEL
+	local slide = animations.SLIDE and animations.SLIDE.VIEWMODEL
+
+	if not walk or not sprint or not jump or not idle or not slide then
+		return
+	end
+
+	walk:Stop(0.15)
+	sprint:Stop(0.15)
+	jump:Stop(0.15)
+	idle:Stop(0.15)
+	slide:Stop(0.15)
+
+	if newState == "WALKING" then
+		walk.Looped = true
+		walk:Play(0.15)
+	elseif newState == "JUMPING" then
+		jump.Looped = false
+		jump:Play(0.15)
+	elseif newState == "IDLE" then
+		idle.Looped = true
+		idle:Play(0.15)
+	elseif newState == "SPRINTING" then
+		sprint.Looped = true
+		sprint:Play(0.15)
+	elseif newState == "SLIDING" then
+		slide.Looped = true
+		slide:Play(0.15)
+	end
 end
 
 -- Weapon ViewModels functions
@@ -32,6 +73,7 @@ function ViewModelController:OnEquip(WeaponInfo)
 
 	self:CreateWeaponViewModel()
 	self.CameraController:OnEquip(self.WeaponViewModel, self.WeaponInfo)
+	self:UpdateMovementAnimations(self.StateManager:GetState("MovementState"))
 end
 
 function ViewModelController:OnUnequip()
@@ -62,13 +104,15 @@ function ViewModelController:AttachWeaponModel(ViewModel, WeaponModel)
 
 	WeaponModel.Parent = ViewModel
 
-	local weaponMotor = Instance.new("Motor6D")
+	local weaponMotor = self.WeaponTrove:Add(Instance.new("Motor6D"))
 	weaponMotor.Name = "WeaponMotor"
 	weaponMotor.Part0 = RightArm
 	weaponMotor.Part1 = Default
 	weaponMotor.C0 = ArmGrip.CFrame
 	weaponMotor.C1 = GunGrip.CFrame
 	weaponMotor.Parent = RightArm
+
+	self.WeaponMotor = weaponMotor
 
 	local Head = ViewModel:WaitForChild("Head", true)
 	local WeaponAimPartReference = Default:WaitForChild("AimPartReference")

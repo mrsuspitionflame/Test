@@ -1,3 +1,0 @@
-local MovementClass = {}
-
-return MovementClass

@@ -1,5 +1,7 @@
 local StateSettings = {}
 
+-- Components apply these cancellation rules after an action is accepted.
+
 StateSettings.Ability = {
 	Grenade = {
 		BlockedStates = {
@@ -8,8 +10,6 @@ StateSettings.Ability = {
 			MovementState = {},
 		},
 		CancelStates = {
-			WeaponState = {},
-			AbilityState = {},
 			MovementState = { "SPRINTING" },
 			EquippedState = { "EQUIPPED" },
 			AimState = { "AIMING" },
@@ -26,7 +26,6 @@ StateSettings.Weapon = {
 		},
 		CancelStates = {
 			WeaponState = { "RELOADING" },
-			AbilityState = {},
 			MovementState = { "SPRINTING" },
 		},
 	},
@@ -38,8 +37,6 @@ StateSettings.Weapon = {
 			MovementState = {},
 		},
 		CancelStates = {
-			WeaponState = {},
-			AbilityState = {},
 			MovementState = { "SPRINTING" },
 		},
 	},
@@ -50,11 +47,7 @@ StateSettings.Weapon = {
 			AbilityState = { "USING_GRENADE" },
 			MovementState = {},
 		},
-		CancelStates = {
-			WeaponState = {},
-			AbilityState = {},
-			MovementState = {},
-		},
+		CancelStates = {},
 	},
 
 	UnEquip = {
@@ -63,22 +56,17 @@ StateSettings.Weapon = {
 			AbilityState = {},
 			MovementState = {},
 		},
-		CancelStates = {
-			WeaponState = {},
-			AbilityState = {},
-			MovementState = {},
-		},
+		CancelStates = {},
 	},
 
 	Aim = {
 		BlockedStates = {
-			WeaponState = { "EQUIPPING", "RELOADING" },
+			WeaponState = { "EQUIPPING" },
 			AbilityState = { "USING_GRENADE" },
 			MovementState = {},
 		},
 		CancelStates = {
 			WeaponState = { "RELOADING" },
-			AbilityState = {},
 			MovementState = { "SPRINTING" },
 		},
 	},
@@ -92,8 +80,6 @@ StateSettings.Movement = {
 			MovementState = { "SLIDING", "CROUCHING", "JUMPING", "FALLING" },
 		},
 		CancelStates = {
-			WeaponState = {},
-			AbilityState = {},
 			MovementState = { "SPRINTING" },
 		},
 	},
@@ -102,12 +88,9 @@ StateSettings.Movement = {
 		BlockedStates = {
 			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
 			AbilityState = {},
-			MovementState = { "SLIDING", "JUMPING", "FALLING" },
+			MovementState = {},
 		},
 		CancelStates = {
-			WeaponState = {},
-			AbilityState = {},
-			MovementState = {},
 			AimState = { "AIMING" },
 		},
 	},
@@ -118,11 +101,7 @@ StateSettings.Movement = {
 			AbilityState = {},
 			MovementState = { "SLIDING", "JUMPING", "FALLING" },
 		},
-		CancelStates = {
-			WeaponState = {},
-			AbilityState = {},
-			MovementState = {},
-		},
+		CancelStates = {},
 	},
 
 	Jump = {
@@ -131,11 +110,16 @@ StateSettings.Movement = {
 			AbilityState = {},
 			MovementState = {},
 		},
-		CancelStates = {
+		CancelStates = {},
+	},
+
+	DoubleJump = {
+		BlockedStates = {
 			WeaponState = {},
 			AbilityState = {},
-			MovementState = {},
+			MovementState = { "JUMPING" },
 		},
+		CancelStates = {},
 	},
 }
 

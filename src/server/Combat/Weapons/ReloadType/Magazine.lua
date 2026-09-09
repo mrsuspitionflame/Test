@@ -24,7 +24,6 @@ function Magazine:Held()
 		return
 	end
 
-	self.WeaponClass.StateManager:PerformAction("Weapon", "Reload")
 	self.WeaponClass.StateManager:SetState("WeaponState", "RELOADING")
 
 	local ReloadSpeed = 1 + (self.WeaponInfo.RELOAD_SPEED - 50) / 100

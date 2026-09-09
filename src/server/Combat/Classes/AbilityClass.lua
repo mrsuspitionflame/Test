@@ -14,12 +14,13 @@ local AbilityClass = {}
 
 AbilityClass.__index = AbilityClass
 
-function AbilityClass.new(player, AbilityInfo, stateManager)
+function AbilityClass.new(player, AbilityInfo, stateManager, combatClasses)
 	local self = setmetatable({
 		Trove = Trove.new(),
 
 		Player = player,
 		StateManager = stateManager,
+		CombatClasses = combatClasses,
 	}, AbilityClass)
 
 	self.AbilityInfo = {
@@ -31,7 +32,12 @@ function AbilityClass.new(player, AbilityInfo, stateManager)
 	return self
 end
 
+function AbilityClass:OnCharacterRemoved()
+	self.Grenade:Reset()
+end
+
 function AbilityClass:Destroy()
+	self:OnCharacterRemoved()
 	self.Trove:Destroy()
 end
 

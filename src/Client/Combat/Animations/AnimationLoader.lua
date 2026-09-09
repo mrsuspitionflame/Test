@@ -3,7 +3,6 @@ local Players = game:GetService("Players")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local AbilitySettings = require(Settings:WaitForChild("AbilitySettings"))
-local MovementSettings = require(Settings:WaitForChild("MovementSettings"))
 
 local AnimationLoader = {}
 AnimationLoader.__index = AnimationLoader
@@ -21,11 +20,10 @@ function AnimationLoader.new(AnimationController)
 
 	self.WeaponTrove = AnimationController.WeaponTrove
 	self.AbilityTrove = AnimationController.AbilityTrove
-	self.MovementTrove = AnimationController.MovementTrove
 
 	self.WeaponAnimations = AnimationController.WeaponAnimations
 	self.AbilityAnimations = AnimationController.AbilityAnimations
-	self.MovementAnimations = AnimationController.MovementAnimations
+
 	return self
 end
 
@@ -87,24 +85,6 @@ function AnimationLoader:LoadAbilityAnimations(ViewModel, AbilityInfo)
 				self.AbilityAnimations[AbilityType][ActionName][AnimationType] = self.AbilityTrove:Add(LoadedAnimation)
 			end
 		end
-	end
-end
-
-function AnimationLoader:LoadMovementAnimations()
-	local Character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
-	local CharacterAnimator = GetAnimator(Character)
-
-	for ActionName, AnimationId in pairs(MovementSettings.LOAD_ANIMATION_IDS) do
-		if AnimationId == nil then
-			continue
-		end
-
-		local Animation = Instance.new("Animation")
-		Animation.Name = ActionName .. "Animation"
-		Animation.AnimationId = AnimationId
-
-		local LoadedAnimation = CharacterAnimator:LoadAnimation(Animation)
-		self.MovementAnimations[ActionName] = self.MovementTrove:Add(LoadedAnimation)
 	end
 end
 

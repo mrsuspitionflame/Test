@@ -4,7 +4,6 @@ local HTTPService = game:GetService("HttpService")
 local Player = game.Players.LocalPlayer
 local Client = script:FindFirstAncestor("Client")
 local Visuals = Client:WaitForChild("Visuals")
-local UIS = game:GetService("UserInputService")
 
 local Effects = ReplicatedStorage:WaitForChild("Effects")
 local Abilities = Effects:WaitForChild("Abilities")
@@ -46,7 +45,6 @@ function SolarGrenade:Held()
 		Action = "Held",
 	})
 
-	self.StateManager:PerformAction("Ability", "Grenade")
 	self.StateManager:SetState("AbilityState", "USING_GRENADE")
 
 	local Animations = self.AbilityController.Animations

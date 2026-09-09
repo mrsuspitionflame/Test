@@ -22,7 +22,7 @@ local WeaponModels = Models:WaitForChild("WeaponModels")
 local WeaponClass = {}
 WeaponClass.__index = WeaponClass
 
-function WeaponClass.new(Player, WeaponName, SlotName, StateManager)
+function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClasses)
 	local WeaponInfo = table.clone(WeaponSettings[WeaponName])
 
 	local self = {
@@ -34,6 +34,7 @@ function WeaponClass.new(Player, WeaponName, SlotName, StateManager)
 		SlotName = SlotName,
 
 		StateManager = StateManager,
+		CombatClasses = CombatClasses,
 
 		Equipped = false,
 	}
@@ -65,7 +66,6 @@ function WeaponClass:OnUnequip()
 
 	self.Equipped = false
 
-	self.StateManager:PerformAction("Weapon", "UnEquip")
 	self.StateManager:SetState("WeaponState", "UNEQUIPPED")
 	self.StateManager:SetState("EquippedState", "UNEQUIPPED")
 
@@ -97,7 +97,6 @@ function WeaponClass:OnEquip()
 
 	self:AttachWeaponModel()
 
-	self.StateManager:PerformAction("Weapon", "Equip")
 	self.StateManager:SetState("WeaponState", "EQUIPPING")
 	self.StateManager:SetState("EquippedState", "EQUIPPED")
 
@@ -127,7 +126,7 @@ function WeaponClass:AttachWeaponModel()
 
 	WeaponModel.Parent = self.Player.Character
 
-	local weaponMotor = Instance.new("Motor6D")
+	local weaponMotor = self.Trove:Add(Instance.new("Motor6D"))
 	weaponMotor.Name = "WeaponMotor"
 	weaponMotor.Part0 = RightArm
 	weaponMotor.Part1 = Default
@@ -139,19 +138,7 @@ function WeaponClass:AttachWeaponModel()
 	self.Muzzle = Default:WaitForChild("MuzzleAttachment")
 end
 
-function WeaponClass:Init()
-	self.Trove:Add(self.StateManager.CancelStateSignal:Connect(function(stateType, cancelledState)
-		if stateType == "WeaponState" then
-			if cancelledState == "RELOADING" then
-				self.Reloading:Cancelled()
-			end
-		elseif stateType == "AimState" then
-			if cancelledState == "AIMING" then
-				self.Aiming:Released()
-			end
-		end
-	end))
-end
+function WeaponClass:Init() end
 
 function WeaponClass:Destroy()
 	self.Firing:Destroy()

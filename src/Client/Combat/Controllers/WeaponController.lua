@@ -6,6 +6,8 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local WeaponSettings = require(Settings:WaitForChild("WeaponSettings"))
 
+local Player = game:GetService("Players").LocalPlayer
+
 local Combat = script:FindFirstAncestor("Combat")
 local Weapons = Combat:WaitForChild("Weapons")
 
@@ -22,7 +24,7 @@ local WeaponController = {}
 
 WeaponController.__index = WeaponController
 
-function WeaponController.new(WeaponName, SlotName, AnimationController, StateManager, GUIController)
+function WeaponController.new(WeaponName, SlotName, AnimationController, StateManager, GUIController, CombatClasses)
 	-- Clones the weapon info from WeaponSettings to avoid modifying the original table
 	local WeaponInfo = table.clone(WeaponSettings[WeaponName])
 
@@ -34,6 +36,7 @@ function WeaponController.new(WeaponName, SlotName, AnimationController, StateMa
 		AnimationController = AnimationController,
 		StateManager = StateManager,
 		GUIController = GUIController,
+		CombatClasses = CombatClasses,
 
 		-- Naming of these stats might change later
 		Equipped = false,
@@ -45,6 +48,8 @@ function WeaponController.new(WeaponName, SlotName, AnimationController, StateMa
 	self.Firing = require(FireMode:WaitForChild(self.WeaponInfo.FIRE_MODE)).new(self)
 	self.Aiming = require(AimType:WaitForChild(self.WeaponInfo.AIM_TYPE)).new(self)
 	self.Reloading = require(ReloadType:WaitForChild(self.WeaponInfo.RELOAD_TYPE)).new(self)
+
+	self.GUIController:InitializeSlot(self.WeaponName, self.SlotName)
 
 	return self
 end
@@ -68,7 +73,6 @@ function WeaponController:OnEquip()
 		return
 	end
 
-	self.StateManager:PerformAction("Weapon", "Equip")
 	self.StateManager:SetState("WeaponState", "EQUIPPING")
 	self.StateManager:SetState("EquippedState", "EQUIPPED")
 
@@ -90,6 +94,15 @@ function WeaponController:OnEquip()
 	self.Animations.EQUIP.VIEWMODEL:Play(0, 1, EquipSpeed)
 	self.Animations.EQUIP.CHARACTER:Play(0, 1, EquipSpeed)
 
+	self.Trove:Add(task.delay(self.WeaponInfo.EQUIP_DURATION / EquipSpeed, function()
+		self.EquipTask = nil
+		if self.StateManager:GetState("WeaponState") ~= "EQUIPPING" then
+			return
+		end
+
+		self.StateManager:SetState("WeaponState", "IDLE")
+	end))
+
 	self:Init()
 end
 
@@ -98,7 +111,6 @@ function WeaponController:OnUnequip()
 		return
 	end
 
-	self.StateManager:PerformAction("Weapon", "UnEquip")
 	self.StateManager:SetState("WeaponState", "UNEQUIPPED")
 	self.StateManager:SetState("EquippedState", "UNEQUIPPED")
 
@@ -143,10 +155,6 @@ function WeaponController:BindAction(actionName, callback, createTouchButton, ..
 end
 
 function WeaponController:Init()
-	self.Trove:Connect(self.Animations.EQUIP.VIEWMODEL.Stopped, function()
-		self.StateManager:SetState("WeaponState", "IDLE")
-	end)
-
 	self:BindAction("Firing", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			self.Firing:Held()
@@ -177,19 +185,6 @@ function WeaponController:Init()
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.UserInputType.MouseButton2)
-
-	-- State Change Connections
-	self.Trove:Add(self.StateManager.CancelStateSignal:Connect(function(stateType, cancelledState)
-		if stateType == "WeaponState" then
-			if cancelledState == "RELOADING" then
-				self.Reloading:Cancelled()
-			end
-		elseif stateType == "AimState" then
-			if cancelledState == "AIMING" then
-				self.Aiming:Released()
-			end
-		end
-	end))
 end
 
 return WeaponController

@@ -27,16 +27,15 @@ end)
 
 PacketSettings.Creation = ByteNet.defineNamespace("Creation", function()
 	return {
-		CreateWeaponController = ByteNet.definePacket({
+		PlayerData = ByteNet.definePacket({
 			value = ByteNet.struct({
-				WeaponName = ByteNet.string,
-				SlotName = ByteNet.string,
-			}),
-		}),
-
-		CreateAbilityController = ByteNet.definePacket({
-			value = ByteNet.struct({
-				Grenade = ByteNet.string,
+				Weapons = ByteNet.array(ByteNet.struct({
+					WeaponName = ByteNet.string,
+					SlotName = ByteNet.string,
+				})),
+				Abilities = ByteNet.struct({
+					Grenade = ByteNet.string,
+				}),
 			}),
 		}),
 

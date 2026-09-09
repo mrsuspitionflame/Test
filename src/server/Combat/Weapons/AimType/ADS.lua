@@ -3,6 +3,7 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
+local StateSettings = require(Settings:WaitForChild("StateSettings"))
 local Trove = require(Packages:WaitForChild("Trove"))
 
 local ADS = {}
@@ -16,12 +17,20 @@ function ADS.new(WeaponClass)
 	return self
 end
 
+function ADS:CancelStates()
+	for stateType, states in pairs(StateSettings.Weapon.Aim.CancelStates) do
+		for _, state in ipairs(states) do
+			self.WeaponClass.CombatClasses:CancelState(stateType, state)
+		end
+	end
+end
+
 function ADS:Held()
 	if not self:CanAim() then
 		return
 	end
 
-	self.WeaponClass.StateManager:PerformAction("Weapon", "Aim")
+	self:CancelStates()
 	self.WeaponClass.StateManager:SetState("AimState", "AIMING")
 end
 
@@ -34,7 +43,11 @@ function ADS:Released()
 end
 
 function ADS:Cancelled()
-	self.WeaponClass.StateManager:SetState("AimState", "IDLE")
+	self.AimTrove:Clean()
+
+	if self.WeaponClass.StateManager:GetState("AimState") == "AIMING" then
+		self.WeaponClass.StateManager:SetState("AimState", "IDLE")
+	end
 end
 
 function ADS:OnUnequip()

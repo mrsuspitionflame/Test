@@ -25,7 +25,13 @@ function WeaponHandler:Init()
 			return
 		end
 
-		local WeaponClass = LoadoutHandler:GetWeaponClass(player, SlotName)
+		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
+
+		if not CombatClasses then
+			return
+		end
+
+		local WeaponClass = CombatClasses.WeaponClasses[SlotName]
 
 		if not WeaponClass or not WeaponClass.Equipped then
 			return
@@ -46,7 +52,8 @@ function WeaponHandler:Init()
 		local Action = data.Action
 		local SlotName = data.SlotName
 
-		local WeaponClass = LoadoutHandler:GetWeaponClass(player, SlotName)
+		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
+		local WeaponClass = CombatClasses and CombatClasses.WeaponClasses[SlotName]
 
 		if not WeaponClass or not WeaponClass.Equipped then
 			return
@@ -56,6 +63,8 @@ function WeaponHandler:Init()
 			WeaponClass.Reloading:Held()
 		elseif Action == "Released" then
 			WeaponClass.Reloading:Released()
+		elseif Action == "Cancelled" then
+			WeaponClass.Reloading:Cancelled()
 		end
 	end)
 
@@ -63,7 +72,8 @@ function WeaponHandler:Init()
 		local SlotName = data.SlotName
 		local Action = data.Action
 
-		local WeaponClass = LoadoutHandler:GetWeaponClass(player, SlotName)
+		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
+		local WeaponClass = CombatClasses and CombatClasses.WeaponClasses[SlotName]
 
 		if not WeaponClass or not WeaponClass.Equipped then
 			return
@@ -73,6 +83,8 @@ function WeaponHandler:Init()
 			WeaponClass.Aiming:Held()
 		elseif Action == "Released" then
 			WeaponClass.Aiming:Released()
+		elseif Action == "Cancelled" then
+			WeaponClass.Aiming:Cancelled()
 		end
 	end)
 
@@ -87,24 +99,25 @@ function WeaponHandler:Init()
 			return
 		end
 
-		local weaponClass = LoadoutHandler:GetWeaponClass(player, slotName)
+		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
+		local WeaponClass = CombatClasses and CombatClasses.WeaponClasses[slotName]
 
-		if not weaponClass then
+		if not WeaponClass then
 			return
 		end
 
 		if action == "Equip" then
-			local equippedWeaponClass = LoadoutHandler:GetEquippedWeaponClass(player)
+			local EquippedWeaponClass = CombatClasses:GetEquippedWeaponClass()
 
-			if equippedWeaponClass and equippedWeaponClass ~= weaponClass then
-				if not equippedWeaponClass:OnUnequip() then
+			if EquippedWeaponClass and EquippedWeaponClass ~= WeaponClass then
+				if not EquippedWeaponClass:OnUnequip() then
 					return
 				end
 			end
 
-			weaponClass:OnEquip()
+			WeaponClass:OnEquip()
 		elseif action == "UnEquip" then
-			weaponClass:OnUnequip()
+			WeaponClass:OnUnequip()
 		end
 	end)
 end

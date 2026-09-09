@@ -13,7 +13,6 @@ function CameraController.new(AnimationController)
 
 	self.WeaponTrove = AnimationController.WeaponTrove
 	self.AbilityTrove = AnimationController.AbilityTrove
-	self.MovementTrove = AnimationController.MovementTrove
 	return self
 end
 

@@ -54,7 +54,6 @@ function Slide:StartSlide()
 	local StartSpeed = math.max(HorizontalSpeed, self.MovementInfo.SLIDE.SLIDE_START_SPEED)
 	print("Starting slide with speed:", StartSpeed)
 
-	self.StateManager:PerformAction("Movement", "Slide")
 	self.StateManager:SetState("MovementState", "SLIDING")
 	self.IsSliding = true
 

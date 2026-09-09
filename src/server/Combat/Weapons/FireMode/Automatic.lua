@@ -7,6 +7,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local Settings = Shared:WaitForChild("Settings")
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
+local StateSettings = require(Settings:WaitForChild("StateSettings"))
 local Validation = require(Utility:WaitForChild("Validation"))
 
 local Automatic = {}
@@ -31,8 +32,20 @@ function Automatic.new(WeaponClass)
 	return self
 end
 
+function Automatic:CancelStates()
+	for stateType, states in pairs(StateSettings.Weapon.Fire.CancelStates) do
+		for _, state in ipairs(states) do
+			self.WeaponClass.CombatClasses:CancelState(stateType, state)
+		end
+	end
+end
+
 function Automatic:Cancelled()
-	self.StateManager:SetState("WeaponState", "IDLE")
+	self.Trove:Clean()
+
+	if self.StateManager:GetState("WeaponState") == "FIRING" then
+		self.StateManager:SetState("WeaponState", "IDLE")
+	end
 end
 
 function Automatic:OnUnequip()
@@ -48,7 +61,7 @@ function Automatic:Held(data)
 	if not self:CanFire(data) then
 		return
 	end
-	self.StateManager:PerformAction("Weapon", "Fire")
+	self:CancelStates()
 	self.StateManager:SetState("WeaponState", "FIRING")
 end
 

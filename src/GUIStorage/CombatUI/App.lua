@@ -40,7 +40,7 @@ local function App()
 					Size = UDim2.fromScale(0.17, 1),
 					Position = UDim2.fromScale(0.01, 0.75),
 					BackgroundTransparency = 1,
-					Rotation = -2,
+					Rotation = 0,
 
 					create("UIAspectRatioConstraint")({
 						AspectRatio = 1.5,
@@ -55,7 +55,7 @@ local function App()
 					BackgroundTransparency = 1,
 					Size = UDim2.fromScale(0.23, 1),
 					Position = UDim2.fromScale(0.76, 0.72),
-					Rotation = 2,
+					Rotation = 0,
 					create("UIAspectRatioConstraint")({
 						AspectRatio = 2,
 						DominantAxis = Enum.DominantAxis.Width,

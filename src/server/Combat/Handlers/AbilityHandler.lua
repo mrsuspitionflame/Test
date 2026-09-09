@@ -13,8 +13,19 @@ function AbilityHandler:Init()
 	PacketSettings.Combat.Ability.GrenadeRequest.listen(function(data, player)
 		local Action = data.Action
 
-		local AbilityClass = LoadoutHandler:GetAbilityClass(player)
+		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
+
+		if not CombatClasses then
+			return
+		end
+
+		local AbilityClass = CombatClasses.AbilityClass
+
 		if not AbilityClass then
+			return
+		end
+
+		if not AbilityClass.Grenade then
 			return
 		end
 

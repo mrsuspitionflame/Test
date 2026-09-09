@@ -4,7 +4,6 @@ local Client = script:FindFirstAncestor("Client")
 local Combat = Client:WaitForChild("Combat")
 local Abilities = Combat:WaitForChild("Abilities")
 local Grenades = Abilities:WaitForChild("Grenades")
-local HTTPService = game:GetService("HttpService")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
 local Player = game.Players.LocalPlayer
@@ -34,11 +33,12 @@ function AbilityController.new(AbilityInfo, animationController, stateManager, g
 
 	self.Grenade = require(Grenades:WaitForChild(AbilityInfo.Grenade)).new(self)
 
-	self:Init()
+	self:Init(AbilityInfo)
 	return self
 end
 
-function AbilityController:Init()
+function AbilityController:Init(AbilityInfo)
+	self.AnimationController:CreateAbilityViewModel(AbilityInfo)
 	self:GetAnimations()
 	self:BindActions()
 end

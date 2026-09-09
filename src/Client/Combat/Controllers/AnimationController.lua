@@ -8,19 +8,18 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
 
 local AnimationController = {}
+AnimationController.__index = AnimationController
 
-function AnimationController.new()
-	local self = setmetatable({}, { __index = AnimationController })
+function AnimationController.new(StateManager)
+	local self = setmetatable({}, AnimationController)
 
+	self.StateManager = StateManager
 	self.Trove = Trove.new()
-
 	self.AbilityTrove = self.Trove:Extend()
 	self.WeaponTrove = self.Trove:Extend()
-	self.MovementTrove = self.Trove:Extend()
 
 	self.AbilityAnimations = {}
 	self.WeaponAnimations = {}
-	self.MovementAnimations = {}
 
 	self.AnimationLoader = AnimationLoader.new(self)
 	self.CameraController = CameraController.new(self)
@@ -29,14 +28,15 @@ function AnimationController.new()
 	return self
 end
 
-function AnimationController:GetAnimation(AnimationType)
-	if AnimationType == "Weapon" then
+function AnimationController:GetAnimation(animationType)
+	if animationType == "Weapon" then
 		return self.WeaponAnimations
-	elseif AnimationType == "Ability" then
+	elseif animationType == "Ability" then
 		return self.AbilityAnimations
-	elseif AnimationType == "Movement" then
+	elseif animationType == "Movement" then
 		return self.MovementAnimations
 	end
+
 	return nil
 end
 

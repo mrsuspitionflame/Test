@@ -120,7 +120,6 @@ function MovementController:Init()
 				end
 			end)
 		elseif newState == Enum.HumanoidStateType.Jumping then
-			self.StateManager:PerformAction("Movement", "Jump")
 			self.StateManager:SetState("MovementState", "JUMPING")
 			self.Jump:PlayAnimation()
 		elseif newState == Enum.HumanoidStateType.Freefall then
@@ -157,16 +156,6 @@ function MovementController:Init()
 		end
 		return Enum.ContextActionResult.Sink
 	end)
-
-	self.Trove:Add(self.StateManager.CancelStateSignal:Connect(function(stateType, cancelledState)
-		if stateType == "MovementState" then
-			if cancelledState == "SPRINTING" then
-				self.Sprint:StopSprint()
-			elseif cancelledState == "SLIDING" then
-				self.Slide:StopSlide()
-			end
-		end
-	end))
 end
 
 return MovementController

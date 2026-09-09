@@ -20,6 +20,7 @@ function SolarGrenade.new(AbilityClass)
 
 	self.AbilityClass = AbilityClass
 	self.StateManager = AbilityClass.StateManager
+	self.CombatClasses = AbilityClass.CombatClasses
 	self.GrenadeInfo = AbilityClass.AbilityInfo.GrenadeInfo
 	self.Player = AbilityClass.Player
 
@@ -30,11 +31,17 @@ function SolarGrenade.new(AbilityClass)
 end
 
 function SolarGrenade:Held()
+	local character = self.Player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not humanoid or humanoid.Health <= 0 then
+		return
+	end
+
 	if not self.StateManager:TryAction("Ability", "Grenade") then
 		return
 	end
 
-	self.StateManager:PerformAction("Ability", "Grenade")
+	self.CombatClasses:TemporarilyUnequipWeapon()
 	self.StateManager:SetState("AbilityState", "USING_GRENADE")
 
 	self.CanCast = true
@@ -52,7 +59,7 @@ function SolarGrenade:Cast(data)
 	self.CastTrove:Add(task.delay(self.GrenadeInfo.CAST_DURATION, function()
 		self:DetachSolarGrenade()
 		self.StateManager:SetState("AbilityState", "IDLE")
-		self.StateManager:ReEquipWeapon()
+		self.CombatClasses:ReEquipStoredWeapon()
 	end))
 
 	SimulateProjectileServer:CreateProjectile({
@@ -72,10 +79,17 @@ end
 
 function SolarGrenade:Released() end
 
-function SolarGrenade:Cancelled()
+-- Lifecycle cleanup must not request a weapon equip on a dead character.
+function SolarGrenade:Reset()
 	self.CanCast = false
+	self.CastTrove:Clean()
+	self:DetachSolarGrenade()
 	self.StateManager:SetState("AbilityState", "IDLE")
-	self.StateManager:ReEquipWeapon()
+end
+
+function SolarGrenade:Cancelled()
+	self:Reset()
+	self.CombatClasses:ReEquipStoredWeapon()
 end
 
 function SolarGrenade:OnHit(result) end
@@ -97,15 +111,18 @@ function SolarGrenade:AttachSolarGrenade()
 end
 
 function SolarGrenade:DetachSolarGrenade()
-	for _, v in pairs(self.SolarGrenadeAttachment:GetChildren()) do
+	local attachment = self.SolarGrenadeAttachment
+	if not attachment then
+		return
+	end
+	self.SolarGrenadeAttachment = nil
+
+	for _, v in pairs(attachment:GetChildren()) do
 		if v:IsA("ParticleEmitter") then
 			v.Enabled = false
 		end
 	end
-	if self.SolarGrenadeAttachment then
-		self.SolarGrenadeAttachment:Destroy()
-		self.SolarGrenadeAttachment = nil
-	end
+	attachment:Destroy()
 end
 
 return SolarGrenade

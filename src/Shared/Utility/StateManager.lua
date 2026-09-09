@@ -18,9 +18,7 @@ function StateManager.new()
 	self.MovementState = "IDLE"
 	self.AimState = "IDLE"
 
-	self.CancelStateSignal = Signal.new()
 	self.StateChangedSignal = Signal.new()
-	self.ReEquipWeaponSignal = Signal.new()
 	return self
 end
 
@@ -44,7 +42,7 @@ function StateManager:SetState(stateType, newState)
 	else
 		error("Invalid state type: " .. tostring(stateType))
 	end
-	print("State changed: " .. stateType .. " -> " .. newState)
+	--print("State changed: " .. stateType .. " -> " .. newState)
 	self.StateChangedSignal:Fire(stateType, newState, oldState)
 end
 
@@ -78,28 +76,6 @@ function StateManager:TryAction(actionType, action)
 	end
 
 	return true
-end
-
-function StateManager:PerformAction(actionType, action)
-	local stateSettings = StateSettings[actionType][action]
-
-	for stateType, cancelStates in pairs(stateSettings.CancelStates) do
-		local currentState = self:GetState(stateType)
-
-		for _, cancelledState in ipairs(cancelStates) do
-			if currentState == cancelledState then
-				self:CancelState(stateType, cancelledState)
-			end
-		end
-	end
-end
-
-function StateManager:CancelState(stateType, cancelledState)
-	self.CancelStateSignal:Fire(stateType, cancelledState)
-end
-
-function StateManager:ReEquipWeapon()
-	self.ReEquipWeaponSignal:Fire()
 end
 
 return StateManager

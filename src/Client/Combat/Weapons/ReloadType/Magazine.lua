@@ -54,6 +54,11 @@ function Magazine:Cancelled()
 		SlotName = self.WeaponController.SlotName,
 		Action = "Cancelled",
 	})
+
+	if self.WeaponController.StateManager:GetState("WeaponState") == "RELOADING" then
+		self.WeaponController.StateManager:SetState("WeaponState", "IDLE")
+	end
+
 	local Animations = self.WeaponController.Animations
 	Animations.RELOAD.VIEWMODEL:Stop(0)
 	Animations.RELOAD.CHARACTER:Stop(0)

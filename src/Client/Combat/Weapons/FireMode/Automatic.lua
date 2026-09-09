@@ -3,6 +3,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
+local StateSettings = require(Settings:WaitForChild("StateSettings"))
 
 local SeedGenerator = Random.new()
 
@@ -27,7 +28,24 @@ function Automatic.new(WeaponController)
 	return self
 end
 
+function Automatic:CancelStates()
+	for stateType, states in pairs(StateSettings.Weapon.Fire.CancelStates) do
+		for _, state in ipairs(states) do
+			self.WeaponController.CombatClasses:CancelState(stateType, state)
+		end
+	end
+end
+
 function Automatic:Cancelled()
+	PacketSettings.Combat.Weapon.FireRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Cancelled",
+	})
+
+	if self.StateManager:GetState("WeaponState") == "FIRING" then
+		self.StateManager:SetState("WeaponState", "IDLE")
+	end
+
 	self.Trove:Clean()
 end
 
@@ -63,7 +81,7 @@ function Automatic:Held()
 		return
 	end
 
-	self.WeaponController.StateManager:PerformAction("Weapon", "Fire")
+	self:CancelStates()
 	self.WeaponController.StateManager:SetState("WeaponState", "FIRING")
 
 	self.Trove:Clean()

@@ -61,7 +61,6 @@ function Sprint:StartSprint()
 	self.AccelerationTrove:Clean()
 
 	self.IsSprinting = true
-	self.StateManager:PerformAction("Movement", "Sprint")
 	self.StateManager:SetState("MovementState", "SPRINTING")
 
 	local SprintWalkSpeed = self.MovementInfo.SPRINT.SPRINT_WALK_SPEED
