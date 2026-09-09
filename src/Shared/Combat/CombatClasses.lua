@@ -46,7 +46,7 @@ function CombatClasses.new(Player)
 
 	self.Player = Player
 
-	self:CreateCombatClasses()
+	self:Init()
 	return self
 end
 
@@ -109,7 +109,7 @@ function CombatClasses:UnequipWeapons()
 	end
 end
 
-function CombatClasses:CreateCombatClasses()
+function CombatClasses:Init()
 	self:CreateMovementClass()
 	self:CreateWeaponClasses()
 	self:CreateAbilityClass()
@@ -253,11 +253,13 @@ function CombatClasses:DestroyCombatClasses()
 	self.Destroyed = true
 	self:OnCharacterRemoving()
 	Simulation:UnregisterPlayer(self.Player)
+	
 	self.Trove:Destroy()
 	for _, weaponClass in pairs(self.WeaponClasses) do
 		weaponClass:Destroy()
 	end
 	self.AbilityClass:Destroy()
+	self.MovementClass:Destroy()
 end
 
 return CombatClasses
