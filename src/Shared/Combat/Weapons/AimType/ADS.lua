@@ -16,16 +16,20 @@ function ADS.new(WeaponClass)
 end
 
 function ADS:Step()
-	local Humanoid = self.Humanoid
 	local Root = self.Root
 
 	local AimHeld = self.WeaponClass.AimAction:GetState()
+	local Aiming = Root:GetAttribute("AimState") == "AIMING"
+	local ShouldAim = AimHeld and not Aiming
 
 	if RS:IsServer() then
 		print("Nothing for now")
 	end
 
-	if AimHeld == true then
+	if ShouldAim then
+		self:Held()
+	elseif Aiming and not AimHeld then
+		self:Released()
 	end
 end
 
@@ -43,6 +47,7 @@ function ADS:Held()
 	end
 
 	self:CancelStates()
+	
 	self.WeaponClass.StateManager:SetState("AimState", "AIMING")
 
 	self.WeaponClass.AnimationController.CameraController:StartAim()

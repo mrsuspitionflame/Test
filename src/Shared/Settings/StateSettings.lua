@@ -1,6 +1,10 @@
 local StateSettings = {}
 
--- Components apply these cancellation rules after an action is accepted.
+-- Components apply these cancellation rules after an action is accepted
+
+StateSettings.Validation = {
+	
+}
 
 StateSettings.Ability = {
 	Grenade = {

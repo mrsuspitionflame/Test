@@ -7,59 +7,54 @@ local StateSettings = require(Settings:WaitForChild("StateSettings"))
 
 local StateManager = {}
 
+local States = table.freeze({
+	"WeaponState",
+	"AbilityState",
+	"MovementState",
+	"EquippedState",
+	"AimState"
+})
+
 StateManager.__index = StateManager
 
-function StateManager.new()
+function StateManager.new(root)
 	local self = setmetatable({}, StateManager)
+	self.Root = root
 
-	self.WeaponState = "UNEQUIPPED"
-	self.EquippedState = "UNEQUIPPED"
-	self.AbilityState = "IDLE"
-	self.MovementState = "IDLE"
-	self.AimState = "IDLE"
+	self.WeaponState = root:SetAttribute("WeaponState", "UNEQUIPPED")
+	self.EquippedState = root:SetAttribute("EquippedState", "UNEQUIPPED")
+	self.AbilityState = root:SetAttribute("AbilityState", "IDLE")
+	self.MovementState = root:SetAttribute("MovementState", "IDLE")
+	self.AimState = root:SetAttribute("AimState", "IDLE")
 
-	self.StateChangedSignal = Signal.new()
 	return self
 end
 
-function StateManager:SetState(stateType, newState)
-	local oldState = self:GetState(stateType)
+function StateManager:SetState(StateType, NewState)
+	local OldState = self:GetState(StateType)
 
-	if oldState == newState then
+	if OldState == NewState then
 		return
 	end
 
-	if stateType == "WeaponState" then
-		self.WeaponState = newState
-	elseif stateType == "AbilityState" then
-		self.AbilityState = newState
-	elseif stateType == "MovementState" then
-		self.MovementState = newState
-	elseif stateType == "AimState" then
-		self.AimState = newState
-	elseif stateType == "EquippedState" then
-		self.EquippedState = newState
-	else
-		error("Invalid state type: " .. tostring(stateType))
+	for _, stateType in ipairs(States) do
+		if StateType == stateType then
+			self.Root:SetAttribute(StateType, NewState)
+			--print("State changed: " .. StateType .. " -> " .. NewState)
+			return
+		end
 	end
-	--print("State changed: " .. stateType .. " -> " .. newState)
-	self.StateChangedSignal:Fire(stateType, newState, oldState)
+
+	error("Invalid state type: " .. tostring(StateType))
 end
 
-function StateManager:GetState(stateType)
-	if stateType == "WeaponState" then
-		return self.WeaponState
-	elseif stateType == "AbilityState" then
-		return self.AbilityState
-	elseif stateType == "MovementState" then
-		return self.MovementState
-	elseif stateType == "AimState" then
-		return self.AimState
-	elseif stateType == "EquippedState" then
-		return self.EquippedState
-	else
-		error("Invalid state type: " .. tostring(stateType))
+function StateManager:GetState(StateType)
+	for _, stateType in ipairs(States) do
+		if StateType == stateType then
+			return self.Root:GetAttribute(stateType)
+		end
 	end
+	error("Invalid state type: " .. tostring(StateType))
 end
 
 function StateManager:TryAction(actionType, action)
