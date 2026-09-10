@@ -25,8 +25,10 @@ WeaponClass.__index = WeaponClass
 function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClasses, data)
 	local WeaponInfo = WeaponSettings[WeaponName]
 
+	local Trove = Trove.new()
+
 	local self = {
-		Trove = Trove.new(),
+		Trove = Trove,
 		WeaponInfo = WeaponInfo,
 
 		Player = Player,
@@ -35,22 +37,24 @@ function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClass
 
 		StateManager = StateManager,
 		CombatClasses = CombatClasses,
-
-		Equipped = false,
 	}
 
-	self.ShotType = require(ShotType:WaitForChild(self.WeaponInfo.SHOT_TYPE)).new(self)
-	self.Firing = require(FireMode:WaitForChild(self.WeaponInfo.FIRE_MODE)).new(self)
-	self.Aiming = require(AimType:WaitForChild(self.WeaponInfo.AIM_TYPE)).new(self)
-	self.Reloading = require(ReloadType:WaitForChild(self.WeaponInfo.RELOAD_TYPE)).new(self)
+	self.ShotType = Trove:Add(require(ShotType:WaitForChild(self.WeaponInfo.SHOT_TYPE)).new(self))
+	self.Firing = Trove:Add(require(FireMode:WaitForChild(self.WeaponInfo.FIRE_MODE)).new(self))
+	self.Aiming = Trove:Add(require(AimType:WaitForChild(self.WeaponInfo.AIM_TYPE)).new(self))
+	self.Reloading = Trove:Add(require(ReloadType:WaitForChild(self.WeaponInfo.RELOAD_TYPE)).new(self))
 
 	setmetatable(self, WeaponClass)
-
-	self:SetupInput()
 	return self
 end
 
-function WeaponClass:OnCharacterAdded() end
+function WeaponClass:OnCharacterAdded(character)
+	self.Character = character
+	self.Humanoid = character:FindFirstChildOfClass("Humanoid")
+	self.Root = character:FindFirstChild("HumanoidRootPart")
+
+	self:SetupInput()
+end
 
 function WeaponClass:OnCharacterRemoving()
 	if self.ShotType then
@@ -74,14 +78,9 @@ function WeaponClass:OnCharacterRemoving()
 	self.Character = nil
 	self.Humanoid = nil
 	self.Root = nil
-
-	--if self.ActiveAnimation then
-	--self.ActiveAnimation:Stop(0.15)
-	--self.ActiveAnimation = nil
-	--end
 end
 
-function WeaponClass:SetupInput()
+function WeaponClass:InputSetup()
 	local Inputs = self.Player:WaitForChild("Inputs")
 	local WeaponContext = Inputs:WaitForChild("WeaponContext")
 	self.AimAction = WeaponContext:WaitForChild("Aim")
@@ -96,25 +95,13 @@ function WeaponClass:Step(dt)
 end
 
 function WeaponClass:OnUnequip()
-	if not self.Equipped or not self.StateManager:TryAction("Weapon", "UnEquip") then
-		PacketSettings.Combat.Weapon.EquipResult.sendTo({
-			Action = "UnEquip",
-			SlotName = self.SlotName,
-			Accepted = false,
-		}, self.Player)
-		return false
+	if self.CombatClasses.EquippedWeaponClass ~= self or not self.StateManager:TryAction("Weapon", "UnEquip") then
+		return
 	end
 
-	PacketSettings.Combat.Weapon.EquipResult.sendTo({
-		Action = "UnEquip",
-		SlotName = self.SlotName,
-		Accepted = true,
-	}, self.Player)
-
-	self.Equipped = false
+	self.CombatClasses.EquippedWeaponClass = nil
 
 	self.StateManager:SetState("WeaponState", "UNEQUIPPED")
-	self.StateManager:SetState("EquippedState", "UNEQUIPPED")
 
 	self.Firing:OnUnequip()
 	self.Reloading:OnUnequip()
@@ -125,12 +112,7 @@ function WeaponClass:OnUnequip()
 end
 
 function WeaponClass:OnEquip()
-	if self.Equipped or not self.StateManager:TryAction("Weapon", "Equip") then
-		PacketSettings.Combat.Weapon.EquipResult.sendTo({
-			Action = "Equip",
-			SlotName = self.SlotName,
-			Accepted = false,
-		}, self.Player)
+	if self.CombatClasses.EquippedWeaponClass ~= nil or not self.StateManager:TryAction("Weapon", "Equip") then
 		return
 	end
 
@@ -140,7 +122,7 @@ function WeaponClass:OnEquip()
 		Accepted = true,
 	}, self.Player)
 
-	self.Equipped = true
+	self.CombatClasses.EquippedWeaponClass = self
 
 	self:AttachWeaponModel()
 
@@ -188,10 +170,10 @@ end
 function WeaponClass:Init() end
 
 function WeaponClass:Destroy()
-	self.Firing:Destroy()
-	self.Reloading:Destroy()
-	self.Aiming:Destroy()
-	self.ShotType:Destroy()
+	if self.CombatClasses.EquippedWeaponClass == self then
+		self.CombatClasses.EquippedWeaponClass = nil
+	end
+
 	self.Trove:Destroy()
 end
 

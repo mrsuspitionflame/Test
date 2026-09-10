@@ -5,23 +5,22 @@ Slide.__index = Slide
 function Slide.new(MovementClass)
 	local self = setmetatable({}, Slide)
 	self.MovementClass = MovementClass
-	self.Humanoid = MovementClass.Humanoid
-	self.Root = MovementClass.Root
 	self.Settings = MovementClass.MovementSettings.SLIDE
 	return self
 end
 
 function Slide:StopSlide()
-	if not self.Root then
+	local Root = self.MovementClass.CombatClasses.Root
+	if not Root then
 		return
 	end
 
-	self.Root:SetAttribute("SlideTimeRemaining", 0)
+	Root:SetAttribute("SlideTimeRemaining", 0)
 end
 
 function Slide:CanSlide()
-	local Humanoid = self.Humanoid
-	local Root = self.Root
+	local Humanoid = self.MovementClass.CombatClasses.Humanoid
+	local Root = self.MovementClass.CombatClasses.Root
 	local Settings = self.Settings
 
 	local Velocity = Root.AssemblyLinearVelocity
@@ -35,8 +34,8 @@ function Slide:CanSlide()
 end
 
 function Slide:Step(dt)
-	local Humanoid = self.Humanoid
-	local Root = self.Root
+	local Humanoid = self.MovementClass.CombatClasses.Humanoid
+	local Root = self.MovementClass.CombatClasses.Root
 	local Settings = self.Settings
 
 	local SlideHeld = self.MovementClass.SlideAction:GetState() == true
@@ -86,16 +85,15 @@ function Slide:Step(dt)
 end
 
 function Slide:Destroy()
+	local Root = self.MovementClass.CombatClasses.Root
 	self:StopSlide()
-	if self.Root then
-		self.Root:SetAttribute("SlideHeld", nil)
-		self.Root:SetAttribute("SlideDirection", nil)
-		self.Root:SetAttribute("SlideStartSpeed", nil)
+	if Root then
+		Root:SetAttribute("SlideHeld", nil)
+		Root:SetAttribute("SlideDirection", nil)
+		Root:SetAttribute("SlideStartSpeed", nil)
 	end
 
 	self.MovementClass = nil
-	self.Humanoid = nil
-	self.Root = nil
 	self.Settings = nil
 end
 

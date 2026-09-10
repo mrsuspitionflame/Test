@@ -43,7 +43,7 @@ end
 function Magazine:Released() end
 
 function Magazine:CanReload()
-	return self.WeaponController.Equipped
+	return self.WeaponController.CombatClasses.EquippedWeaponClass == self.WeaponController
 		and self.WeaponController.StateManager:TryAction("Weapon", "Reload")
 		and self.WeaponInfo.AMMO < self.WeaponInfo.MAGAZINE_SIZE
 		and self.WeaponInfo.RESERVE_AMMO > 0

@@ -11,7 +11,6 @@ local Classes = Combat:WaitForChild("Classes")
 local SharedCombat = Shared:WaitForChild("Combat")
 local MovementClass = require(SharedCombat:WaitForChild("Classes"):WaitForChild("MovementClass"))
 
-local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local SimulationFolder = Shared:WaitForChild("Simulation")
 
@@ -30,42 +29,51 @@ local CombatClasses = {}
 
 CombatClasses.__index = CombatClasses
 
-function CombatClasses.new(Player)
+function CombatClasses.new(player)
 	local self = setmetatable({}, CombatClasses)
+
+	self.EquippedWeaponClass = nil
+
+	self.Player = player
 
 	self.Trove = Trove.new()
 
-	self.StateManager = StateManager.new()
-
-	self.WeaponClasses = {}
-	self.AbilityClass = nil
+	self.StateTrove = Trove.new()
+	self.StateManager = self.StateTrove:Add(StateManager.new())
 
 	self.StoredSlot = nil
 	self.Character = nil
 	self.Destroyed = false
 
-	self.Player = Player
-
 	self:Init()
 	return self
 end
 
+function CombatClasses:CanStep()
+	return not self.Destroyed and self.Character ~= nil
+end
+
 function CombatClasses:Step(dt)
-	for _, WeaponClass in pairs(self.WeaponClasses) do
-		WeaponClass:Step(dt)
+	if not self:CanStep() then
+		return
 	end
-	self.AbilityClass:Step(dt)
-	self.MovementClass:Step(dt)
+
+	for _, weaponClass in pairs(self.WeaponClasses) do
+		if weaponClass then
+			weaponClass:Step(dt)
+		end
+	end
+	if self.AbilityClass then
+		self.AbilityClass:Step(dt)
+	end
+
+	if self.MovementClass then
+		self.MovementClass:Step(dt)
+	end
 end
 
 function CombatClasses:GetEquippedWeaponClass()
-	for _, weaponClass in pairs(self.WeaponClasses) do
-		if weaponClass.Equipped then
-			return weaponClass
-		end
-	end
-
-	return nil
+	return self.EquippedWeaponClass
 end
 
 function CombatClasses:CancelState(stateType, state)
@@ -95,11 +103,6 @@ function CombatClasses:CancelState(stateType, state)
 	return true
 end
 
-function CombatClasses:CreateMovementClass()
-	self.MovementClass = MovementClass.new(self.Player, self.StateManager)
-	Simulation:RegisterPlayer(self.Player, self.MovementClass)
-end
-
 function CombatClasses:UnequipWeapons()
 	self.StateManager:SetState("WeaponState", "IDLE")
 
@@ -114,6 +117,8 @@ function CombatClasses:Init()
 	self:CreateWeaponClasses()
 	self:CreateAbilityClass()
 
+	Simulation:RegisterPlayer(self.Player, self)
+
 	self.CharacterTrove = self.Trove:Extend()
 
 	self.Trove:Connect(self.Player.CharacterAdded, function(character)
@@ -124,8 +129,9 @@ function CombatClasses:Init()
 		self:OnCharacterRemoving(character)
 	end)
 
-	if self.Player.Character then
-		local character = self.Player.Character
+	local character = self.Player.Character
+
+	if character then
 		self.Trove:Add(task.spawn(function()
 			self:OnCharacterAdded(character)
 		end))
@@ -134,39 +140,69 @@ end
 
 function CombatClasses:CreateWeaponClasses()
 	for _, SlotName in ipairs(Slots) do
-		self.WeaponClasses[SlotName] = WeaponClass.new(self.Player, "HandCannon", SlotName, self.StateManager, self)
+		self.WeaponClasses[SlotName] =
+			self.Trove:Add(WeaponClass.new(self.Player, "HandCannon", SlotName, self.StateManager, self))
 	end
 end
 
 function CombatClasses:CreateAbilityClass()
 	local AbilityInfo = { Grenade = "SolarGrenade" }
-	self.AbilityClass = AbilityClass.new(self.Player, AbilityInfo, self.StateManager, self)
+	self.AbilityClass = self.Trove:Add(AbilityClass.new(self.Player, AbilityInfo, self.StateManager, self))
+end
+
+function CombatClasses:CreateMovementClass()
+	self.MovementClass = self.Trove:Add(MovementClass.new(self.Player, self.StateManager, self))
 end
 
 function CombatClasses:OnCharacterAdded(character)
-	if self.Destroyed or self.Player.Character ~= character then
+	if self.Destroyed or self.Player.Character ~= character or self.Character == character then
 		return
 	end
 
 	if self.Character then
 		self:OnCharacterRemoving(self.Character)
 	end
+
 	self.CharacterTrove:Clean()
 	self.Character = character
 
-	self:SetupCharacter(character)
-
 	local humanoid = character:WaitForChild("Humanoid", 10)
-	if not humanoid or self.Destroyed or self.Character ~= character then
+	local root = character:WaitForChild("HumanoidRootPart", 10)
+	if not root or not humanoid or self.Destroyed or self.Character ~= character then
 		return
 	end
+
+	if humanoid.Health <= 0 then
+		self:OnCharacterRemoving(character)
+		return
+	end
+	self.Humanoid = humanoid
+	self.Root = root
+	self.StateManager:BindRoot(root)
 
 	self.CharacterTrove:Connect(humanoid.Died, function()
 		self:OnCharacterRemoving(character)
 	end)
-	if humanoid.Health <= 0 then
-		self:OnCharacterRemoving(character)
+	self.MovementClass:OnCharacterAdded()
+	if self.Character == character then
+		self:SetupCharacter(character)
 	end
+end
+
+function CombatClasses:OnCharacterRemoving(character)
+	if not self.Character or (character and self.Character ~= character) then
+		return
+	end
+
+	self.Character = nil
+	self.StoredSlot = nil
+	self.CharacterTrove:Clean()
+	self.AbilityClass:OnCharacterRemoved()
+	self:UnequipWeapons()
+	self.MovementClass:OnCharacterRemoving()
+	self.StateManager:UnbindRoot()
+	self.Humanoid = nil
+	self.Root = nil
 end
 
 function CombatClasses:AddAttachment(parent, name, position, orientation)
@@ -194,16 +230,9 @@ function CombatClasses:SetupCharacter(character)
 	self:AddAttachment(LeftHand, "AbilityGripAttachment", Vector3.new(0, -1.2, 0), Vector3.new(0, 0, 0))
 end
 
-function CombatClasses:OnCharacterRemoving(character)
-	if not self.Character or (character and self.Character ~= character) then
-		return
-	end
-
-	self.Character = nil
-	self.StoredSlot = nil
-	self.CharacterTrove:Clean()
-	self.AbilityClass:OnCharacterRemoved()
-	self:UnequipWeapons()
+function CombatClasses:SetupInput()
+	self:GetEquippedWeaponClass():SetupInput()
+	-- Add other setups later
 end
 
 function CombatClasses:TemporarilyUnequipWeapon()
@@ -237,7 +266,7 @@ function CombatClasses:ReEquipStoredWeapon()
 	end
 
 	local weaponClass = self.WeaponClasses[slotName]
-	if not weaponClass or weaponClass.Equipped then
+	if not weaponClass or self.EquippedWeaponClass == weaponClass then
 		return false
 	end
 
@@ -246,20 +275,23 @@ function CombatClasses:ReEquipStoredWeapon()
 	return true
 end
 
-function CombatClasses:DestroyCombatClasses()
+function CombatClasses:Destroy()
 	if self.Destroyed then
 		return
 	end
 	self.Destroyed = true
 	self:OnCharacterRemoving()
+
 	Simulation:UnregisterPlayer(self.Player)
-	
+
 	self.Trove:Destroy()
-	for _, weaponClass in pairs(self.WeaponClasses) do
-		weaponClass:Destroy()
-	end
-	self.AbilityClass:Destroy()
-	self.MovementClass:Destroy()
+
+	-- Components may use StateManager during destruction, so clean it last.
+	self.StateTrove:Destroy()
+
+	table.clear(self.WeaponClasses)
+	self.AbilityClass = nil
+	self.MovementClass = nil
 end
 
 return CombatClasses

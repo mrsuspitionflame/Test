@@ -2,10 +2,6 @@ local StateSettings = {}
 
 -- Components apply these cancellation rules after an action is accepted
 
-StateSettings.Validation = {
-	
-}
-
 StateSettings.Ability = {
 	Grenade = {
 		BlockedStates = {
@@ -15,7 +11,6 @@ StateSettings.Ability = {
 		},
 		CancelStates = {
 			MovementState = { "SPRINTING" },
-			EquippedState = { "EQUIPPED" },
 			AimState = { "AIMING" },
 		},
 	},

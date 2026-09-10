@@ -36,7 +36,7 @@ function AbilityClass:Step(dt)
 	self.Grenade:Step(dt)
 end
 
-function AbilityClass:OnCharacterRemoved()
+function AbilityClass:OnCharacterRemoving()
 	self.Grenade:Reset()
 end
 

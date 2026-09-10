@@ -84,7 +84,7 @@ function Automatic:CanFire(data)
 	local JitterTolerance = math.min(MAX_JITTER_TOLERANCE, FireInterval * JITTER_TOLERANCE_RATIO)
 	local FireTimingValid = self.NextFireTime == 0 or Now + JitterTolerance >= self.NextFireTime
 
-	local CanFire = self.WeaponClass.Equipped
+	local CanFire = self.WeaponClass.CombatClasses.EquippedWeaponClass == self.WeaponClass
 		and head ~= nil
 		and humanoid ~= nil
 		and humanoid.Health > 0

@@ -32,6 +32,8 @@ CombatClasses.__index = CombatClasses
 function CombatClasses.new()
 	local self = setmetatable({}, CombatClasses)
 
+	self.EquippedWeaponClass = nil
+
 	self.WeaponLoadout = {
 		KineticSlot = nil,
 		EnergySlot = nil,
@@ -60,13 +62,7 @@ function CombatClasses:CreateWeaponController(data)
 end
 
 function CombatClasses:GetEquippedWeapon()
-	for _, weaponController in pairs(self.WeaponLoadout) do
-		if weaponController.Equipped then
-			return weaponController
-		end
-	end
-
-	return nil
+	return self.EquippedWeaponClass
 end
 
 function CombatClasses:CancelState(stateType, state)
@@ -107,29 +103,58 @@ function CombatClasses:CreateMovementClass()
 	if self.MovementClass then
 		return
 	end
-	self.MovementClass = MovementClass.new(Player, self.StateManager)
+	self.MovementClass = MovementClass.new(Player, self.StateManager, self)
 	Simulation:RegisterPlayer(Player, self.MovementClass)
 end
 
 function CombatClasses:OnCharacterAdded(character)
-	self.GUI:SetCombatUIEnabled(true)
-
-	local Humanoid = character:WaitForChild("Humanoid")
-	Humanoid.Died:Connect(function()
-		self:OnCharacterRemoved()
+	if Player.Character ~= character or self.Character == character then
+		return
+	end
+	self:OnCharacterRemoved()
+	self.Character = character
+	local humanoid = character:WaitForChild("Humanoid", 10)
+	local root = character:WaitForChild("HumanoidRootPart", 10)
+	if not humanoid or not root or self.Character ~= character or Player.Character ~= character then
+		return
+	end
+	if humanoid.Health <= 0 then
+		self:OnCharacterRemoved(character)
+		return
+	end
+	self.Humanoid = humanoid
+	self.Root = root
+	self.StateManager:BindRoot(root)
+	local runService = game:GetService("RunService")
+	runService:SetPredictionMode(root, Enum.PredictionMode.On)
+	runService:SetPredictionMode(humanoid, Enum.PredictionMode.On)
+	self.DeathConnection = humanoid.Died:Connect(function()
+		self:OnCharacterRemoved(character)
 	end)
+	self.GUI:SetCombatUIEnabled(true)
+	self.MovementClass:OnCharacterAdded()
 end
 
-function CombatClasses:OnCharacterRemoved()
+function CombatClasses:OnCharacterRemoved(character)
+	if not self.Character or (character and self.Character ~= character) then
+		return
+	end
+	self.Character = nil
+	if self.DeathConnection then
+		self.DeathConnection:Disconnect()
+		self.DeathConnection = nil
+	end
 	-- Character cleanup must not be blocked by the current combat action.
 	self.StateManager:SetState("WeaponState", "IDLE")
-
 	for _, controller in pairs(self.WeaponLoadout) do
-		if controller.Equipped then
+		if self.EquippedWeaponClass == controller then
 			controller:OnUnequip()
 		end
 	end
-
+	self.MovementClass:OnCharacterRemoving()
+	self.StateManager:UnbindRoot()
+	self.Humanoid = nil
+	self.Root = nil
 	self.GUI:SetCombatUIEnabled(false)
 end
 

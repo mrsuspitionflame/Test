@@ -33,11 +33,12 @@ local MovementClass = {}
 
 MovementClass.__index = MovementClass
 
-function MovementClass.new(Player, StateManager)
+function MovementClass.new(Player, StateManager, CombatClasses)
 	local self = setmetatable({}, MovementClass)
 	self.Trove = Trove.new()
 	self.AnimationTrove = self.Trove:Extend()
 
+	self.CombatClasses = CombatClasses
 	self.Player = Player
 	self.StateManager = StateManager
 	self.MovementSettings = table.clone(MovementSettings)
@@ -49,14 +50,13 @@ function MovementClass.new(Player, StateManager)
 	return self
 end
 
-function MovementClass:OnCharacterAdded(character, humanoid, root)
+function MovementClass:OnCharacterAdded()
+	local character = self.CombatClasses.Character
+	local humanoid = self.CombatClasses.Humanoid
 	-- CharacterAdded can race with a previous character's asynchronous setup.
 	-- Dispose any existing components before binding the new character.
 	self:OnCharacterRemoving()
 
-	self.Character = character
-	self.Humanoid = humanoid
-	self.Root = root
 
 	self.Jump = Jump.new(self)
 	self.Sprint = Sprint.new(self)
@@ -71,6 +71,9 @@ function MovementClass:OnCharacterAdded(character, humanoid, root)
 	end)
 
 	self:LoadMovementAnimations()
+	if self.CombatClasses.Character ~= character then
+		return
+	end
 	self:UpdateMovementAnimation(self.StateManager:GetState("MovementState"))
 end
 
@@ -89,22 +92,21 @@ function MovementClass:OnCharacterRemoving()
 	self.Sprint = nil
 	self.Slide = nil
 
-	self.Character = nil
-	self.Humanoid = nil
 	if self.StateConnection then
 		self.StateConnection:Disconnect()
 		self.StateConnection = nil
 	end
 
-	self.Root = nil
 	if self.ActiveAnimation then
 		self.ActiveAnimation:Stop(0.15)
 		self.ActiveAnimation = nil
 	end
+	self.AnimationTrove:Clean()
+	table.clear(self.Animations)
 end
 
 function MovementClass:Step(dt)
-	if not self.Character or not self.Humanoid or not self.Root then
+	if not self.CombatClasses.Character or not self.CombatClasses.Humanoid or not self.CombatClasses.Root or not self.Jump then
 		return
 	end
 
@@ -116,8 +118,8 @@ function MovementClass:Step(dt)
 end
 
 function MovementClass:UpdateMovementState()
-	local Root = self.Root
-	local Humanoid = self.Humanoid
+	local Root = self.CombatClasses.Root
+	local Humanoid = self.CombatClasses.Humanoid
 
 	local HumanoidState = Humanoid:GetState()
 	local IsSliding = (Root:GetAttribute("SlideTimeRemaining") or 0) > 0
@@ -166,9 +168,15 @@ function MovementClass:LoadMovementAnimations()
 	self.AnimationTrove:Clean()
 	table.clear(self.Animations)
 
-	local Character = self.Character or self.Player.Character or self.Player.CharacterAdded:Wait()
-	local Humanoid = Character:WaitForChild("Humanoid")
+	local Character = self.CombatClasses.Character
+	local Humanoid = self.CombatClasses.Humanoid
+	if not Character or not Humanoid then
+		return
+	end
 	local Animator = Humanoid:WaitForChild("Animator")
+	if self.CombatClasses.Character ~= Character or self.CombatClasses.Humanoid ~= Humanoid then
+		return
+	end
 
 	for ActionName, AnimationId in pairs(MovementSettings.ANIMATION_IDS) do
 		local Animation = Instance.new("Animation")

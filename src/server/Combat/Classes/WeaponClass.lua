@@ -36,7 +36,6 @@ function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClass
 		StateManager = StateManager,
 		CombatClasses = CombatClasses,
 
-		Equipped = false,
 	}
 
 	self.ShotType = require(ShotType:WaitForChild(self.WeaponInfo.SHOT_TYPE)).new(self)
@@ -49,7 +48,7 @@ function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClass
 end
 
 function WeaponClass:OnUnequip()
-	if not self.Equipped or not self.StateManager:TryAction("Weapon", "UnEquip") then
+	if self.CombatClasses.EquippedWeaponClass ~= self or not self.StateManager:TryAction("Weapon", "UnEquip") then
 		PacketSettings.Combat.Weapon.EquipResult.sendTo({
 			Action = "UnEquip",
 			SlotName = self.SlotName,
@@ -64,7 +63,7 @@ function WeaponClass:OnUnequip()
 		Accepted = true,
 	}, self.Player)
 
-	self.Equipped = false
+	self.CombatClasses.EquippedWeaponClass = nil
 
 	self.StateManager:SetState("WeaponState", "UNEQUIPPED")
 	self.StateManager:SetState("EquippedState", "UNEQUIPPED")
@@ -78,7 +77,7 @@ function WeaponClass:OnUnequip()
 end
 
 function WeaponClass:OnEquip()
-	if self.Equipped or not self.StateManager:TryAction("Weapon", "Equip") then
+	if self.CombatClasses.EquippedWeaponClass ~= nil or not self.StateManager:TryAction("Weapon", "Equip") then
 		PacketSettings.Combat.Weapon.EquipResult.sendTo({
 			Action = "Equip",
 			SlotName = self.SlotName,
@@ -93,7 +92,7 @@ function WeaponClass:OnEquip()
 		Accepted = true,
 	}, self.Player)
 
-	self.Equipped = true
+	self.CombatClasses.EquippedWeaponClass = self
 
 	self:AttachWeaponModel()
 
@@ -141,6 +140,9 @@ end
 function WeaponClass:Init() end
 
 function WeaponClass:Destroy()
+	if self.CombatClasses.EquippedWeaponClass == self then
+		self.CombatClasses.EquippedWeaponClass = nil
+	end
 	self.Firing:Destroy()
 	self.Reloading:Destroy()
 	self.Aiming:Destroy()

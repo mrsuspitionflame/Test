@@ -94,7 +94,7 @@ function Automatic:CanFire()
 	local Now = workspace:GetServerTimeNow()
 	local DelayBetweenShots = 60 / self.WeaponInfo.FIRE_RATE
 
-	return self.WeaponController.Equipped
+	return self.WeaponController.CombatClasses.EquippedWeaponClass == self.WeaponController
 		and self.WeaponController.StateManager:TryAction("Weapon", "Fire")
 		and self.WeaponInfo.AMMO > 0
 		and Now - self.LastTimeFired >= DelayBetweenShots
