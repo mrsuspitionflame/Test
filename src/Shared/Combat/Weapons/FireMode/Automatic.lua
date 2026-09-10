@@ -77,6 +77,8 @@ function Automatic:CanFire(dt)
 		and Now - self.LastTimeFired >= DelayBetweenShots
 end
 
+function Automatic:TestFunction() end
+
 function Automatic:Fire()
 	if not self:CanFire() then
 		return
