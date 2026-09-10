@@ -53,7 +53,7 @@ function Magazine:CanReload()
 	local character = self.WeaponClass.Player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 
-	return self.WeaponClass.Equipped
+	return self.WeaponClass.CombatClasses.EquippedWeaponClass == self.WeaponClass
 		and self.WeaponClass.StateManager:TryAction("Weapon", "Reload")
 		and humanoid ~= nil
 		and humanoid.Health > 0

@@ -23,8 +23,8 @@ function LoadoutController:Init()
 
 	PacketSettings.Creation.RequestPlayerData.send()
 
-	local function OnCharacterRemoved()
-		CombatClasses:OnCharacterRemoved()
+	local function OnCharacterRemoved(character)
+		CombatClasses:OnCharacterRemoved(character)
 	end
 
 	local function OnCharacterAdded(character)

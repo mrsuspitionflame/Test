@@ -33,7 +33,7 @@ function WeaponHandler:Init()
 
 		local WeaponClass = CombatClasses.WeaponClasses[SlotName]
 
-		if not WeaponClass or not WeaponClass.Equipped then
+		if not WeaponClass or CombatClasses.EquippedWeaponClass ~= WeaponClass then
 			return
 		end
 
@@ -55,7 +55,7 @@ function WeaponHandler:Init()
 		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
 		local WeaponClass = CombatClasses and CombatClasses.WeaponClasses[SlotName]
 
-		if not WeaponClass or not WeaponClass.Equipped then
+		if not WeaponClass or CombatClasses.EquippedWeaponClass ~= WeaponClass then
 			return
 		end
 
@@ -75,7 +75,7 @@ function WeaponHandler:Init()
 		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
 		local WeaponClass = CombatClasses and CombatClasses.WeaponClasses[SlotName]
 
-		if not WeaponClass or not WeaponClass.Equipped then
+		if not WeaponClass or CombatClasses.EquippedWeaponClass ~= WeaponClass then
 			return
 		end
 

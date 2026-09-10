@@ -18,7 +18,7 @@ local RegisteredPlayers = {}
 
 local PlayerCombatClasses = {}
 
-function Simulation:RegisterPlayer(player, movementClass)
+function Simulation:RegisterPlayer(player, combatClass)
 	if RegisteredPlayers[player] then
 		return
 	end
@@ -35,59 +35,7 @@ function Simulation:RegisterPlayer(player, movementClass)
 	end
 
 	RegisteredPlayers[player] = Record
-	PlayerCombatClasses[player] = movementClass
-
-	local function OnCharacterAdded(character)
-		Record.Generation += 1
-		local generation = Record.Generation
-		if PlayerCombatClasses[player] then
-			PlayerCombatClasses[player]:OnCharacterRemoving()
-		end
-
-		task.spawn(function()
-			local humanoid = character:WaitForChild("Humanoid", 30)
-			local root = character:WaitForChild("HumanoidRootPart", 30)
-
-			if not humanoid or not root then
-				warn("Failed to attach movement simulation: missing an input action or character part")
-				return
-			end
-
-			-- Ignore setup that finished after a respawn or removal.
-			if
-				not Running
-				or RegisteredPlayers[player] ~= Record
-				or Record.Generation ~= generation
-				or player.Character ~= character
-			then
-				return
-			end
-
-			if not IsServer then
-				-- Track the local character's sprint attributes
-				-- and humanoid properties for prediction.
-				RunService:SetPredictionMode(root, Enum.PredictionMode.On)
-				RunService:SetPredictionMode(humanoid, Enum.PredictionMode.On)
-			end
-
-			if PlayerCombatClasses[player] then
-				PlayerCombatClasses[player]:OnCharacterAdded(character, humanoid, root)
-			end
-		end)
-	end
-
-	Record.Connections:Add(player.CharacterAdded:Connect(OnCharacterAdded))
-
-	Record.Connections:Add(player.CharacterRemoving:Connect(function()
-		Record.Generation += 1
-		if PlayerCombatClasses[player] then
-			PlayerCombatClasses[player]:OnCharacterRemoving()
-		end
-	end))
-
-	if player.Character then
-		OnCharacterAdded(player.Character)
-	end
+	PlayerCombatClasses[player] = combatClass
 end
 function Simulation:UnregisterPlayer(player)
 	local Record = RegisteredPlayers[player]
@@ -97,10 +45,11 @@ function Simulation:UnregisterPlayer(player)
 
 	RegisteredPlayers[player] = nil
 
-	if PlayerCombatClasses[player] then
-		PlayerCombatClasses[player]:Destroy()
-	end
+	local combatClass = PlayerCombatClasses[player]
 	PlayerCombatClasses[player] = nil
+	if combatClass then
+		combatClass:Destroy()
+	end
 
 	Record.Generation += 1
 
@@ -115,8 +64,8 @@ function Simulation:Init()
 	Initialized = true
 
 	local SimulationConnection = RunService:BindToSimulation(function(dt)
-		for _, movementClass in pairs(PlayerCombatClasses) do
-			movementClass:Step(dt)
+		for _, combatClass in pairs(PlayerCombatClasses) do
+			combatClass:Step(dt)
 		end
 	end)
 

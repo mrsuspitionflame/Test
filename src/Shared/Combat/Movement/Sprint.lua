@@ -5,15 +5,13 @@ Sprint.__index = Sprint
 function Sprint.new(MovementClass)
 	local self = setmetatable({}, Sprint)
 	self.MovementClass = MovementClass
-	self.Humanoid = MovementClass.Humanoid
-	self.Root = MovementClass.Root
 	self.Settings = MovementClass.MovementSettings.SPRINT
 	return self
 end
 
 function Sprint:CanSprint()
-	local Humanoid = self.Humanoid
-	local Root = self.Root
+	local Humanoid = self.MovementClass.CombatClasses.Humanoid
+	local Root = self.MovementClass.CombatClasses.Root
 
 	local SprintHeld = self.MovementClass.SprintAction:GetState() == true
 	local Grounded = Humanoid.FloorMaterial ~= Enum.Material.Air
@@ -32,15 +30,16 @@ function Sprint:CanSprint()
 end
 
 function Sprint:StopSprint()
-	if self.Root then
-		self.Root:SetAttribute("SprintActive", false)
-		self.Root:SetAttribute("SprintSpeed", 0)
+	local Root = self.MovementClass.CombatClasses.Root
+	if Root then
+		Root:SetAttribute("SprintActive", false)
+		Root:SetAttribute("SprintSpeed", 0)
 	end
 end
 
 function Sprint:Step(dt)
-	local Humanoid = self.Humanoidz
-	local Root = self.Root
+	local Humanoid = self.MovementClass.CombatClasses.Humanoid
+	local Root = self.MovementClass.CombatClasses.Root
 	local Settings = self.Settings
 
 	local CanSprint = self:CanSprint()
@@ -65,14 +64,13 @@ function Sprint:Step(dt)
 end
 
 function Sprint:Destroy()
-	if self.Root then
-		self.Root:SetAttribute("SprintSpeed", nil)
-		self.Root:SetAttribute("SprintActive", nil)
+	local Root = self.MovementClass.CombatClasses.Root
+	if Root then
+		Root:SetAttribute("SprintSpeed", nil)
+		Root:SetAttribute("SprintActive", nil)
 	end
 
 	self.MovementClass = nil
-	self.Humanoid = nil
-	self.Root = nil
 	self.Settings = nil
 end
 

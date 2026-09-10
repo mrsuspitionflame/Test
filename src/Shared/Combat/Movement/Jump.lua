@@ -5,23 +5,24 @@ Jump.__index = Jump
 function Jump.new(MovementClass)
 	local self = setmetatable({}, Jump)
 	self.MovementClass = MovementClass
-	self.Humanoid = MovementClass.Humanoid
-	self.Root = MovementClass.Root
+	local Humanoid = self.MovementClass.CombatClasses.Humanoid
 	self.Settings = MovementClass.MovementSettings.JUMP
 
-	self.Humanoid.UseJumpPower = true
-	self.Humanoid.JumpPower = self.Settings.JUMP_POWER
+	Humanoid.UseJumpPower = true
+	Humanoid.JumpPower = self.Settings.JUMP_POWER
 	return self
 end
 
 function Jump:ApplyJump(jumpPower)
+	local Humanoid = self.MovementClass.CombatClasses.Humanoid
+	local Root = self.MovementClass.CombatClasses.Root
 	if self.MovementClass.Slide then
 		self.MovementClass.Slide:StopSlide()
 	end
 
-	local velocity = self.Root.AssemblyLinearVelocity
-	self.Root.AssemblyLinearVelocity = Vector3.new(velocity.X, jumpPower, velocity.Z)
-	self.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	local velocity = Root.AssemblyLinearVelocity
+	Root.AssemblyLinearVelocity = Vector3.new(velocity.X, jumpPower, velocity.Z)
+	Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 end
 
 function Jump:DoubleJump()
@@ -29,17 +30,17 @@ function Jump:DoubleJump()
 end
 
 function Jump:CanDoubleJump()
-	local Humanoid = self.Humanoid
-	local Root = self.Root
+	local Humanoid = self.MovementClass.CombatClasses.Humanoid
+	local Root = self.MovementClass.CombatClasses.Root
 	local JumpHeld = self.MovementClass.JumpAction:GetState() == true
 	local WasJumpHeld = Root:GetAttribute("DoubleJumpHeld") == true
 
 	local JumpPressed = JumpHeld and not WasJumpHeld
 
 	local Grounded = Humanoid.FloorMaterial ~= Enum.Material.Air
-	return self.Humanoid
-		and self.Humanoid.Health > 0
-		and self.Humanoid:GetState() ~= Enum.HumanoidStateType.Jumping
+	return Humanoid
+		and Humanoid.Health > 0
+		and Humanoid:GetState() ~= Enum.HumanoidStateType.Jumping
 		and JumpPressed
 		and not Grounded
 		and Root:GetAttribute("DoubleJumpAvailable") == true
@@ -49,8 +50,9 @@ end
 function Jump:CancelStates() end -- Haven't finished movement cancellation yet, try not to get messed up
 
 function Jump:Step(dt)
-	local Humanoid = self.Humanoid
-	local Root = self.Root
+	local Humanoid = self.MovementClass.CombatClasses.Humanoid
+	local Root = self.MovementClass.CombatClasses.Root
+
 	local JumpHeld = self.MovementClass.JumpAction:GetState() == true
 	local WasJumpHeld = Root:GetAttribute("DoubleJumpHeld") == true
 	local JumpPressed = JumpHeld and not WasJumpHeld
@@ -103,16 +105,15 @@ function Jump:Step(dt)
 end
 
 function Jump:Destroy()
-	if self.Root then
-		self.Root:SetAttribute("DoubleJumpAvailable", nil)
-		self.Root:SetAttribute("DoubleJumpHeld", nil)
-		self.Root:SetAttribute("NormalJumpUsed", nil)
-		self.Root:SetAttribute("CoyoteTimeRemaining", nil)
+	local Root = self.MovementClass.CombatClasses.Root
+	if Root then
+		Root:SetAttribute("DoubleJumpAvailable", nil)
+		Root:SetAttribute("DoubleJumpHeld", nil)
+		Root:SetAttribute("NormalJumpUsed", nil)
+		Root:SetAttribute("CoyoteTimeRemaining", nil)
 	end
 
 	self.MovementClass = nil
-	self.Humanoid = nil
-	self.Root = nil
 	self.Settings = nil
 end
 

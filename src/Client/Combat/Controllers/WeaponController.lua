@@ -39,7 +39,6 @@ function WeaponController.new(WeaponName, SlotName, AnimationController, StateMa
 		CombatClasses = CombatClasses,
 
 		-- Naming of these stats might change later
-		Equipped = false,
 
 		Animations = {},
 	}, WeaponController)
@@ -69,7 +68,7 @@ function WeaponController:GetAnimations()
 end
 
 function WeaponController:OnEquip()
-	if not self.StateManager:TryAction("Weapon", "Equip") then
+	if self.CombatClasses.EquippedWeaponClass ~= nil or not self.StateManager:TryAction("Weapon", "Equip") then
 		return
 	end
 
@@ -78,7 +77,7 @@ function WeaponController:OnEquip()
 
 	UIS.MouseIconEnabled = false
 
-	self.Equipped = true
+	self.CombatClasses.EquippedWeaponClass = self
 
 	self.GUIController:EquippedSlotChanged(self.SlotName)
 	self.AnimationController:OnEquip(self.WeaponInfo)
@@ -107,7 +106,7 @@ function WeaponController:OnEquip()
 end
 
 function WeaponController:OnUnequip()
-	if not self.StateManager:TryAction("Weapon", "UnEquip") then
+	if self.CombatClasses.EquippedWeaponClass ~= self or not self.StateManager:TryAction("Weapon", "UnEquip") then
 		return
 	end
 
@@ -116,7 +115,7 @@ function WeaponController:OnUnequip()
 
 	UIS.MouseIconEnabled = true
 
-	self.Equipped = false
+	self.CombatClasses.EquippedWeaponClass = nil
 
 	self.Animations.IDLE.VIEWMODEL:Stop(0.15)
 	self.Animations.IDLE.CHARACTER:Stop(0.15)
@@ -131,7 +130,7 @@ function WeaponController:OnUnequip()
 end
 
 function WeaponController:EquipOrUnequip()
-	if self.Equipped then
+	if self.CombatClasses.EquippedWeaponClass == self then
 		PacketSettings.Combat.Weapon.EquipRequest.send({
 			SlotName = self.SlotName,
 			Action = "UnEquip",
