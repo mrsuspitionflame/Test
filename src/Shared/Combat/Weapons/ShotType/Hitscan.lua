@@ -4,6 +4,8 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
 local RaycastService = require(Utility:WaitForChild("RaycastService"))
 
+local RS = game:GetService("RunService")
+
 local Hitscan = {}
 
 Hitscan.__index = Hitscan
@@ -42,7 +44,9 @@ function Hitscan:Fire(ShotData)
 		RaycastService:CastRays(Origin.Position, rayDirections, ignoreList, self.WeaponInfo.BULLET_RADIUS)
 	local rayOrigin = self.WeaponController.AnimationController.ViewModelController:GetRayOrigin()
 
-	RaycastService:DrawRayResults(rayOrigin, rayResults)
+	if RS:IsClient() then
+		RaycastService:DrawRayResults(rayOrigin, rayResults)
+	end
 end
 
 return Hitscan
