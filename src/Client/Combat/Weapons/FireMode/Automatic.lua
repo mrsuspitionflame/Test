@@ -13,15 +13,15 @@ local Automatic = {}
 
 Automatic.__index = Automatic
 
-function Automatic.new(WeaponController)
+function Automatic.new(WeaponHandler)
 	local self = setmetatable({}, Automatic)
 
-	self.WeaponController = WeaponController
-	self.WeaponInfo = WeaponController.WeaponInfo
+	self.WeaponHandler = WeaponHandler
+	self.WeaponInfo = WeaponHandler.WeaponInfo
 
-	self.StateManager = WeaponController.StateManager
+	self.StateManager = WeaponHandler.StateManager
 
-	self.Trove = WeaponController.Trove:Extend()
+	self.Trove = WeaponHandler.Trove:Extend()
 
 	self.LastTimeFired = workspace:GetServerTimeNow()
 
@@ -31,14 +31,14 @@ end
 function Automatic:CancelStates()
 	for stateType, states in pairs(StateSettings.Weapon.Fire.CancelStates) do
 		for _, state in ipairs(states) do
-			self.WeaponController.CombatClasses:CancelState(stateType, state)
+			self.WeaponHandler.CombatClasses:CancelState(stateType, state)
 		end
 	end
 end
 
 function Automatic:Cancelled()
 	PacketSettings.Combat.Weapon.FireRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Cancelled",
 	})
 
@@ -55,11 +55,11 @@ end
 
 function Automatic:Released()
 	PacketSettings.Combat.Weapon.FireRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Released",
 	})
 
-	self.WeaponController.StateManager:SetState("WeaponState", "IDLE")
+	self.WeaponHandler.StateManager:SetState("WeaponState", "IDLE")
 
 	self.Trove:Clean()
 end
@@ -71,7 +71,7 @@ function Automatic:Held()
 	local Seed = SeedGenerator:NextInteger(0, 2 ^ 31 - 1)
 
 	PacketSettings.Combat.Weapon.FireRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Held",
 		Origin = Origin,
 		Seed = Seed,
@@ -82,7 +82,7 @@ function Automatic:Held()
 	end
 
 	self:CancelStates()
-	self.WeaponController.StateManager:SetState("WeaponState", "FIRING")
+	self.WeaponHandler.StateManager:SetState("WeaponState", "FIRING")
 
 	self.Trove:Clean()
 	self.Trove:Connect(RS.Heartbeat, function()
@@ -94,8 +94,8 @@ function Automatic:CanFire()
 	local Now = workspace:GetServerTimeNow()
 	local DelayBetweenShots = 60 / self.WeaponInfo.FIRE_RATE
 
-	return self.WeaponController.CombatClasses.EquippedWeaponClass == self.WeaponController
-		and self.WeaponController.StateManager:TryAction("Weapon", "Fire")
+	return self.WeaponHandler.CombatClasses.EquippedWeaponClass == self.WeaponHandler
+		and self.WeaponHandler.StateManager:TryAction("Weapon", "Fire")
 		and self.WeaponInfo.AMMO > 0
 		and Now - self.LastTimeFired >= DelayBetweenShots
 end
@@ -105,7 +105,7 @@ function Automatic:Fire()
 		return
 	end
 
-	local ShotType = self.WeaponController.ShotType
+	local ShotType = self.WeaponHandler.ShotType
 
 	local Camera = workspace.CurrentCamera
 
@@ -113,7 +113,7 @@ function Automatic:Fire()
 	local Seed = SeedGenerator:NextInteger(0, 2 ^ 31 - 1)
 
 	PacketSettings.Combat.Weapon.FireRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Fire",
 		Origin = Origin,
 		Seed = Seed,
@@ -121,11 +121,11 @@ function Automatic:Fire()
 
 	self.LastTimeFired = workspace:GetServerTimeNow()
 
-	self.WeaponController.Animations.FIRE.VIEWMODEL:Play(0)
-	self.WeaponController.Animations.FIRE.CHARACTER:Play(0)
-	self.WeaponController.AnimationController.CameraController:Recoil()
+	self.WeaponHandler.Animations.FIRE.VIEWMODEL:Play(0)
+	self.WeaponHandler.Animations.FIRE.CHARACTER:Play(0)
+	self.WeaponHandler.AnimationHandler.CameraHandler:Recoil()
 
-	local Muzzle = self.WeaponController.AnimationController.ViewModelController:GetMuzzle()
+	local Muzzle = self.WeaponHandler.AnimationHandler.ViewModelHandler:GetMuzzle()
 	if Muzzle then
 		local FlashEmitter = Muzzle:FindFirstChild("FlashEmitter")
 		local CircleEmitter = Muzzle:FindFirstChild("CircleEmitter")

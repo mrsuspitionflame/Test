@@ -20,13 +20,6 @@ local MovementSettings = {
 		SLIDE_DURATION = 0.7,
 	},
 
-	ANIMATION_IDS = {
-		JUMP = "rbxassetid://104064553178165",
-		WALK = "rbxassetid://92911553202111",
-		FALL = "rbxassetid://76180328658621",
-		SPRINT = "rbxassetid://122472086522812",
-		SLIDE = "rbxassetid://87397276095774",
-	},
 }
 
 return MovementSettings

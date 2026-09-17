@@ -8,16 +8,16 @@ local ADS = {}
 
 ADS.__index = ADS
 
-function ADS.new(WeaponController)
+function ADS.new(WeaponHandler)
 	local self = setmetatable({}, ADS)
-	self.WeaponController = WeaponController
+	self.WeaponHandler = WeaponHandler
 	return self
 end
 
 function ADS:CancelStates()
 	for stateType, states in pairs(StateSettings.Weapon.Aim.CancelStates) do
 		for _, state in ipairs(states) do
-			self.WeaponController.CombatClasses:CancelState(stateType, state)
+			self.WeaponHandler.CombatClasses:CancelState(stateType, state)
 		end
 	end
 end
@@ -28,51 +28,51 @@ function ADS:Held()
 	end
 
 	PacketSettings.Combat.Weapon.AimRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Held",
 	})
 
 	self:CancelStates()
-	self.WeaponController.StateManager:SetState("AimState", "AIMING")
+	self.WeaponHandler.StateManager:SetState("AimState", "AIMING")
 
-	self.WeaponController.AnimationController.CameraController:StartAim()
+	self.WeaponHandler.AnimationHandler.CameraHandler:StartAim()
 end
 
 function ADS:Released()
 	PacketSettings.Combat.Weapon.AimRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Released",
 	})
 
-	self.WeaponController.StateManager:SetState("AimState", "IDLE")
-	self.WeaponController.AnimationController.CameraController:StopAim()
+	self.WeaponHandler.StateManager:SetState("AimState", "IDLE")
+	self.WeaponHandler.AnimationHandler.CameraHandler:StopAim()
 end
 
 function ADS:Cancelled()
 	PacketSettings.Combat.Weapon.AimRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Cancelled",
 	})
 
-	if self.WeaponController.StateManager:GetState("AimState") == "AIMING" then
-		self.WeaponController.StateManager:SetState("AimState", "IDLE")
+	if self.WeaponHandler.StateManager:GetState("AimState") == "AIMING" then
+		self.WeaponHandler.StateManager:SetState("AimState", "IDLE")
 	end
 
-	self.WeaponController.AnimationController.CameraController:StopAim()
+	self.WeaponHandler.AnimationHandler.CameraHandler:StopAim()
 end
 
 function ADS:OnUnequip()
 	PacketSettings.Combat.Weapon.AimRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Released",
 	})
 
-	self.WeaponController.StateManager:SetState("AimState", "IDLE")
-	self.WeaponController.AnimationController.CameraController:StopAim()
+	self.WeaponHandler.StateManager:SetState("AimState", "IDLE")
+	self.WeaponHandler.AnimationHandler.CameraHandler:StopAim()
 end
 
 function ADS:CanAim()
-	return self.WeaponController.StateManager:TryAction("Weapon", "Aim")
+	return self.WeaponHandler.StateManager:TryAction("Weapon", "Aim")
 end
 
 return ADS

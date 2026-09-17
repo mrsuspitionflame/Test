@@ -29,17 +29,17 @@ function StateManager:Destroy()
 	self.Trove:Destroy()
 end
 
-function StateManager:UnbindRoot()
-	self.Root = nil
-end
 
-function StateManager:BindRoot(root)
-	self:UnbindRoot()
+function StateManager:OnCharacterAdded(root)
 	self.Root = root
 
 	for stateType, defaultState in pairs(States) do
 		self.Root:SetAttribute(stateType, defaultState)
 	end
+end
+
+function StateManager:OnCharacterRemoving()
+	self.Root = nil
 end
 
 function StateManager:SetState(stateType, newState)

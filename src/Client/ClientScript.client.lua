@@ -10,8 +10,10 @@ local Humanoid = Character:WaitForChild("Humanoid")
 
 local ReplicateRayCast = require(Visuals:WaitForChild("ReplicateRayCast"))
 local ReplicateAbility = require(Visuals:WaitForChild("ReplicateAbility"))
-local LoadoutController = require(Combat:WaitForChild("LoadoutController"))
+local CombatClassHandler = require(Combat:WaitForChild("Handlers"):WaitForChild("CombatClassHandler"))
 local SimulateProjectileClient = require(Visuals:WaitForChild("SimulateProjectile(Client)"))
+local SimulationFolder = Shared:WaitForChild("Simulation")
+local Simulation = require(SimulationFolder:WaitForChild("Simulation"))
 
 local StarterGui = game:GetService("StarterGui")
 
@@ -28,5 +30,6 @@ Player.CameraMaxZoomDistance = 17
 
 ReplicateRayCast:Init()
 ReplicateAbility:Init()
-LoadoutController:Init()
+CombatClassHandler:Init()
 SimulateProjectileClient:Init()
+Simulation:Init()

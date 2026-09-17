@@ -37,6 +37,7 @@ function Simulation:RegisterPlayer(player, combatClass)
 	RegisteredPlayers[player] = Record
 	PlayerCombatClasses[player] = combatClass
 end
+
 function Simulation:UnregisterPlayer(player)
 	local Record = RegisteredPlayers[player]
 	if not Record then

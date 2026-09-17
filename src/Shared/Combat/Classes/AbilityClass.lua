@@ -24,7 +24,7 @@ function AbilityClass.new(player, AbilityInfo, stateManager, combatClasses)
 	}, AbilityClass)
 
 	self.AbilityInfo = {
-		GrenadeInfo = table.clone(AbilitySettings.Grenade[AbilityInfo.Grenade]),
+		GrenadeInfo = AbilitySettings.Grenade[AbilityInfo.Grenade],
 	}
 
 	self.Grenade = require(Grenades:WaitForChild(AbilityInfo.Grenade)).new(self)
@@ -37,11 +37,11 @@ function AbilityClass:Step(dt)
 end
 
 function AbilityClass:OnCharacterRemoving()
-	self.Grenade:Reset()
+	print("Nothing for now")
 end
 
 function AbilityClass:Destroy()
-	self:OnCharacterRemoved()
+	self:OnCharacterRemoving()
 	self.Trove:Destroy()
 end
 

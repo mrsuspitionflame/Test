@@ -23,21 +23,21 @@ local SolarGrenade = {}
 
 SolarGrenade.__index = SolarGrenade
 
-function SolarGrenade.new(AbilityController)
+function SolarGrenade.new(AbilityHandler)
 	local self = setmetatable({}, SolarGrenade)
 
-	self.AbilityController = AbilityController
-	self.StateManager = AbilityController.StateManager
-	self.ViewModelController = AbilityController.AnimationController.ViewModelController
-	self.GrenadeInfo = self.AbilityController.AbilityInfo.GrenadeInfo
+	self.AbilityHandler = AbilityHandler
+	self.StateManager = AbilityHandler.StateManager
+	self.ViewModelHandler = AbilityHandler.AnimationHandler.ViewModelHandler
+	self.GrenadeInfo = self.AbilityHandler.AbilityInfo.GrenadeInfo
 
-	self.Trove = self.AbilityController.Trove:Extend()
+	self.Trove = self.AbilityHandler.Trove:Extend()
 
 	return self
 end
 
 function SolarGrenade:Held()
-	if not self.AbilityController.StateManager:TryAction("Ability", "Grenade") then
+	if not self.AbilityHandler.StateManager:TryAction("Ability", "Grenade") then
 		return
 	end
 
@@ -47,11 +47,11 @@ function SolarGrenade:Held()
 
 	self.StateManager:SetState("AbilityState", "USING_GRENADE")
 
-	local Animations = self.AbilityController.Animations
+	local Animations = self.AbilityHandler.Animations
 	local GrenadeHeldAnimation = Animations.Grenade.HELD.VIEWMODEL
 	local GrenadeCharacterAnimation = Animations.Grenade.HELD.CHARACTER
 
-	self.ViewModelController:ShowAbilityViewModel()
+	self.ViewModelHandler:ShowAbilityViewModel()
 	self:AttachSolarGrenade()
 
 	self.Trove:Add(GrenadeHeldAnimation:GetMarkerReachedSignal("CastSolarGrenade"):Connect(function()
@@ -62,7 +62,7 @@ function SolarGrenade:Held()
 	self.Trove:Add(GrenadeHeldAnimation.Stopped:Connect(function()
 		self.StateManager:SetState("AbilityState", "IDLE")
 		self:DetachSolarGrenade()
-		self.ViewModelController:HideAbilityViewModel()
+		self.ViewModelHandler:HideAbilityViewModel()
 		self.Trove:Clean()
 	end))
 
@@ -71,7 +71,7 @@ function SolarGrenade:Held()
 end
 
 function SolarGrenade:AttachSolarGrenade()
-	local LeftArm = self.ViewModelController.AbilityViewModel:FindFirstChild("Left Arm")
+	local LeftArm = self.ViewModelHandler.AbilityViewModel:FindFirstChild("Left Arm")
 	local LeftGripAttachment = LeftArm:FindFirstChild("LeftGripAttachment")
 
 	if LeftGripAttachment then
@@ -88,7 +88,7 @@ function SolarGrenade:AttachSolarGrenade()
 end
 
 function SolarGrenade:DetachSolarGrenade()
-	local LeftArm = self.ViewModelController.AbilityViewModel:FindFirstChild("Left Arm")
+	local LeftArm = self.ViewModelHandler.AbilityViewModel:FindFirstChild("Left Arm")
 
 	if LeftArm:FindFirstChild("SolarGrenadeAttachment") then
 		local solarGrenade = LeftArm:FindFirstChild("SolarGrenadeAttachment")

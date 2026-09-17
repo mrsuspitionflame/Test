@@ -7,11 +7,11 @@ local Magazine = {}
 
 Magazine.__index = Magazine
 
-function Magazine.new(WeaponController)
+function Magazine.new(WeaponHandler)
 	local self = setmetatable({}, Magazine)
 
-	self.WeaponController = WeaponController
-	self.WeaponInfo = WeaponController.WeaponInfo
+	self.WeaponHandler = WeaponHandler
+	self.WeaponInfo = WeaponHandler.WeaponInfo
 
 	return self
 end
@@ -22,18 +22,18 @@ function Magazine:Held()
 	end
 
 	PacketSettings.Combat.Weapon.ReloadRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Held",
 	})
 
-	self.WeaponController.StateManager:SetState("WeaponState", "RELOADING")
+	self.WeaponHandler.StateManager:SetState("WeaponState", "RELOADING")
 
-	local Animations = self.WeaponController.Animations
+	local Animations = self.WeaponHandler.Animations
 
 	local ReloadSpeed = 1 + (self.WeaponInfo.RELOAD_SPEED - 50) / 100
 
-	self.WeaponController.Trove:Connect(self.WeaponController.Animations.RELOAD.VIEWMODEL.Stopped, function()
-		self.WeaponController.StateManager:SetState("WeaponState", "IDLE")
+	self.WeaponHandler.Trove:Connect(self.WeaponHandler.Animations.RELOAD.VIEWMODEL.Stopped, function()
+		self.WeaponHandler.StateManager:SetState("WeaponState", "IDLE")
 	end)
 
 	Animations.RELOAD.VIEWMODEL:Play(0, 1, ReloadSpeed)
@@ -43,29 +43,29 @@ end
 function Magazine:Released() end
 
 function Magazine:CanReload()
-	return self.WeaponController.CombatClasses.EquippedWeaponClass == self.WeaponController
-		and self.WeaponController.StateManager:TryAction("Weapon", "Reload")
+	return self.WeaponHandler.CombatClasses.EquippedWeaponClass == self.WeaponHandler
+		and self.WeaponHandler.StateManager:TryAction("Weapon", "Reload")
 		and self.WeaponInfo.AMMO < self.WeaponInfo.MAGAZINE_SIZE
 		and self.WeaponInfo.RESERVE_AMMO > 0
 end
 
 function Magazine:Cancelled()
 	PacketSettings.Combat.Weapon.ReloadRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Cancelled",
 	})
 
-	if self.WeaponController.StateManager:GetState("WeaponState") == "RELOADING" then
-		self.WeaponController.StateManager:SetState("WeaponState", "IDLE")
+	if self.WeaponHandler.StateManager:GetState("WeaponState") == "RELOADING" then
+		self.WeaponHandler.StateManager:SetState("WeaponState", "IDLE")
 	end
 
-	local Animations = self.WeaponController.Animations
+	local Animations = self.WeaponHandler.Animations
 	Animations.RELOAD.VIEWMODEL:Stop(0)
 	Animations.RELOAD.CHARACTER:Stop(0)
 end
 
 function Magazine:OnUnequip()
-	local Animations = self.WeaponController.Animations
+	local Animations = self.WeaponHandler.Animations
 	Animations.RELOAD.VIEWMODEL:Stop(0)
 	Animations.RELOAD.CHARACTER:Stop(0)
 end

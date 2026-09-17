@@ -3,9 +3,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
 
-local ServerScriptService = game:GetService("ServerScriptService")
-local Server = ServerScriptService:WaitForChild("Server")
-local Combat = Server:WaitForChild("Combat")
+local Combat = Shared:WaitForChild("Combat")
 local Classes = Combat:WaitForChild("Classes")
 
 local SharedCombat = Shared:WaitForChild("Combat")
@@ -19,17 +17,17 @@ local AbilityClass = require(Classes:WaitForChild("AbilityClass"))
 local StateManager = require(Utility:WaitForChild("StateManager"))
 local Simulation = require(SimulationFolder:WaitForChild("Simulation"))
 
-local Slots = {
+local Slots = table.freeze({
 	"KineticSlot",
 	"EnergySlot",
 	"HeavySlot",
-}
+})
 
 local CombatClasses = {}
 
 CombatClasses.__index = CombatClasses
 
-function CombatClasses.new(player)
+function CombatClasses.new(player, data)
 	local self = setmetatable({}, CombatClasses)
 
 	self.EquippedWeaponClass = nil
@@ -38,8 +36,7 @@ function CombatClasses.new(player)
 
 	self.Trove = Trove.new()
 
-	self.StateTrove = Trove.new()
-	self.StateManager = self.StateTrove:Add(StateManager.new())
+	self.StateManager = StateManager.new()
 
 	self.StoredSlot = nil
 	self.Character = nil
@@ -112,11 +109,8 @@ function CombatClasses:UnequipWeapons()
 	end
 end
 
-function CombatClasses:Init()
-	self:CreateMovementClass()
-	self:CreateWeaponClasses()
-	self:CreateAbilityClass()
-
+function CombatClasses:Init(data)
+	self:CreateClasses(data)
 	Simulation:RegisterPlayer(self.Player, self)
 
 	self.CharacterTrove = self.Trove:Extend()
@@ -138,14 +132,18 @@ function CombatClasses:Init()
 	end
 end
 
-function CombatClasses:CreateWeaponClasses()
+function CombatClasses:CreateClasses(data)
+	print("Nothing for now")
+end
+
+function CombatClasses:CreateWeaponClasses(data)
 	for _, SlotName in ipairs(Slots) do
 		self.WeaponClasses[SlotName] =
 			self.Trove:Add(WeaponClass.new(self.Player, "HandCannon", SlotName, self.StateManager, self))
 	end
 end
 
-function CombatClasses:CreateAbilityClass()
+function CombatClasses:CreateAbilityClass(data)
 	local AbilityInfo = { Grenade = "SolarGrenade" }
 	self.AbilityClass = self.Trove:Add(AbilityClass.new(self.Player, AbilityInfo, self.StateManager, self))
 end
@@ -178,7 +176,7 @@ function CombatClasses:OnCharacterAdded(character)
 	end
 	self.Humanoid = humanoid
 	self.Root = root
-	self.StateManager:BindRoot(root)
+	self.StateManager:OnCharacterAdded(root)
 
 	self.CharacterTrove:Connect(humanoid.Died, function()
 		self:OnCharacterRemoving(character)
@@ -197,38 +195,14 @@ function CombatClasses:OnCharacterRemoving(character)
 	self.Character = nil
 	self.StoredSlot = nil
 	self.CharacterTrove:Clean()
-	self.AbilityClass:OnCharacterRemoved()
+	self.AbilityClass:OnCharacterRemoving()
 	self:UnequipWeapons()
 	self.MovementClass:OnCharacterRemoving()
-	self.StateManager:UnbindRoot()
+	self.StateManager:OnCharacterRemoving()
 	self.Humanoid = nil
 	self.Root = nil
 end
 
-function CombatClasses:AddAttachment(parent, name, position, orientation)
-	local existing = parent:FindFirstChild(name)
-	if existing then
-		return existing
-	end
-
-	local attachment = Instance.new("Attachment")
-	attachment.Name = name
-	attachment.Position = position or Vector3.zero
-	attachment.Orientation = orientation or Vector3.zero
-	attachment.Parent = parent
-
-	return attachment
-end
-
-function CombatClasses:SetupCharacter(character)
-	local RightHand = character:FindFirstChild("RightHand") or character:WaitForChild("Right Arm")
-
-	local LeftHand = character:FindFirstChild("LeftHand") or character:WaitForChild("Left Arm")
-
-	self:AddAttachment(RightHand, "WeaponGripAttachment", Vector3.new(0, -0.65, -0.5), Vector3.new(0, 0, 0))
-
-	self:AddAttachment(LeftHand, "AbilityGripAttachment", Vector3.new(0, -1.2, 0), Vector3.new(0, 0, 0))
-end
 
 function CombatClasses:SetupInput()
 	self:GetEquippedWeaponClass():SetupInput()
@@ -287,7 +261,7 @@ function CombatClasses:Destroy()
 	self.Trove:Destroy()
 
 	-- Components may use StateManager during destruction, so clean it last.
-	self.StateTrove:Destroy()
+	self.StateManager:Destroy()
 
 	table.clear(self.WeaponClasses)
 	self.AbilityClass = nil
