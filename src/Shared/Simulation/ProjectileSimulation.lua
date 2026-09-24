@@ -1,0 +1,3 @@
+local ProjectileSimulation = {}
+
+return ProjectileSimulation

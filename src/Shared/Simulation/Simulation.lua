@@ -1,15 +1,11 @@
 local RunService = game:GetService("RunService")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local Inputs = ReplicatedStorage:WaitForChild("Inputs")
-
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
 
 local Simulation = {}
 
-local IsServer = RunService:IsServer()
 local Running = true
 local Initialized = false
 local CleanupSimulation = nil
@@ -27,12 +23,6 @@ function Simulation:RegisterPlayer(player, combatClass)
 		Connections = Trove.new(),
 		Generation = 0,
 	}
-
-	if IsServer then
-		local inputClone = Inputs:Clone()
-		inputClone.Parent = player
-		inputClone.Name = "Inputs"
-	end
 
 	RegisteredPlayers[player] = Record
 	PlayerCombatClasses[player] = combatClass

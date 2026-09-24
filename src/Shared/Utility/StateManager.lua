@@ -25,10 +25,8 @@ function StateManager.new()
 end
 
 function StateManager:Destroy()
-	self:UnbindRoot()
 	self.Trove:Destroy()
 end
-
 
 function StateManager:OnCharacterAdded(root)
 	self.Root = root

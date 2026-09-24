@@ -14,15 +14,15 @@ end
 
 -- Lifecycle
 
-function AnimationLoader.new(AnimationHandler)
+function AnimationLoader.new(AnimationController)
 	local self = setmetatable({}, AnimationLoader)
-	self.AnimationHandler = AnimationHandler
+	self.AnimationController = AnimationController
 
-	self.WeaponTrove = AnimationHandler.WeaponTrove
-	self.AbilityTrove = AnimationHandler.AbilityTrove
+	self.WeaponTrove = AnimationController.WeaponTrove
+	self.AbilityTrove = AnimationController.AbilityTrove
 
-	self.WeaponAnimations = AnimationHandler.WeaponAnimations
-	self.AbilityAnimations = AnimationHandler.AbilityAnimations
+	self.WeaponAnimations = AnimationController.WeaponAnimations
+	self.AbilityAnimations = AnimationController.AbilityAnimations
 
 	return self
 end

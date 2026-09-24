@@ -3,18 +3,15 @@ local Players = game:GetService("Players")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Combat = Shared:WaitForChild("Combat")
+local Classes = Combat:WaitForChild("Classes")
 local Settings = Shared:WaitForChild("Settings")
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
-local CombatClassesModule = require(Combat:WaitForChild("CombatClasses"))
+local CombatClassesModule = require(Classes:WaitForChild("CombatClasses"))
 
 local PlayerCombatClasses = {}
 
 local CombatClassesHandler = {}
-
-function CombatClassesHandler:GetCombatClasses(player)
-	return PlayerCombatClasses[player.UserId]
-end
 
 local function SendPlayerData(player)
 	local Loadout = PlayerCombatClasses[player.UserId]
@@ -56,6 +53,10 @@ local function DestroyPlayerData(player)
 
 	PlayerCombatClasses[player.UserId]:Destroy()
 	PlayerCombatClasses[player.UserId] = nil
+end
+
+function CombatClassesHandler:GetCombatClasses(player)
+	return PlayerCombatClasses[player.UserId]
 end
 
 function CombatClassesHandler:Init()
