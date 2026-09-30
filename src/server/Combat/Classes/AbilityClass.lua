@@ -7,7 +7,7 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
 
 local Combat = script:FindFirstAncestor("Combat")
-local Abilities = Combat:WaitForChild("Abilities")
+local Abilities = Combat:WaitForChild("Components"):WaitForChild("Abilities")
 local Grenades = Abilities:WaitForChild("Grenades")
 
 local AbilityClass = {}
@@ -24,7 +24,7 @@ function AbilityClass.new(player, AbilityInfo, stateManager, combatClasses)
 	}, AbilityClass)
 
 	self.AbilityInfo = {
-		GrenadeInfo = table.clone(AbilitySettings.Grenade[AbilityInfo.Grenade]),
+		GrenadeInfo = AbilitySettings.Grenade[AbilityInfo.Grenade],
 	}
 
 	self.Grenade = require(Grenades:WaitForChild(AbilityInfo.Grenade)).new(self)
@@ -32,12 +32,12 @@ function AbilityClass.new(player, AbilityInfo, stateManager, combatClasses)
 	return self
 end
 
-function AbilityClass:OnCharacterRemoved()
-	self.Grenade:Reset()
+function AbilityClass:OnCharacterRemoving()
+	self.Grenade:OnCharacterRemoving()
 end
 
 function AbilityClass:Destroy()
-	self:OnCharacterRemoved()
+	self:OnCharacterRemoving()
 	self.Trove:Destroy()
 end
 

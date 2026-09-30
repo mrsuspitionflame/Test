@@ -1,8 +1,10 @@
 local WeaponSettings = {
 	HandCannon = {
+		WEAPON_ID = 1234567890,
 		WEAPON_NAME = "HandCannon",
 		WEAPON_TYPE = "HandCannon",
 
+		EQUIP_TYPE = "Gun",
 		AIM_TYPE = "ADS",
 		FIRE_MODE = "Automatic",
 		SHOT_TYPE = "Hitscan",

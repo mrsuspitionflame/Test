@@ -6,11 +6,11 @@ local WeaponSettings = require(Settings:WaitForChild("WeaponSettings"))
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 local Trove = require(Packages:WaitForChild("Trove"))
-local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local Combat = script:FindFirstAncestor("Combat")
-local Weapons = Combat:WaitForChild("Weapons")
+local Weapons = Combat:WaitForChild("Components"):WaitForChild("Weapons")
 
+local EquipType = Weapons:WaitForChild("EquipType")
 local FireMode = Weapons:WaitForChild("FireMode")
 local AimType = Weapons:WaitForChild("AimType")
 local ReloadType = Weapons:WaitForChild("ReloadType")
@@ -23,11 +23,13 @@ local WeaponClass = {}
 WeaponClass.__index = WeaponClass
 
 function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClasses)
-	local WeaponInfo = table.clone(WeaponSettings[WeaponName])
+	local WeaponInfo = WeaponSettings[WeaponName]
 
 	local self = {
 		Trove = Trove.new(),
 		WeaponInfo = WeaponInfo,
+		Ammo = WeaponInfo.AMMO,
+		ReserveAmmo = WeaponInfo.RESERVE_AMMO,
 
 		Player = Player,
 		WeaponName = WeaponName,
@@ -38,6 +40,7 @@ function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClass
 
 	}
 
+	self.Equipping = require(EquipType:WaitForChild(self.WeaponInfo.EQUIP_TYPE)).new(self)
 	self.ShotType = require(ShotType:WaitForChild(self.WeaponInfo.SHOT_TYPE)).new(self)
 	self.Firing = require(FireMode:WaitForChild(self.WeaponInfo.FIRE_MODE)).new(self)
 	self.Aiming = require(AimType:WaitForChild(self.WeaponInfo.AIM_TYPE)).new(self)
@@ -48,69 +51,11 @@ function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClass
 end
 
 function WeaponClass:OnUnequip()
-	if self.CombatClasses.EquippedWeaponClass ~= self or not self.StateManager:TryAction("Weapon", "UnEquip") then
-		PacketSettings.Combat.Weapon.EquipResult.sendTo({
-			Action = "UnEquip",
-			SlotName = self.SlotName,
-			Accepted = false,
-		}, self.Player)
-		return false
-	end
-
-	PacketSettings.Combat.Weapon.EquipResult.sendTo({
-		Action = "UnEquip",
-		SlotName = self.SlotName,
-		Accepted = true,
-	}, self.Player)
-
-	self.CombatClasses.EquippedWeaponClass = nil
-
-	self.StateManager:SetState("WeaponState", "UNEQUIPPED")
-	self.StateManager:SetState("EquippedState", "UNEQUIPPED")
-
-	self.Firing:OnUnequip()
-	self.Reloading:OnUnequip()
-	self.Aiming:OnUnequip()
-
-	self.Trove:Clean()
-	return true
+	return self.Equipping:OnUnequip()
 end
 
 function WeaponClass:OnEquip()
-	if self.CombatClasses.EquippedWeaponClass ~= nil or not self.StateManager:TryAction("Weapon", "Equip") then
-		PacketSettings.Combat.Weapon.EquipResult.sendTo({
-			Action = "Equip",
-			SlotName = self.SlotName,
-			Accepted = false,
-		}, self.Player)
-		return
-	end
-
-	PacketSettings.Combat.Weapon.EquipResult.sendTo({
-		Action = "Equip",
-		SlotName = self.SlotName,
-		Accepted = true,
-	}, self.Player)
-
-	self.CombatClasses.EquippedWeaponClass = self
-
-	self:AttachWeaponModel()
-
-	self.StateManager:SetState("WeaponState", "EQUIPPING")
-	self.StateManager:SetState("EquippedState", "EQUIPPED")
-
-	local EquipSpeed = 1 + (self.WeaponInfo.HANDLING - 50) / 100
-
-	self.Trove:Add(task.delay(self.WeaponInfo.EQUIP_DURATION / EquipSpeed, function()
-		self.EquipTask = nil
-		if self.StateManager:GetState("WeaponState") ~= "EQUIPPING" then
-			return
-		end
-
-		self.StateManager:SetState("WeaponState", "IDLE")
-	end))
-
-	self:Init()
+	return self.Equipping:OnEquip()
 end
 
 function WeaponClass:AttachWeaponModel()
@@ -140,8 +85,8 @@ end
 function WeaponClass:Init() end
 
 function WeaponClass:Destroy()
-	if self.CombatClasses.EquippedWeaponClass == self then
-		self.CombatClasses.EquippedWeaponClass = nil
+	if self.CombatClasses.EquippedSlot == self.SlotName then
+		self.CombatClasses.EquippedSlot = nil
 	end
 	self.Firing:Destroy()
 	self.Reloading:Destroy()

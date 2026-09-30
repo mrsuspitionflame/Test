@@ -33,12 +33,12 @@ function WeaponHandler:Init()
 
 		local WeaponClass = CombatClasses.WeaponClasses[SlotName]
 
-		if not WeaponClass or CombatClasses.EquippedWeaponClass ~= WeaponClass then
+		if not WeaponClass or CombatClasses.EquippedSlot ~= SlotName then
 			return
 		end
 
-		if Action == "Held" then
-			WeaponClass.Firing:Held(data)
+		if Action == "Pressed" then
+			WeaponClass.Firing:Pressed(data)
 		elseif Action == "Released" then
 			WeaponClass.Firing:Released(data)
 		elseif Action == "Fire" then
@@ -55,12 +55,12 @@ function WeaponHandler:Init()
 		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
 		local WeaponClass = CombatClasses and CombatClasses.WeaponClasses[SlotName]
 
-		if not WeaponClass or CombatClasses.EquippedWeaponClass ~= WeaponClass then
+		if not WeaponClass or CombatClasses.EquippedSlot ~= SlotName then
 			return
 		end
 
-		if Action == "Held" then
-			WeaponClass.Reloading:Held()
+		if Action == "Pressed" then
+			WeaponClass.Reloading:Pressed()
 		elseif Action == "Released" then
 			WeaponClass.Reloading:Released()
 		elseif Action == "Cancelled" then
@@ -75,12 +75,12 @@ function WeaponHandler:Init()
 		local CombatClasses = LoadoutHandler:GetCombatClasses(player)
 		local WeaponClass = CombatClasses and CombatClasses.WeaponClasses[SlotName]
 
-		if not WeaponClass or CombatClasses.EquippedWeaponClass ~= WeaponClass then
+		if not WeaponClass or CombatClasses.EquippedSlot ~= SlotName then
 			return
 		end
 
-		if Action == "Held" then
-			WeaponClass.Aiming:Held()
+		if Action == "Pressed" then
+			WeaponClass.Aiming:Pressed()
 		elseif Action == "Released" then
 			WeaponClass.Aiming:Released()
 		elseif Action == "Cancelled" then

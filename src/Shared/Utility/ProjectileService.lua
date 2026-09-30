@@ -1,6 +1,6 @@
 local ProjectileSimulation = {}
 
-function ProjectileSimulation:Create(config)
+function ProjectileSimulation.Create(config)
 	return {
 		Id = config.Id,
 
@@ -17,7 +17,7 @@ function ProjectileSimulation:Create(config)
 	}
 end
 
-function ProjectileSimulation:GetStep(projectile, dt)
+function ProjectileSimulation.GetStep(projectile, dt)
 	local nextVelocity = projectile.Velocity + projectile.Gravity * dt
 
 	local displacement = (projectile.Velocity + nextVelocity) * 0.5 * dt
@@ -31,7 +31,7 @@ function ProjectileSimulation:GetStep(projectile, dt)
 	return nextVelocity, displacement
 end
 
-function ProjectileSimulation:Advance(projectile, nextVelocity, displacement)
+function ProjectileSimulation.Advance(projectile, nextVelocity, displacement)
 	projectile.Velocity = nextVelocity
 	projectile.Position += displacement
 	projectile.Distance += displacement.Magnitude
