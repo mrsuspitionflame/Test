@@ -37,6 +37,7 @@ function WeaponController.new(WeaponName, SlotName, ViewModelController, StateMa
 
 	}, WeaponController)
 
+	self.EquippedTrove = self.Trove:Extend()
 	self:Init()
 	return self
 end
@@ -96,7 +97,7 @@ end
 
 function WeaponController:UnbindWeaponInputs()
 	if self.InputTrove then
-		self.InputTrove:Clean()
+		self.Trove:Remove(self.InputTrove)
 		self.InputTrove = nil
 	end
 end
@@ -113,7 +114,7 @@ function WeaponController:Init()
 
 	self.GUIController:InitializeSlot(self.WeaponName, self.SlotName, self.Ammo, self.ReserveAmmo)
 
-	self.CombatController.Trove:Add(PacketSettings.Combat.Weapon.AmmoUpdate.listen(function(data)
+	self.Trove:Add(PacketSettings.Combat.Weapon.AmmoUpdate.listen(function(data)
 		if data.SlotName == self.SlotName then
 			self:SetAmmo(data.Ammo, data.ReserveAmmo)
 		end
@@ -128,7 +129,7 @@ function WeaponController:Init()
 	self.Equipping = require(EquipType:WaitForChild(self.WeaponInfo.EQUIP_TYPE)).new(self)
 	
 	if self.EquipAction then
-		self.CombatController.Trove:Connect(self.EquipAction.Pressed, function()
+		self.Trove:Connect(self.EquipAction.Pressed, function()
 			self.Equipping:Pressed()
 		end)
 	else

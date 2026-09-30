@@ -70,34 +70,6 @@ function ADS:CanAim()
 end
 
 function ADS:OnEquip()
-
-	local Inputs = self.WeaponController.Inputs
-	if not Inputs then 
-		warn("Inputs not found for WeaponController")
-		return
-	end
-
-	local WeaponContext = Inputs:WaitForChild("WeaponContext")
-	if not WeaponContext then
-		warn("WeaponContext not found for Inputs")
-		return
-	end
-
-	local AimAction = WeaponContext:WaitForChild("AimAction")
-	if not AimAction then
-		warn("AimAction not found for WeaponContext")
-		return
-	end
-
-	self.Trove = self.WeaponController.Trove:Extend()
-
-	self.Trove:Add(AimAction.Released:Connect(function()
-		self:Released()
-	end))
-
-	self.Trove:Add(AimAction.Pressed:Connect(function()
-		self:Pressed()
-	end))
 end
 
 return ADS

@@ -32,7 +32,6 @@ function SolarGrenade.new(AbilityController)
 
 	self.Trove = self.AbilityController.Trove:Extend()
 
-	self:Init()
 	return self
 end
 
@@ -45,6 +44,8 @@ function SolarGrenade:Pressed()
 		Action = "Pressed",
 	})
 
+	self.AbilityController.CombatController:CancelStates("Ability", "Grenade")
+	self.Trove:Clean()
 	self.StateManager:SetState("AbilityState", "USING_GRENADE")
 
 	local Animations = self.AbilityController.Animations
@@ -150,31 +151,6 @@ function SolarGrenade:OnHit(result)
 		self:SetEmitterTransparency(hit)
 		Debris:AddItem(hit, 1)
 	end)
-end
-
-function SolarGrenade:Init()
-	local Inputs = self.WeaponController.Inputs
-	if not Inputs then
-		warn("Inputs not found for WeaponController")
-		return
-	end
-
-	local AbilityContext = Inputs:WaitForChild("AbilityContext")
-	if not AbilityContext then
-		warn("AbilityContext not found for Inputs")
-		return
-	end
-
-	local GrenadeAction = AbilityContext:WaitForChild("GrenadeAction")
-
-	if not GrenadeAction then
-		warn("Grenade action not found for slot: " .. self.WeaponController.SlotName)
-		return
-	end
-
-	self.Trove:Add(GrenadeAction.Pressed:Connect(function()
-		self:Pressed()
-	end))
 end
 
 return SolarGrenade

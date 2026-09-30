@@ -83,17 +83,16 @@ function CombatController:CancelState(stateType, state)
 end
 
 function CombatController:CancelStates(actionType, action)
-	local actionSettings = StateSettings[actionType] and StateSettings[actionType][action]
+	local category = StateSettings[actionType]
+	local actionSettings = category and category[action]
 	if not actionSettings then
 		return false
 	end
-
 	for stateType, states in pairs(actionSettings.CancelStates) do
 		for _, state in ipairs(states) do
 			self:CancelState(stateType, state)
 		end
 	end
-
 	return true
 end
 
@@ -114,7 +113,7 @@ function CombatController:CreateAbilityController(data)
 	if self.Ability then
 		return
 	end
-	self.Ability = AbilityController.new(data, self.AnimationController, self.StateManager, self.GUI)
+	self.Ability = self.Trove:Add(AbilityController.new(data, self.AnimationController, self.StateManager, self.GUIController, self))
 end
 
 function CombatController:CreateMovementClass()

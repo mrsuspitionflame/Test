@@ -29,8 +29,8 @@ function AbilityHandler:Init()
 			return
 		end
 
-		if Action == "Held" then
-			AbilityClass.Grenade:Held(data)
+		if Action == "Pressed" then
+			AbilityClass.Grenade:Pressed(data)
 		elseif Action == "Released" then
 			AbilityClass.Grenade:Released(data)
 		elseif Action == "Cast" then

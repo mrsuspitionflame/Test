@@ -13,7 +13,7 @@ function Gun.new(WeaponController)
 	local self = setmetatable({}, Gun)
 
 	self.WeaponController = WeaponController
-	self.Trove = WeaponController.CombatController.Trove
+	self.Trove = WeaponController.Trove
 
 	self:Init()
 	return self
@@ -25,6 +25,7 @@ function Gun:OnEquip()
 		return
 	end
 
+	WeaponController.CombatController:CancelStates("Weapon", "Equip")
 	WeaponController.StateManager:SetState("WeaponState", "EQUIPPING")
 	WeaponController.StateManager:SetState("EquippedState", "EQUIPPED")
 
@@ -47,7 +48,7 @@ function Gun:OnEquip()
 	Animations.EQUIP.VIEWMODEL:Play(0, 1, EquipSpeed)
 	Animations.EQUIP.CHARACTER:Play(0, 1, EquipSpeed)
 
-	WeaponController.Trove:Add(task.delay(WeaponController.WeaponInfo.EQUIP_DURATION / EquipSpeed, function()
+	WeaponController.EquippedTrove:Add(task.delay(WeaponController.WeaponInfo.EQUIP_DURATION / EquipSpeed, function()
 		WeaponController.EquipTask = nil
 		if WeaponController.StateManager:GetState("WeaponState") ~= "EQUIPPING" then
 			return
@@ -59,6 +60,7 @@ function Gun:OnEquip()
 	WeaponController.Firing:OnEquip()
 	WeaponController.Aiming:OnEquip()
 	WeaponController.Reloading:OnEquip()
+	WeaponController:BindWeaponInputs()
 end
 
 function Gun:OnUnequip()
@@ -67,6 +69,7 @@ function Gun:OnUnequip()
 		return
 	end
 
+	WeaponController.CombatController:CancelStates("Weapon", "UnEquip")
 	WeaponController.StateManager:SetState("WeaponState", "UNEQUIPPED")
 	WeaponController.StateManager:SetState("EquippedState", "UNEQUIPPED")
 
@@ -82,7 +85,8 @@ function Gun:OnUnequip()
 	WeaponController.Reloading:OnUnequip()
 	WeaponController.Aiming:OnUnequip()
 
-	WeaponController.Trove:Clean()
+	WeaponController:UnbindWeaponInputs()
+	WeaponController.EquippedTrove:Clean()
 	WeaponController.AnimationController:OnUnequip()
 	WeaponController.GUIController:OnUnequip()
 end
@@ -109,19 +113,6 @@ function Gun:Pressed()
 	})
 end
 
-local function GetEquipActionfromSlot(weaponContext, slotName)
-	if not weaponContext or not slotName then
-		return nil
-	end
-
-	local equipAction = weaponContext:FindFirstChild("Equip" .. slotName .. "Action")
-	if equipAction then
-		return equipAction
-	end
-
-	return nil
-end
-
 function Gun:Init()
 	if self.Initialized then
 		return
@@ -145,28 +136,6 @@ function Gun:Init()
 		end
 	end))
 
-	local Inputs = self.WeaponController.Inputs
-	if not Inputs then
-		warn("Inputs not found for WeaponController")
-		return
-	end
-
-	local WeaponContext = Inputs:WaitForChild("WeaponContext")
-	if not WeaponContext then
-		warn("WeaponContext not found for Inputs")
-		return
-	end
-
-	local EquipAction = GetEquipActionfromSlot(WeaponContext, self.WeaponController.SlotName)
-
-	if not EquipAction then
-		warn("Equip action not found for slot: " .. self.WeaponController.SlotName)
-		return
-	end
-
-	self.Trove:Add(EquipAction.Pressed:Connect(function()
-		self:Pressed()
-	end))
 end
 
 return Gun

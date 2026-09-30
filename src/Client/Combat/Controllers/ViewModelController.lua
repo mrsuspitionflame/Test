@@ -30,35 +30,6 @@ function ViewModelController.new(AnimationController)
 	end))
 	return self
 end
-
-function ViewModelController:UpdateMovementAnimations(newState)
-	local animations = self.AnimationController.WeaponAnimations
-	local 
-
-	walk:Stop(0.15)
-	sprint:Stop(0.15)
-	jump:Stop(0.15)
-	idle:Stop(0.15)
-	slide:Stop(0.15)
-
-	if newState == "WALKING" then
-		walk.Looped = true
-		walk:Play(0.15)
-	elseif newState == "JUMPING" then
-		jump.Looped = false
-		jump:Play(0.15)
-	elseif newState == "IDLE" then
-		idle.Looped = true
-		idle:Play(0.15)
-	elseif newState == "SPRINTING" then
-		sprint.Looped = true
-		sprint:Play(0.15)
-	elseif newState == "SLIDING" then
-		slide.Looped = true
-		slide:Play(0.15)
-	end
-end
-
 -- Weapon ViewModels functions
 
 function ViewModelController:OnEquip(WeaponInfo)
@@ -80,9 +51,8 @@ function ViewModelController:CreateWeaponViewModel()
 	self.WeaponViewModel.Name = self.WeaponInfo.WEAPON_NAME
 	self.WeaponViewModel.Parent = workspace.CurrentCamera
 
-	self.AnimationController.WeaponAnimations = AnimationLoader.LoadWeaponAnimations(
-		Player, self.WeaponTrove, self.WeaponViewModel, self.WeaponInfo
-	)
+	self.AnimationController.WeaponAnimations =
+		AnimationLoader.LoadWeaponAnimations(Player, self.WeaponTrove, self.WeaponViewModel, self.WeaponInfo)
 
 	local WeaponModel = WeaponModels:WaitForChild(self.WeaponInfo.WEAPON_TYPE):WaitForChild("HandCannonModel"):Clone()
 
@@ -126,9 +96,8 @@ function ViewModelController:CreateAbilityViewModel(AbilityInfo)
 	self.AbilityViewModel.Name = "AbilityViewModel"
 	self.AbilityViewModel.Parent = workspace
 
-	self.AnimationController.AbilityAnimations = AnimationLoader.LoadAbilityAnimations(
-		Player, self.AbilityTrove, self.AbilityViewModel, AbilityInfo
-	)
+	self.AnimationController.AbilityAnimations =
+		AnimationLoader.LoadAbilityAnimations(Player, self.AbilityTrove, self.AbilityViewModel, AbilityInfo)
 
 	self:ApplyViewModelAppearance(self.AbilityViewModel)
 	self.AbilityViewModel.Parent = nil

@@ -30,7 +30,7 @@ function SolarGrenade.new(AbilityClass)
 	return self
 end
 
-function SolarGrenade:Held()
+function SolarGrenade:Pressed()
 	local character = self.Player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	if not humanoid or humanoid.Health <= 0 then
