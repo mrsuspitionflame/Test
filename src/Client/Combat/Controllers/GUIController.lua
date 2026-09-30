@@ -25,10 +25,10 @@ function GUIController:SetCombatUIEnabled(visible)
 	CombatUIsources.UIEnabled(visible)
 end
 
-function GUIController:InitializeSlot(weaponName, slotName)
+function GUIController:InitializeSlot(weaponName, slotName, ammo, reserveAmmo)
 	local weaponInfo = weaponSettings[weaponName]
-	CombatUIsources[slotName].Ammo(weaponInfo.MAGAZINE_SIZE)
-	CombatUIsources[slotName].ReserveAmmo(weaponInfo.RESERVE_AMMO)
+	CombatUIsources[slotName].Ammo(ammo)
+	CombatUIsources[slotName].ReserveAmmo(reserveAmmo)
 	CombatUIsources[slotName].AmmoType(weaponInfo.AMMO_TYPE)
 end
 

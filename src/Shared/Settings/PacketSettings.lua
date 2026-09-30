@@ -1,149 +1,168 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
-local ByteNet = require(Packages:WaitForChild("Bytenet"))
+local ByteNetMax = require(Packages:WaitForChild("ByteNetMax"))
+
+-- Keep the existing packet paths while using Max's packets/queries namespaces.
+local function DefinePackets(name, define)
+	return ByteNetMax.defineNamespace(name, function()
+		return { packets = define() }
+	end).packets
+end
 
 local PacketSettings = {}
 
-PacketSettings.Character = ByteNet.defineNamespace("Character", function()
+PacketSettings.Character = DefinePackets("Character", function()
 	return {
-		UpperBodyAim = ByteNet.definePacket({
+		UpperBodyAim = ByteNetMax.definePacket({
 			reliabilityType = "unreliable",
-			value = ByteNet.struct({
-				Pitch = ByteNet.float32,
-				Yaw = ByteNet.float32,
+			value = ByteNetMax.struct({
+				Pitch = ByteNetMax.float32,
+				Yaw = ByteNetMax.float32,
 			}),
 		}),
 
-		ApplyUpperBodyAim = ByteNet.definePacket({
+		ApplyUpperBodyAim = ByteNetMax.definePacket({
 			reliabilityType = "unreliable",
-			value = ByteNet.struct({
-				Player = ByteNet.inst,
-				Pitch = ByteNet.float32,
-				Yaw = ByteNet.float32,
+			value = ByteNetMax.struct({
+				Player = ByteNetMax.inst,
+				Pitch = ByteNetMax.float32,
+				Yaw = ByteNetMax.float32,
 			}),
 		}),
 	}
 end)
 
-PacketSettings.Creation = ByteNet.defineNamespace("Creation", function()
+PacketSettings.Creation = DefinePackets("Creation", function()
 	return {
-		PlayerData = ByteNet.definePacket({
-			value = ByteNet.struct({
-				Weapons = ByteNet.array(ByteNet.struct({
-					WeaponName = ByteNet.string,
-					SlotName = ByteNet.string,
+		PlayerData = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				Weapons = ByteNetMax.array(ByteNetMax.struct({
+					WeaponName = ByteNetMax.string,
+					SlotName = ByteNetMax.string,
 				})),
-				Abilities = ByteNet.struct({
-					Grenade = ByteNet.string,
+				Abilities = ByteNetMax.struct({
+					Grenade = ByteNetMax.string,
 				}),
 			}),
 		}),
 
-		RequestPlayerData = ByteNet.definePacket({
-			value = ByteNet.nothing,
+		RequestPlayerData = ByteNetMax.definePacket({
+			value = ByteNetMax.nothing,
 		}),
 	}
 end)
 
 PacketSettings.Combat = {}
 
-PacketSettings.Combat.Replicate = ByteNet.defineNamespace("CombatReplicate", function()
+PacketSettings.Combat.Replicate = DefinePackets("CombatReplicate", function()
 	return {
-		ReplicateShotEvent = ByteNet.definePacket({
+		ReplicateShotEvent = ByteNetMax.definePacket({
 			reliabilityType = "unreliable",
-			value = ByteNet.struct({
-				RayOrigin = ByteNet.vec3,
+			value = ByteNetMax.struct({
+				RayOrigin = ByteNetMax.vec3,
 
-				RayResults = ByteNet.array(ByteNet.struct({
-					Position = ByteNet.vec3,
-					Normal = ByteNet.vec3,
-					Instance = ByteNet.optional(ByteNet.inst),
-					Distance = ByteNet.optional(ByteNet.float32),
+				RayResults = ByteNetMax.array(ByteNetMax.struct({
+					Position = ByteNetMax.vec3,
+					Normal = ByteNetMax.vec3,
+					Instance = ByteNetMax.optional(ByteNetMax.inst),
+					Distance = ByteNetMax.optional(ByteNetMax.float32),
 				})),
 			}),
 		}),
 
-		ReplicateAbilityEvent = ByteNet.definePacket({
+		ReplicateAbilityEvent = ByteNetMax.definePacket({
 			reliabilityType = "unreliable",
-			value = ByteNet.struct({
-				AbilityType = ByteNet.string,
-				AbilityName = ByteNet.string,
-				ActionType = ByteNet.string,
-				Player = ByteNet.optional(ByteNet.inst),
-				ProjectileID = ByteNet.optional(ByteNet.string),
-				Origin = ByteNet.optional(ByteNet.vec3),
-				Direction = ByteNet.optional(ByteNet.vec3),
+			value = ByteNetMax.struct({
+				AbilityType = ByteNetMax.string,
+				AbilityName = ByteNetMax.string,
+				ActionType = ByteNetMax.string,
+				Player = ByteNetMax.optional(ByteNetMax.inst),
+				ProjectileID = ByteNetMax.optional(ByteNetMax.string),
+				Origin = ByteNetMax.optional(ByteNetMax.vec3),
+				Direction = ByteNetMax.optional(ByteNetMax.vec3),
 			}),
 		}),
 	}
 end)
 
-PacketSettings.Combat.Weapon = ByteNet.defineNamespace("Weapon", function()
+PacketSettings.Combat.Weapon = DefinePackets("Weapon", function()
 	return {
-		FireRequest = ByteNet.definePacket({
-			value = ByteNet.struct({
-				Action = ByteNet.string, -- "Held", "Released", "Cancelled", "Fire"
-				SlotName = ByteNet.string,
-				Origin = ByteNet.optional(ByteNet.cframe),
-				Seed = ByteNet.optional(ByteNet.int32),
+		FireRequest = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				Action = ByteNetMax.string, -- "Held", "Released", "Cancelled", "Fire"
+				SlotName = ByteNetMax.string,
+				Origin = ByteNetMax.optional(ByteNetMax.cframe),
+				Seed = ByteNetMax.optional(ByteNetMax.int32),
 			}),
 		}),
 
-		ShotRequest = ByteNet.definePacket({
-			value = ByteNet.struct({
-				SlotName = ByteNet.string,
-				CFrame = ByteNet.cframe,
-				Seed = ByteNet.int32,
+		ShotRequest = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				SlotName = ByteNetMax.string,
+				CFrame = ByteNetMax.cframe,
+				Seed = ByteNetMax.int32,
 			}),
 		}),
 
-		ReloadRequest = ByteNet.definePacket({
-			value = ByteNet.struct({
-				Action = ByteNet.string,
-				SlotName = ByteNet.string,
+		ReloadRequest = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				Action = ByteNetMax.string,
+				SlotName = ByteNetMax.string,
 			}),
 		}),
 
-		AmmoUpdate = ByteNet.definePacket({
-			value = ByteNet.struct({
-				SlotName = ByteNet.string,
-				Ammo = ByteNet.int32,
-				ReserveAmmo = ByteNet.optional(ByteNet.int32),
+		AmmoUpdate = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				SlotName = ByteNetMax.string,
+				Ammo = ByteNetMax.int32,
+				ReserveAmmo = ByteNetMax.optional(ByteNetMax.int32),
 			}),
 		}),
 
-		EquipRequest = ByteNet.definePacket({
-			value = ByteNet.struct({
-				SlotName = ByteNet.string,
-				Action = ByteNet.string,
+		EquipRequest = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				SlotName = ByteNetMax.string,
+				Action = ByteNetMax.string,
 			}),
 		}),
 
-		EquipResult = ByteNet.definePacket({
-			value = ByteNet.struct({
-				Action = ByteNet.string,
-				SlotName = ByteNet.string,
-				Accepted = ByteNet.bool,
+		EquipResult = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				Action = ByteNetMax.string,
+				SlotName = ByteNetMax.string,
+				Accepted = ByteNetMax.bool,
 			}),
 		}),
 
-		AimRequest = ByteNet.definePacket({
-			value = ByteNet.struct({
-				SlotName = ByteNet.string,
-				Action = ByteNet.string,
+		EquipRequest2 = ByteNetMax.defineQuery({
+			request = ByteNetMax.struct({
+				SlotName = ByteNetMax.string,
+				Action = ByteNetMax.string
+			}),
+			response = ByteNetMax.struct({
+				Action = ByteNetMax.string,
+				SlotName = ByteNetMax.string,
+				Accepted = ByteNetMax.bool,
+			}),
+		}),
+
+		AimRequest = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				SlotName = ByteNetMax.string,
+				Action = ByteNetMax.string,
 			}),
 		}),
 	}
 end)
 
-PacketSettings.Combat.Ability = ByteNet.defineNamespace("Ability", function()
+PacketSettings.Combat.Ability = DefinePackets("Ability", function()
 	return {
-		GrenadeRequest = ByteNet.definePacket({
-			value = ByteNet.struct({
-				Action = ByteNet.string,
-				Origin = ByteNet.optional(ByteNet.vec3),
-				Direction = ByteNet.optional(ByteNet.vec3),
-				ProjectileId = ByteNet.optional(ByteNet.string),
+		GrenadeRequest = ByteNetMax.definePacket({
+			value = ByteNetMax.struct({
+				Action = ByteNetMax.string,
+				Origin = ByteNetMax.optional(ByteNetMax.vec3),
+				Direction = ByteNetMax.optional(ByteNetMax.vec3),
+				ProjectileId = ByteNetMax.optional(ByteNetMax.string),
 			}),
 		}),
 	}

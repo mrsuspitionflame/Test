@@ -190,7 +190,7 @@ local function OnUpperBodyAimReceived(data)
 	pose.TargetYaw = math.clamp(data.Yaw, -MAX_AIM_YAW, MAX_AIM_YAW)
 end
 
-PacketSettings.Character.ApplyUpperBodyAim.listen(OnUpperBodyAimReceived)
+local DisconnectUpperBodyAim = PacketSettings.Character.ApplyUpperBodyAim.listen(OnUpperBodyAimReceived)
 
 local PlayerRemovingConnection = Players.PlayerRemoving:Connect(function(player)
 	local pose = Poses[player]
@@ -232,11 +232,7 @@ script.Destroying:Connect(function()
 	PlayerRemovingConnection:Disconnect()
 	PreSimulationConnection:Disconnect()
 
-	local listeners = PacketSettings.Character.ApplyUpperBodyAim.getListeners()
-	local listenerIndex = table.find(listeners, OnUpperBodyAimReceived)
-	if listenerIndex then
-		table.remove(listeners, listenerIndex)
-	end
+	DisconnectUpperBodyAim()
 
 	for _, pose in pairs(Poses) do
 		RestorePose(pose)

@@ -8,8 +8,6 @@ local EnvironmentImpactEffect = Effects:WaitForChild("EnvironmentImpactEffect")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
-local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
-
 local RaycastService = {}
 
 export type RayResult = {

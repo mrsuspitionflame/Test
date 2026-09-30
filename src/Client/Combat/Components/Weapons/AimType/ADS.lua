@@ -1,0 +1,103 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Settings = Shared:WaitForChild("Settings")
+local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
+
+local ADS = {}
+
+ADS.__index = ADS
+
+function ADS.new(WeaponController)
+	local self = setmetatable({}, ADS)
+
+
+	self.WeaponController = WeaponController
+
+	return self
+end
+
+function ADS:Pressed()
+	if not self:CanAim() then
+		return
+	end
+
+	PacketSettings.Combat.Weapon.AimRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Pressed",
+	})
+
+	self.WeaponController.CombatController:CancelStates("Weapon", "Aim")
+	self.WeaponController.StateManager:SetState("AimState", "AIMING")
+
+	self.WeaponController.CameraController:StartAim()
+end
+
+function ADS:Released()
+	PacketSettings.Combat.Weapon.AimRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Released",
+	})
+
+	self.WeaponController.StateManager:SetState("AimState", "IDLE")
+	self.WeaponController.CameraController:StopAim()
+end
+
+function ADS:Cancelled()
+	PacketSettings.Combat.Weapon.AimRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Cancelled",
+	})
+
+	if self.WeaponController.StateManager:GetState("AimState") == "AIMING" then
+		self.WeaponController.StateManager:SetState("AimState", "IDLE")
+	end
+
+	self.WeaponController.CameraController:StopAim()
+end
+
+function ADS:OnUnequip()
+	PacketSettings.Combat.Weapon.AimRequest.send({
+		SlotName = self.WeaponController.SlotName,
+		Action = "Released",
+	})
+
+	self.WeaponController.StateManager:SetState("AimState", "IDLE")
+	self.WeaponController.CameraController:StopAim()
+end
+
+function ADS:CanAim()
+	return self.WeaponController.StateManager:TryAction("Weapon", "Aim")
+end
+
+function ADS:OnEquip()
+
+	local Inputs = self.WeaponController.Inputs
+	if not Inputs then 
+		warn("Inputs not found for WeaponController")
+		return
+	end
+
+	local WeaponContext = Inputs:WaitForChild("WeaponContext")
+	if not WeaponContext then
+		warn("WeaponContext not found for Inputs")
+		return
+	end
+
+	local AimAction = WeaponContext:WaitForChild("AimAction")
+	if not AimAction then
+		warn("AimAction not found for WeaponContext")
+		return
+	end
+
+	self.Trove = self.WeaponController.Trove:Extend()
+
+	self.Trove:Add(AimAction.Released:Connect(function()
+		self:Released()
+	end))
+
+	self.Trove:Add(AimAction.Pressed:Connect(function()
+		self:Pressed()
+	end))
+end
+
+return ADS
