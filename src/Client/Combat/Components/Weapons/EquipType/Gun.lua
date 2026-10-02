@@ -13,9 +13,7 @@ function Gun.new(WeaponController)
 	local self = setmetatable({}, Gun)
 
 	self.WeaponController = WeaponController
-	self.Trove = WeaponController.Trove
 
-	self:Init()
 	return self
 end
 
@@ -27,14 +25,13 @@ function Gun:OnEquip()
 
 	WeaponController.CombatController:CancelStates("Weapon", "Equip")
 	WeaponController.StateManager:SetState("WeaponState", "EQUIPPING")
-	WeaponController.StateManager:SetState("EquippedState", "EQUIPPED")
 
 	UIS.MouseIconEnabled = false
 
 	WeaponController.CombatController.EquippedSlot = WeaponController.SlotName
 
 	WeaponController.GUIController:EquippedSlotChanged(WeaponController.SlotName)
-	WeaponController.AnimationController:OnEquip(WeaponController.WeaponInfo)
+	WeaponController.ViewModelController:OnEquip(WeaponController.WeaponInfo)
 	WeaponController:GetAnimations()
 	local Animations = WeaponController.Animations
 
@@ -71,7 +68,6 @@ function Gun:OnUnequip()
 
 	WeaponController.CombatController:CancelStates("Weapon", "UnEquip")
 	WeaponController.StateManager:SetState("WeaponState", "UNEQUIPPED")
-	WeaponController.StateManager:SetState("EquippedState", "UNEQUIPPED")
 
 	UIS.MouseIconEnabled = true
 
@@ -87,7 +83,7 @@ function Gun:OnUnequip()
 
 	WeaponController:UnbindWeaponInputs()
 	WeaponController.EquippedTrove:Clean()
-	WeaponController.AnimationController:OnUnequip()
+	WeaponController.ViewModelController:OnUnequip()
 	WeaponController.GUIController:OnUnequip()
 end
 
@@ -111,31 +107,6 @@ function Gun:Pressed()
 		SlotName = WeaponController.SlotName,
 		Action = if isEquipped then "UnEquip" else "Equip",
 	})
-end
-
-function Gun:Init()
-	if self.Initialized then
-		return
-	end
-	self.Initialized = true
-
-	self.Trove:Add(PacketSettings.Combat.Weapon.EquipResult.listen(function(data)
-		if data.SlotName ~= self.WeaponController.SlotName then
-			return
-		end
-
-		if not data.Accepted then
-			warn("Equip/Unequip action was not accepted for slot:", data.SlotName)
-			return
-		end
-
-		if data.Action == "Equip" then
-			self:OnEquip()
-		elseif data.Action == "UnEquip" then
-			self:OnUnequip()
-		end
-	end))
-
 end
 
 return Gun

@@ -17,12 +17,12 @@ local Controllers = Combat:WaitForChild("Controllers")
 local AbilityController = require(Controllers:WaitForChild("AbilityController"))
 local WeaponController = require(Controllers:WaitForChild("WeaponController"))
 local ViewModelController = require(Controllers:WaitForChild("ViewModelController"))
+local CameraController = require(Controllers:WaitForChild("CameraController"))
 local GUIController = require(Controllers:WaitForChild("GUIController"))
 local StateManager = require(Utility:WaitForChild("StateManager"))
 
 local Simulations = Shared:WaitForChild("Simulations")
-local Simulation = require(Simulations:WaitForChild("Simulation"))
-
+local MovementSimulation = require(Simulations:WaitForChild("MovementSimulation"))
 
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
@@ -33,19 +33,22 @@ CombatController.__index = CombatController
 
 function CombatController.new()
 	local self = setmetatable({}, CombatController)
+	-- Tracks character event connections, weapon controller troves, the ability controller, and child troves.
 	self.Trove = Trove.new()
 
 	self.EquippedSlot = nil
+	self.WeaponClasses = {}
 
-	self.WeaponLoadout = {
-		KineticSlot = nil,
-		EnergySlot = nil,
-		HeavySlot = nil,
-	}
+	self.StateManager = StateManager.new()
+
+	-- Tracks the equipped weapon's viewmodel, animations, motor, render loops, zoom, and camera resets.
+	self.WeaponTrove = self.Trove:Extend()
+	-- Tracks the ability viewmodel and animations; its child trove manages the render loop while visible.
+	self.AbilityTrove = self.Trove:Extend()
 
 	self.GUIController = GUIController.new()
-	self.StateManager = StateManager.new()
-	self.ViewModelController = ViewModelController.new()
+	self.CameraController = CameraController.new(self)
+	self.ViewModelController = ViewModelController.new(self)
 
 	self:Init()
 	return self
@@ -97,8 +100,12 @@ function CombatController:CancelStates(actionType, action)
 end
 
 function CombatController:CreateWeaponController(data)
-	if self.WeaponLoadout[data.SlotName] == nil then
-		self.WeaponLoadout[data.SlotName] = WeaponController.new(
+	if not self.WeaponControllers then
+		self.WeaponControllers = {}
+	end
+
+	if self.WeaponControllers[data.SlotName] == nil then
+		self.WeaponControllers[data.SlotName] = WeaponController.new(
 			data.WeaponName,
 			data.SlotName,
 			self.ViewModelController,
@@ -113,7 +120,9 @@ function CombatController:CreateAbilityController(data)
 	if self.Ability then
 		return
 	end
-	self.Ability = self.Trove:Add(AbilityController.new(data, self.AnimationController, self.StateManager, self.GUIController, self))
+	self.Ability = self.Trove:Add(
+		AbilityController.new(data, self.ViewModelController, self.StateManager, self.GUIController, self)
+	)
 end
 
 function CombatController:CreateMovementClass()
@@ -121,14 +130,14 @@ function CombatController:CreateMovementClass()
 		return
 	end
 	self.MovementClass = MovementClass.new(Player, self.StateManager, self)
-	Simulation:RegisterPlayer(Player, self.MovementClass)
+	MovementSimulation:BindPlayerMovementClass(Player, self.MovementClass)
 end
 
 function CombatController:OnCharacterAdded(character)
 	if Player.Character ~= character or self.Character == character then
 		return
 	end
-	self:OnCharacterRemoved()
+	self:OnCharacterRemoving()
 	self.Character = character
 	local humanoid = character:WaitForChild("Humanoid", 10)
 	local root = character:WaitForChild("HumanoidRootPart", 10)
@@ -136,7 +145,7 @@ function CombatController:OnCharacterAdded(character)
 		return
 	end
 	if humanoid.Health <= 0 then
-		self:OnCharacterRemoved(character)
+		self:OnCharacterRemoving(character)
 		return
 	end
 	self.Humanoid = humanoid
@@ -146,13 +155,13 @@ function CombatController:OnCharacterAdded(character)
 	runService:SetPredictionMode(root, Enum.PredictionMode.On)
 	runService:SetPredictionMode(humanoid, Enum.PredictionMode.On)
 	self.DeathConnection = humanoid.Died:Connect(function()
-		self:OnCharacterRemoved(character)
+		self:OnCharacterRemoving(character)
 	end)
-	self.GUI:SetCombatUIEnabled(true)
+	self.GUIController:SetCombatUIEnabled(true)
 	self.MovementClass:OnCharacterAdded()
 end
 
-function CombatController:OnCharacterRemoved(character)
+function CombatController:OnCharacterRemoving(character)
 	if not self.Character or (character and self.Character ~= character) then
 		return
 	end
@@ -163,7 +172,7 @@ function CombatController:OnCharacterRemoved(character)
 	end
 	-- Character cleanup must not be blocked by the current combat action.
 	self.StateManager:SetState("WeaponState", "IDLE")
-	for _, controller in pairs(self.WeaponLoadout) do
+	for _, controller in pairs(self.WeaponControllers) do
 		if self.EquippedSlot == controller.SlotName then
 			controller.Equipping:OnUnequip()
 		end
@@ -172,7 +181,7 @@ function CombatController:OnCharacterRemoved(character)
 	self.StateManager:UnbindRoot()
 	self.Humanoid = nil
 	self.Root = nil
-	self.GUI:SetCombatUIEnabled(false)
+	self.GUIController:SetCombatUIEnabled(false)
 end
 
 function CombatController:Init()
@@ -184,7 +193,7 @@ function CombatController:Init()
 	self:CreateMovementClass()
 
 	self.Trove:Connect(Player.CharacterRemoving, function(character)
-		self:OnCharacterRemoved(character)
+		self:OnCharacterRemoving(character)
 	end)
 	self.Trove:Connect(Player.CharacterAdded, function(character)
 		self:OnCharacterAdded(character)

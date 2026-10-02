@@ -1,5 +1,5 @@
 local Combat = script:FindFirstAncestor("Combat")
-local Handlers = Combat:WaitForChild("Handlers")
+local Features = Combat.Parent:WaitForChild("Features")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Effects = ReplicatedStorage:WaitForChild("Effects")
@@ -9,7 +9,7 @@ local SolarGrenade = Grenade:WaitForChild("SolarGrenade")
 
 local SolarGrenadeEffect = SolarGrenade:WaitForChild("SolarGrenadeAttachment")
 
-local SimulateProjectileServer = require(Handlers:WaitForChild("SimulateProjectile(Server)"))
+local SimulateProjectileServer = require(Features:WaitForChild("SimulateProjectile(Server)"))
 
 local SolarGrenade = {}
 

@@ -13,8 +13,6 @@ local AimType = Weapons:WaitForChild("AimType")
 local ReloadType = Weapons:WaitForChild("ReloadType")
 local ShotType = Weapons:WaitForChild("ShotType")
 
-
-
 local WeaponController = {}
 
 WeaponController.__index = WeaponController
@@ -30,11 +28,10 @@ function WeaponController.new(WeaponName, SlotName, ViewModelController, StateMa
 		WeaponName = WeaponName,
 		SlotName = SlotName, --Change later to weaponInfo.SlotName if we add that to the settings
 		ViewModelController = ViewModelController,
+		CameraController = CombatController.CameraController,
 		StateManager = StateManager,
 		GUIController = GUIController,
 		CombatController = CombatController,
-
-
 	}, WeaponController)
 
 	self.EquippedTrove = self.Trove:Extend()
@@ -53,7 +50,7 @@ function WeaponController:SetAmmo(ammo, reserveAmmo)
 end
 
 function WeaponController:GetAnimations()
-	self.Animations = self.AnimationController:GetAnimation("Weapon")
+	self.Animations = self.ViewModelController.WeaponAnimations
 end
 
 function WeaponController:InputSetup()
@@ -73,32 +70,32 @@ function WeaponController:InputSetup()
 end
 
 function WeaponController:BindWeaponInputs()
-	if self.InputTrove then
+	if self.EquipTrove then
 		return
 	end
-	local InputTrove = self.Trove:Extend()
-	self.InputTrove = InputTrove
-	InputTrove:Connect(self.FireAction.Pressed, function()
+	local EquipTrove = self.Trove:Extend()
+	self.EquipTrove = EquipTrove
+	EquipTrove:Connect(self.FireAction.Pressed, function()
 		self.Firing:Pressed()
 	end)
-	InputTrove:Connect(self.FireAction.Released, function()
+	EquipTrove:Connect(self.FireAction.Released, function()
 		self.Firing:Released()
 	end)
-	InputTrove:Connect(self.AimAction.Pressed, function()
+	EquipTrove:Connect(self.AimAction.Pressed, function()
 		self.Aiming:Pressed()
 	end)
-	InputTrove:Connect(self.AimAction.Released, function()
+	EquipTrove:Connect(self.AimAction.Released, function()
 		self.Aiming:Released()
 	end)
-	InputTrove:Connect(self.ReloadAction.Pressed, function()
+	EquipTrove:Connect(self.ReloadAction.Pressed, function()
 		self.Reloading:Pressed()
 	end)
 end
 
 function WeaponController:UnbindWeaponInputs()
-	if self.InputTrove then
-		self.Trove:Remove(self.InputTrove)
-		self.InputTrove = nil
+	if self.EquipTrove then
+		self.Trove:Remove(self.EquipTrove)
+		self.EquipTrove = nil
 	end
 end
 
@@ -127,7 +124,24 @@ function WeaponController:Init()
 	self.Aiming = require(AimType:WaitForChild(self.WeaponInfo.AIM_TYPE)).new(self)
 	self.Reloading = require(ReloadType:WaitForChild(self.WeaponInfo.RELOAD_TYPE)).new(self)
 	self.Equipping = require(EquipType:WaitForChild(self.WeaponInfo.EQUIP_TYPE)).new(self)
-	
+
+	self.Trove:Add(PacketSettings.Combat.Weapon.EquipResult.listen(function(data)
+		if data.SlotName ~= self.SlotName then
+			return
+		end
+
+		if not data.Accepted then
+			warn("Equip/Unequip action was not accepted for slot:", data.SlotName)
+			return
+		end
+
+		if data.Action == "Equip" then
+			self.Equipping:OnEquip()
+		elseif data.Action == "UnEquip" then
+			self.Equipping:OnUnequip()
+		end
+	end))
+
 	if self.EquipAction then
 		self.Trove:Connect(self.EquipAction.Pressed, function()
 			self.Equipping:Pressed()
@@ -136,7 +150,6 @@ function WeaponController:Init()
 		warn("Equip action not found for slot: " .. self.SlotName)
 	end
 end
-
 
 function WeaponController:Destroy()
 	self.Trove:Destroy()

@@ -40,7 +40,7 @@ function Hitscan:Fire(ShotData)
 
 	local rayResults =
 		RaycastService:CastRays(Origin.Position, rayDirections, ignoreList, self.WeaponInfo.BULLET_RADIUS)
-	local rayOrigin = self.WeaponController.AnimationController.ViewModelController:GetRayOrigin()
+	local rayOrigin = self.WeaponController.ViewModelController:GetRayOrigin()
 
 	RaycastService:DrawRayResults(rayOrigin, rayResults)
 end

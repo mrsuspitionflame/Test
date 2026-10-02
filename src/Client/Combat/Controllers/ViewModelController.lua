@@ -14,20 +14,15 @@ ViewModelController.__index = ViewModelController
 
 -- Lifecycle
 
-function ViewModelController.new(AnimationController)
+function ViewModelController.new(CombatController)
 	local self = setmetatable({}, ViewModelController)
 
-	self.AnimationController = AnimationController
-	self.StateManager = AnimationController.StateManager
-	self.CameraController = AnimationController.CameraController
-	self.WeaponTrove = AnimationController.WeaponTrove
-	self.AbilityTrove = AnimationController.AbilityTrove
+	self.CombatController = CombatController
+	self.StateManager = CombatController.StateManager
+	self.CameraController = CombatController.CameraController
+	self.WeaponTrove = CombatController.WeaponTrove
+	self.AbilityTrove = CombatController.AbilityTrove
 
-	AnimationController.Trove:Add(self.StateManager.StateChangedSignal:Connect(function(stateType, newState)
-		if stateType == "MovementState" then
-			self:UpdateMovementAnimations(newState)
-		end
-	end))
 	return self
 end
 -- Weapon ViewModels functions
@@ -36,8 +31,18 @@ function ViewModelController:OnEquip(WeaponInfo)
 	self.WeaponInfo = WeaponInfo
 
 	self:CreateWeaponViewModel()
-	self.CameraController:OnEquip(self.WeaponViewModel, self.WeaponInfo)
-	self:UpdateMovementAnimations(self.StateManager:GetState("MovementState"))
+	self.CameraController:OnEquip(self.WeaponInfo)
+
+	local head = self.WeaponViewModel:WaitForChild("Head")
+	self.WeaponAimPart = head:FindFirstChild("AimPartAttachment")
+	self.SwayCF = CFrame.new()
+	self.AimCF = CFrame.new()
+	self.LastCameraCF = workspace.CurrentCamera.CFrame
+
+	self.WeaponBindingName = "Update" .. self.WeaponInfo.WEAPON_NAME .. "WeaponViewModel"
+	self.WeaponTrove:BindToRenderStep(self.WeaponBindingName, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
+		self:UpdateWeaponViewModel(deltaTime)
+	end)
 end
 
 function ViewModelController:OnUnequip()
@@ -51,7 +56,7 @@ function ViewModelController:CreateWeaponViewModel()
 	self.WeaponViewModel.Name = self.WeaponInfo.WEAPON_NAME
 	self.WeaponViewModel.Parent = workspace.CurrentCamera
 
-	self.AnimationController.WeaponAnimations =
+	self.WeaponAnimations =
 		AnimationLoader.LoadWeaponAnimations(Player, self.WeaponTrove, self.WeaponViewModel, self.WeaponInfo)
 
 	local WeaponModel = WeaponModels:WaitForChild(self.WeaponInfo.WEAPON_TYPE):WaitForChild("HandCannonModel"):Clone()
@@ -96,7 +101,7 @@ function ViewModelController:CreateAbilityViewModel(AbilityInfo)
 	self.AbilityViewModel.Name = "AbilityViewModel"
 	self.AbilityViewModel.Parent = workspace
 
-	self.AnimationController.AbilityAnimations =
+	self.AbilityAnimations =
 		AnimationLoader.LoadAbilityAnimations(Player, self.AbilityTrove, self.AbilityViewModel, AbilityInfo)
 
 	self:ApplyViewModelAppearance(self.AbilityViewModel)
@@ -110,7 +115,7 @@ function ViewModelController:ShowAbilityViewModel()
 
 	self.AbilityViewModel.Parent = camera
 
-	self.CameraController:OnAbilityCast(self.AbilityViewModel, self.AbilityViewModelTrove)
+	self:OnAbilityCast(self.AbilityViewModel, self.AbilityViewModelTrove)
 end
 
 function ViewModelController:HideAbilityViewModel()
@@ -146,12 +151,117 @@ function ViewModelController:ApplyViewModelAppearance(ViewModel)
 	end
 end
 
+-- Helper functions
+
 function ViewModelController:GetRayOrigin()
 	return self.RayOrigin.WorldPosition
 end
 
 function ViewModelController:GetMuzzle()
 	return self.Muzzle
+end
+
+function ViewModelController:OnAbilityCast(ViewModel, AbilityViewModelTrove)
+	self.AbilityViewModel = ViewModel
+
+	local head = self.AbilityViewModel:WaitForChild("Head")
+
+	if head:FindFirstChild("AimPartAttachment") then
+		self.AbilityAimPart = head:FindFirstChild("AimPartAttachment")
+	end
+
+	self.AbilityBindingName = "UpdateAbilityViewModel"
+
+	self.AbilitySwayCF = CFrame.new()
+	self.AbilityAimCF = CFrame.new()
+	self.AbilityLastCameraCF = workspace.CurrentCamera.CFrame
+
+	AbilityViewModelTrove:BindToRenderStep(
+		self.AbilityBindingName,
+		Enum.RenderPriority.Camera.Value + 1,
+		function(deltaTime)
+			self:UpdateAbilityViewModel(deltaTime)
+		end
+	)
+end
+
+function ViewModelController:UpdateWeaponViewModel(deltaTime: number)
+	deltaTime = math.min(deltaTime, 1 / 30)
+
+	local camera = workspace.CurrentCamera
+	local cameraCF = camera.CFrame
+
+	local rotation = cameraCF:ToObjectSpace(self.LastCameraCF)
+	local x, y = rotation:ToOrientation()
+
+	local swayAmount
+	if self.WeaponInfo.HANDLING >= 95 then
+		swayAmount = 0.1
+	else
+		swayAmount = (100 - self.WeaponInfo.HANDLING) / 20
+	end
+	local targetSway = CFrame.Angles(math.sin(x) * swayAmount, math.sin(y) * swayAmount, 0)
+
+	-- Speeds are measured approximately per second
+	local swaySpeed = 12
+	local handlingPercent = math.clamp(self.WeaponInfo.HANDLING / 100, 0, 1)
+	local aimSpeed = 10 + handlingPercent * 15
+
+	local swayAlpha = 1 - math.exp(-swaySpeed * deltaTime)
+
+	local aimAlpha = 1 - math.exp(-aimSpeed * deltaTime)
+
+	self.SwayCF = self.SwayCF:Lerp(targetSway, swayAlpha)
+
+	self.LastCameraCF = cameraCF
+
+	local targetAimCF = CFrame.new()
+
+	if self.CameraController.Aiming and self.WeaponAimPart then
+		targetAimCF = self.WeaponAimPart.WorldCFrame:ToObjectSpace(self.WeaponViewModel:GetPivot())
+	end
+
+	self.AimCF = self.AimCF:Lerp(targetAimCF, aimAlpha)
+
+	self.WeaponViewModel:PivotTo(cameraCF * self.SwayCF * self.AimCF)
+end
+
+function ViewModelController:UpdateAbilityViewModel(deltaTime: number)
+	-- Prevent unusually large jumps after lag spikes
+	deltaTime = math.min(deltaTime, 1 / 30)
+
+	local camera = workspace.CurrentCamera
+	local cameraCF = camera.CFrame
+
+	local rotation = cameraCF:ToObjectSpace(self.AbilityLastCameraCF)
+	local x, y = rotation:ToOrientation()
+
+	local swayAmount = 0.2
+
+	local targetSway = CFrame.Angles(math.sin(x) * swayAmount, math.sin(y) * swayAmount, 0)
+
+	-- Speeds are measured approximately per second
+	local swaySpeed = 12
+	local handlingPercent = 0.8
+	local aimSpeed = 10 + handlingPercent * 15
+
+	local swayAlpha = 1 - math.exp(-swaySpeed * deltaTime)
+
+	local aimAlpha = 1 - math.exp(-aimSpeed * deltaTime)
+
+	self.AbilitySwayCF = self.AbilitySwayCF:Lerp(targetSway, swayAlpha)
+
+	self.AbilityLastCameraCF = cameraCF
+
+	local targetAimCF = CFrame.new()
+
+	if self.CameraController.Aiming and self.AbilityAimPart then
+		targetAimCF = self.AbilityAimPart.WorldCFrame:ToObjectSpace(self.AbilityViewModel:GetPivot())
+	end
+
+	self.AbilityAimCF = self.AbilityAimCF:Lerp(targetAimCF, aimAlpha)
+
+	self.AbilityViewModel:PivotTo(cameraCF * self.AbilitySwayCF * self.AbilityAimCF)
 end
 
 return ViewModelController

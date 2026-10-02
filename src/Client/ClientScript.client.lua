@@ -1,16 +1,16 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Utility = Shared:WaitForChild("Utility")
-local Client = script.Parent
+local Simulations = Shared:WaitForChild("Simulations")
+local Client = script:FindFirstAncestor("Client")
 local Visuals = Utility:WaitForChild("Visuals")
 local Combat = Client:WaitForChild("Combat")
+local Handlers = Combat:WaitForChild("Handlers")
 local Player = game.Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
 
+local MovementSimulation = require(Simulations:WaitForChild("MovementSimulation"))
 local ReplicateRayCast = require(Visuals:WaitForChild("ReplicateRayCast"))
-local ReplicateAbility = require(Visuals:WaitForChild("ReplicateAbility"))
-local LoadoutController = require(Combat:WaitForChild("LoadoutController"))
+local LoadoutHandler = require(Handlers:WaitForChild("LoadoutHandler"))
 local SimulateProjectileClient = require(Visuals:WaitForChild("SimulateProjectile(Client)"))
 
 local StarterGui = game:GetService("StarterGui")
@@ -26,7 +26,7 @@ Player.CameraMode = Enum.CameraMode.Classic
 Player.CameraMinZoomDistance = 0
 Player.CameraMaxZoomDistance = 17
 
+MovementSimulation:Init()
 ReplicateRayCast:Init()
-ReplicateAbility:Init()
-LoadoutController:Init()
+LoadoutHandler:Init()
 SimulateProjectileClient:Init()

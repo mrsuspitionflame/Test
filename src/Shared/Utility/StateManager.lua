@@ -21,6 +21,11 @@ StateManager.__index = StateManager
 function StateManager.new()
 	local self = setmetatable({}, StateManager)
 	self.Trove = Trove.new()
+
+	self.WeaponState = States.WeaponState
+	self.AbilityState = States.AbilityState
+	self.MovementState = nil
+	self.AimState = States.AimState
 	return self
 end
 

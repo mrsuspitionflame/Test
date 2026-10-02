@@ -14,8 +14,7 @@ end
 
 function Gun:CanEquip()
 	local WeaponClass = self.WeaponClass
-	return WeaponClass.CombatClasses.EquippedSlot == nil
-		and WeaponClass.StateManager:TryAction("Weapon", "Equip")
+	return WeaponClass.CombatClasses.EquippedSlot == nil and WeaponClass.StateManager:TryAction("Weapon", "Equip")
 end
 
 function Gun:CanUnequip()
@@ -44,7 +43,6 @@ function Gun:OnUnequip()
 	WeaponClass.CombatClasses.EquippedSlot = nil
 
 	WeaponClass.StateManager:SetState("WeaponState", "UNEQUIPPED")
-	WeaponClass.StateManager:SetState("EquippedState", "UNEQUIPPED")
 
 	WeaponClass.Firing:OnUnequip()
 	WeaponClass.Reloading:OnUnequip()
@@ -76,12 +74,10 @@ function Gun:OnEquip()
 	WeaponClass:AttachWeaponModel()
 
 	WeaponClass.StateManager:SetState("WeaponState", "EQUIPPING")
-	WeaponClass.StateManager:SetState("EquippedState", "EQUIPPED")
 
 	local EquipSpeed = 1 + (WeaponClass.WeaponInfo.HANDLING - 50) / 100
 
 	WeaponClass.Trove:Add(task.delay(WeaponClass.WeaponInfo.EQUIP_DURATION / EquipSpeed, function()
-		WeaponClass.EquipTask = nil
 		if WeaponClass.StateManager:GetState("WeaponState") ~= "EQUIPPING" then
 			return
 		end

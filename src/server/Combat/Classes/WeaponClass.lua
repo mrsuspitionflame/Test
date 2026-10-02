@@ -37,7 +37,6 @@ function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClass
 
 		StateManager = StateManager,
 		CombatClasses = CombatClasses,
-
 	}
 
 	self.Equipping = require(EquipType:WaitForChild(self.WeaponInfo.EQUIP_TYPE)).new(self)
@@ -48,14 +47,6 @@ function WeaponClass.new(Player, WeaponName, SlotName, StateManager, CombatClass
 
 	setmetatable(self, WeaponClass)
 	return self
-end
-
-function WeaponClass:OnUnequip()
-	return self.Equipping:OnUnequip()
-end
-
-function WeaponClass:OnEquip()
-	return self.Equipping:OnEquip()
 end
 
 function WeaponClass:AttachWeaponModel()
@@ -81,8 +72,6 @@ function WeaponClass:AttachWeaponModel()
 	self.RayOrigin = Default:WaitForChild("RayOrigin")
 	self.Muzzle = Default:WaitForChild("MuzzleAttachment")
 end
-
-function WeaponClass:Init() end
 
 function WeaponClass:Destroy()
 	if self.CombatClasses.EquippedSlot == self.SlotName then

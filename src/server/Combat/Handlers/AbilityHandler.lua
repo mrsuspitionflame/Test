@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local Combat = Server:WaitForChild("Combat")
-local LoadoutHandler = require(Combat:WaitForChild("LoadoutHandler"))
+local LoadoutHandler = require(Combat:WaitForChild("Handlers"):WaitForChild("LoadoutHandler"))
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
 local AbilityHandler = {}

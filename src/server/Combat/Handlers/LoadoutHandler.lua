@@ -6,7 +6,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
-local CombatClassesModule = require(script.Parent:WaitForChild("CombatClasses"))
+local CombatClassesModule = require(script.Parent.Parent:WaitForChild("Classes"):WaitForChild("CombatClass"))
 
 local PlayerCombatClasses = {}
 
