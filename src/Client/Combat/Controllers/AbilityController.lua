@@ -14,11 +14,11 @@ local AbilityController = {}
 
 AbilityController.__index = AbilityController
 
-function AbilityController.new(AbilityInfo, animationController, stateManager, guiController, combatController)
+function AbilityController.new(AbilityInfo, viewModelController, stateManager, guiController, combatController)
 	local self = setmetatable({
 		Trove = Trove.new(),
 
-		AnimationController = animationController,
+		ViewModelController = viewModelController,
 		StateManager = stateManager,
 		GUIController = guiController,
 		CombatController = combatController,
@@ -35,7 +35,7 @@ function AbilityController.new(AbilityInfo, animationController, stateManager, g
 end
 
 function AbilityController:GetAnimations()
-	self.Animations = self.AnimationController:GetAnimation("Ability")
+	self.Animations = self.ViewModelController.AbilityAnimations
 end
 
 function AbilityController:IsFirstPerson()
@@ -98,7 +98,7 @@ function AbilityController:UnbindAbilityInputs()
 end
 
 function AbilityController:Init(AbilityInfo)
-	self.AnimationController:CreateAbilityViewModel(AbilityInfo)
+	self.ViewModelController:CreateAbilityViewModel(AbilityInfo)
 	self:GetAnimations()
 
 	self.Grenade = require(Grenades:WaitForChild(AbilityInfo.Grenade)).new(self)

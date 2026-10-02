@@ -54,6 +54,7 @@ end)
 
 PacketSettings.Combat = {}
 
+
 PacketSettings.Combat.Replicate = DefinePackets("CombatReplicate", function()
 	return {
 		ReplicateShotEvent = ByteNetMax.definePacket({

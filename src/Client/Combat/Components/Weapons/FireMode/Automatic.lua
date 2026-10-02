@@ -115,9 +115,9 @@ function Automatic:Fire()
 
 	self.WeaponController.Animations.FIRE.VIEWMODEL:Play(0)
 	self.WeaponController.Animations.FIRE.CHARACTER:Play(0)
-	self.WeaponController.AnimationController.CameraController:Recoil()
+	self.WeaponController.CameraController:Recoil()
 
-	local Muzzle = self.WeaponController.AnimationController.ViewModelController:GetMuzzle()
+	local Muzzle = self.WeaponController.ViewModelController:GetMuzzle()
 	if Muzzle then
 		local FlashEmitter = Muzzle:FindFirstChild("FlashEmitter")
 		local CircleEmitter = Muzzle:FindFirstChild("CircleEmitter")

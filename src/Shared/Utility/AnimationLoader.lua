@@ -77,4 +77,8 @@ function AnimationLoader.LoadAbilityAnimations(Player: Player, Trove, ViewModel,
 	return AbilityAnimations
 end
 
+function AnimationLoader.LoadMovementAnimations()
+	
+end
+
 return AnimationLoader

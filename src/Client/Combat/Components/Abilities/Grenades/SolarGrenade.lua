@@ -27,7 +27,7 @@ function SolarGrenade.new(AbilityController)
 
 	self.AbilityController = AbilityController
 	self.StateManager = AbilityController.StateManager
-	self.ViewModelController = AbilityController.AnimationController.ViewModelController
+	self.ViewModelController = AbilityController.ViewModelController
 	self.GrenadeInfo = self.AbilityController.AbilityInfo.GrenadeInfo
 
 	self.Trove = self.AbilityController.Trove:Extend()

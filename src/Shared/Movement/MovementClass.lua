@@ -1,4 +1,4 @@
-local Movement = script.Parent.Parent:WaitForChild("Movement")
+local Movement = script.Parent:WaitForChild("Components")
 local Jump = require(Movement:WaitForChild("Jump"))
 local Sprint = require(Movement:WaitForChild("Sprint"))
 local Slide = require(Movement:WaitForChild("Slide"))
