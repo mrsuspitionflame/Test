@@ -17,7 +17,7 @@ local MovementSettings = {
 		MIN_START_SPEED = 20,
 		SLIDE_START_SPEED = 50,
 		SLIDE_END_SPEED = 30,
-		SLIDE_DURATION = 0.7,
+		SLIDE_DURATION = 1,
 	},
 
 	ANIMATION_IDS = {

@@ -88,7 +88,7 @@ function SolarGrenade:OnCharacterRemoving()
 end
 
 function SolarGrenade:Cancelled()
-	self:Reset()
+	self:OnCharacterRemoving()
 	self.CombatClasses:ReEquipStoredWeapon()
 end
 

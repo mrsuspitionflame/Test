@@ -19,8 +19,14 @@ end
 
 function Gun:OnEquip()
 	local WeaponController = self.WeaponController
-	if not self:CanEquip() then
+	local CombatController = WeaponController.CombatController
+	-- Apply the server's decision; local combat restrictions may differ.
+	if CombatController.EquippedSlot == WeaponController.SlotName then
 		return
+	end
+	local PreviousWeapon = CombatController:GetEquippedWeapon()
+	if PreviousWeapon then
+		PreviousWeapon.Equipping:OnUnequip()
 	end
 
 	WeaponController.CombatController:CancelStates("Weapon", "Equip")
@@ -62,7 +68,8 @@ end
 
 function Gun:OnUnequip()
 	local WeaponController = self.WeaponController
-	if not self:CanUnequip() then
+	-- Ignore duplicate/stale results without rechecking action restrictions.
+	if WeaponController.CombatController.EquippedSlot ~= WeaponController.SlotName then
 		return
 	end
 

@@ -4,10 +4,19 @@ local Player = Players.LocalPlayer
 local Utility = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Utility")
 local AnimationLoader = require(Utility:WaitForChild("AnimationLoader"))
 
+local RS = game:GetService("RunService")
+
 local Models = ReplicatedStorage:WaitForChild("Models")
 local ViewModels = Models:WaitForChild("ViewModels")
 local WeaponViewModels = ViewModels:WaitForChild("WeaponViewModels")
 local WeaponModels = Models:WaitForChild("WeaponModels")
+
+local MovementAnimations = {
+	WALKING = "WALK",
+	SPRINTING = "SPRINT",
+	JUMPING = "JUMP",
+	SLIDING = "SLIDE",
+}
 
 local ViewModelController = {}
 ViewModelController.__index = ViewModelController
@@ -38,15 +47,20 @@ function ViewModelController:OnEquip(WeaponInfo)
 	self.SwayCF = CFrame.new()
 	self.AimCF = CFrame.new()
 	self.LastCameraCF = workspace.CurrentCamera.CFrame
+	self.LastMovementState = nil
+	self.ActiveMovementAnimation = nil
 
 	self.WeaponBindingName = "Update" .. self.WeaponInfo.WEAPON_NAME .. "WeaponViewModel"
 	self.WeaponTrove:BindToRenderStep(self.WeaponBindingName, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
 		self:UpdateWeaponViewModel(deltaTime)
+		self:UpdateWeaponViewModelMovementAnimation()
 	end)
 end
 
 function ViewModelController:OnUnequip()
 	self.WeaponTrove:Clean()
+	self.LastMovementState = nil
+	self.ActiveMovementAnimation = nil
 end
 
 -- Viewmodel setup and appearance
@@ -217,7 +231,7 @@ function ViewModelController:UpdateWeaponViewModel(deltaTime: number)
 
 	local targetAimCF = CFrame.new()
 
-	if self.CameraController.Aiming and self.WeaponAimPart then
+	if self.StateManager:GetState("AimState") == "AIMING" and self.WeaponAimPart then
 		targetAimCF = self.WeaponAimPart.WorldCFrame:ToObjectSpace(self.WeaponViewModel:GetPivot())
 	end
 
@@ -255,13 +269,36 @@ function ViewModelController:UpdateAbilityViewModel(deltaTime: number)
 
 	local targetAimCF = CFrame.new()
 
-	if self.CameraController.Aiming and self.AbilityAimPart then
+	if self.StateManager:GetState("AimState") == "AIMING" and self.AbilityAimPart then
 		targetAimCF = self.AbilityAimPart.WorldCFrame:ToObjectSpace(self.AbilityViewModel:GetPivot())
 	end
 
 	self.AbilityAimCF = self.AbilityAimCF:Lerp(targetAimCF, aimAlpha)
 
 	self.AbilityViewModel:PivotTo(cameraCF * self.AbilitySwayCF * self.AbilityAimCF)
+end
+
+function ViewModelController:UpdateWeaponViewModelMovementAnimation()
+	local movementState = self.StateManager.Root and self.StateManager:GetState("MovementState")
+	if movementState == self.LastMovementState then
+		return
+	end
+	self.LastMovementState = movementState
+
+	local animationName = MovementAnimations[movementState]
+	local animations = animationName and self.WeaponAnimations and self.WeaponAnimations[animationName]
+	local nextAnimation = animations and animations.VIEWMODEL
+
+	if self.ActiveMovementAnimation then
+		self.ActiveMovementAnimation:Stop(0.15)
+	end
+	self.ActiveMovementAnimation = nextAnimation
+
+	if nextAnimation then
+		nextAnimation.Priority = Enum.AnimationPriority.Movement
+		nextAnimation.Looped = movementState == "WALKING" or movementState == "SPRINTING"
+		nextAnimation:Play(0.15)
+	end
 end
 
 return ViewModelController

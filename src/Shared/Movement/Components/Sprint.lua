@@ -24,9 +24,13 @@ function Sprint:CanSprint()
 		and Humanoid.Health > 0
 		and not Humanoid.Sit
 		and (Grounded or WasSprinting)
-		and MoveDirection:Dot(LookVector) > 0.3
+		and MoveDirection:Dot(LookVector) > 0.7
 		and (Root:GetAttribute("SlideTimeRemaining") or 0) <= 0
 		and self.MovementClass.StateManager:TryAction("Movement", "Sprint")
+end
+
+function Sprint:CancelStates()
+	self.MovementClass.CombatClasses:CancelStates("Movement", "Sprint")
 end
 
 function Sprint:StopSprint()
@@ -43,6 +47,9 @@ function Sprint:Step(dt)
 	local Settings = self.Settings
 
 	local CanSprint = self:CanSprint()
+	if CanSprint and Root:GetAttribute("SprintActive") ~= true then
+		self:CancelStates()
+	end
 	local TargetSpeed = CanSprint and Settings.SPRINT_WALK_SPEED or Settings.DEFAULT_WALK_SPEED
 
 	-- Read tracked state each tick. Don't keep speed in a closure.

@@ -15,11 +15,9 @@ Automatic.__index = Automatic
 function Automatic.new(WeaponController)
 	local self = setmetatable({}, Automatic)
 
-
 	self.WeaponController = WeaponController
 	self.WeaponInfo = WeaponController.WeaponInfo
 	self.StateManager = WeaponController.StateManager
-
 
 	self.LastTimeFired = workspace:GetServerTimeNow()
 
@@ -119,12 +117,12 @@ function Automatic:Fire()
 
 	local Muzzle = self.WeaponController.ViewModelController:GetMuzzle()
 	if Muzzle then
-		local FlashEmitter = Muzzle:FindFirstChild("FlashEmitter")
+		-- local FlashEmitter = Muzzle:FindFirstChild("FlashEmitter")
 		local CircleEmitter = Muzzle:FindFirstChild("CircleEmitter")
 
-		if FlashEmitter then
-			FlashEmitter:Emit(1)
-		end
+		-- if FlashEmitter then
+		-- 	FlashEmitter:Emit(1)
+		-- end
 		if CircleEmitter then
 			CircleEmitter:Emit(1)
 		end

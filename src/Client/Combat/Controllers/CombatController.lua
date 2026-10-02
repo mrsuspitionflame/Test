@@ -37,7 +37,7 @@ function CombatController.new()
 	self.Trove = Trove.new()
 
 	self.EquippedSlot = nil
-	self.WeaponClasses = {}
+	self.WeaponControllers = {}
 
 	self.StateManager = StateManager.new()
 
@@ -55,12 +55,23 @@ function CombatController.new()
 end
 
 function CombatController:GetEquippedWeapon()
-	return self.WeaponLoadout[self.EquippedSlot]
+	return self.WeaponControllers[self.EquippedSlot]
 end
 
 function CombatController:CancelState(stateType, state)
 	if self.StateManager:GetState(stateType) ~= state then
 		return false
+	end
+
+	if stateType == "MovementState" then
+		if state == "SPRINTING" then
+			self.MovementClass.Sprint:StopSprint()
+		elseif state == "SLIDING" then
+			self.MovementClass.Slide:StopSlide()
+		else
+			return false
+		end
+		return true
 	end
 
 	local weaponController = self:GetEquippedWeapon()

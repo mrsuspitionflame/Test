@@ -71,6 +71,22 @@ function SolarGrenade:Pressed()
 	GrenadeCharacterAnimation:Play(0)
 end
 
+function SolarGrenade:Cancelled()
+	-- Disconnect the marker and stopped callbacks before stopping the tracks.
+	self.Trove:Clean()
+	local animations = self.AbilityController.Animations.Grenade.HELD
+	animations.VIEWMODEL:Stop(0.15)
+	animations.CHARACTER:Stop(0.15)
+	if self.ViewModelController.AbilityViewModel then
+		self:DetachSolarGrenade()
+		if self.ViewModelController.AbilityViewModelTrove then
+			self.ViewModelController:HideAbilityViewModel()
+		end
+	end
+	self.StateManager:SetState("AbilityState", "IDLE")
+	PacketSettings.Combat.Ability.GrenadeRequest.send({ Action = "Cancelled" })
+end
+
 function SolarGrenade:AttachSolarGrenade()
 	local LeftArm = self.ViewModelController.AbilityViewModel:FindFirstChild("Left Arm")
 	local LeftGripAttachment = LeftArm:FindFirstChild("LeftGripAttachment")

@@ -6,6 +6,8 @@ local Movement = Shared:WaitForChild("Movement")
 local MovementClass = require(Movement:WaitForChild("MovementClass"))
 
 local Utility = Shared:WaitForChild("Utility")
+local Settings = Shared:WaitForChild("Settings")
+local StateSettings = require(Settings:WaitForChild("StateSettings"))
 
 local Classes = Combat:WaitForChild("Classes")
 
@@ -57,6 +59,17 @@ function CombatClass:CancelState(stateType, state)
 		return false
 	end
 
+	if stateType == "MovementState" then
+		if state == "SPRINTING" then
+			self.MovementClass.Sprint:StopSprint()
+		elseif state == "SLIDING" then
+			self.MovementClass.Slide:StopSlide()
+		else
+			return false
+		end
+		return true
+	end
+
 	local weaponClass = self:GetEquippedWeaponClass()
 	if not weaponClass then
 		return false
@@ -76,6 +89,20 @@ function CombatClass:CancelState(stateType, state)
 		return false
 	end
 
+	return true
+end
+
+function CombatClass:CancelStates(actionType, action)
+	local category = StateSettings[actionType]
+	local actionSettings = category and category[action]
+	if not actionSettings then
+		return false
+	end
+	for stateType, states in pairs(actionSettings.CancelStates) do
+		for _, state in ipairs(states) do
+			self:CancelState(stateType, state)
+		end
+	end
 	return true
 end
 

@@ -9,6 +9,10 @@ function Slide.new(MovementClass)
 	return self
 end
 
+function Slide:CancelStates()
+	self.MovementClass.CombatClasses:CancelStates("Movement", "Slide")
+end
+
 function Slide:StopSlide()
 	local Root = self.MovementClass.CombatClasses.Root
 	if not Root then
@@ -50,6 +54,7 @@ function Slide:Step(dt)
 	local HorizontalSpeed = HorizontalVelocity.Magnitude
 
 	if SlidePressed and self:CanSlide() then
+		self:CancelStates()
 		local StartSpeed = math.max(HorizontalSpeed, Settings.SLIDE_START_SPEED)
 
 		Root:SetAttribute("SlideDirection", HorizontalVelocity.Unit)

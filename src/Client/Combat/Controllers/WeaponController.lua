@@ -133,6 +133,8 @@ function WeaponController:Init()
 		if not data.Accepted then
 			warn("Equip/Unequip action was not accepted for slot:", data.SlotName)
 			return
+		else
+			print("Equip/Unequip action was accepted for slot:", data.SlotName)
 		end
 
 		if data.Action == "Equip" then

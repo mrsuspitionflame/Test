@@ -29,7 +29,7 @@ function ADS:Pressed()
 	self.WeaponController.CombatController:CancelStates("Weapon", "Aim")
 	self.WeaponController.StateManager:SetState("AimState", "AIMING")
 
-	self.WeaponController.CameraController:StartAim()
+	self.WeaponController.CameraController:ZoomCamera(55)
 end
 
 function ADS:Released()
@@ -39,7 +39,7 @@ function ADS:Released()
 	})
 
 	self.WeaponController.StateManager:SetState("AimState", "IDLE")
-	self.WeaponController.CameraController:StopAim()
+	self.WeaponController.CameraController:ZoomCamera(80)
 end
 
 function ADS:Cancelled()
@@ -52,7 +52,7 @@ function ADS:Cancelled()
 		self.WeaponController.StateManager:SetState("AimState", "IDLE")
 	end
 
-	self.WeaponController.CameraController:StopAim()
+	self.WeaponController.CameraController:ZoomCamera(80)
 end
 
 function ADS:OnUnequip()
@@ -62,7 +62,7 @@ function ADS:OnUnequip()
 	})
 
 	self.WeaponController.StateManager:SetState("AimState", "IDLE")
-	self.WeaponController.CameraController:StopAim()
+	self.WeaponController.CameraController:ZoomCamera(80)
 end
 
 function ADS:CanAim()

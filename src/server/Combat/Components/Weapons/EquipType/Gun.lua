@@ -34,12 +34,6 @@ function Gun:OnUnequip()
 		return false
 	end
 
-	PacketSettings.Combat.Weapon.EquipResult.sendTo({
-		Action = "UnEquip",
-		SlotName = WeaponClass.SlotName,
-		Accepted = true,
-	}, WeaponClass.Player)
-
 	WeaponClass.CombatClasses.EquippedSlot = nil
 
 	WeaponClass.StateManager:SetState("WeaponState", "UNEQUIPPED")
@@ -49,6 +43,11 @@ function Gun:OnUnequip()
 	WeaponClass.Aiming:OnUnequip()
 
 	WeaponClass.Trove:Clean()
+	PacketSettings.Combat.Weapon.EquipResult.sendTo({
+		Action = "UnEquip",
+		SlotName = WeaponClass.SlotName,
+		Accepted = true,
+	}, WeaponClass.Player)
 	return true
 end
 
@@ -63,17 +62,24 @@ function Gun:OnEquip()
 		return
 	end
 
-	PacketSettings.Combat.Weapon.EquipResult.sendTo({
-		Action = "Equip",
-		SlotName = WeaponClass.SlotName,
-		Accepted = true,
-	}, WeaponClass.Player)
-
 	WeaponClass.CombatClasses.EquippedSlot = WeaponClass.SlotName
-
-	WeaponClass:AttachWeaponModel()
-
 	WeaponClass.StateManager:SetState("WeaponState", "EQUIPPING")
+
+	local Attached, AttachError = pcall(function()
+		WeaponClass:AttachWeaponModel()
+	end)
+	if not Attached then
+		WeaponClass.Trove:Clean()
+		WeaponClass.CombatClasses.EquippedSlot = nil
+		WeaponClass.StateManager:SetState("WeaponState", "UNEQUIPPED")
+		warn("Weapon equip setup failed:", AttachError)
+		PacketSettings.Combat.Weapon.EquipResult.sendTo({
+			Action = "Equip",
+			SlotName = WeaponClass.SlotName,
+			Accepted = false,
+		}, WeaponClass.Player)
+		return false
+	end
 
 	local EquipSpeed = 1 + (WeaponClass.WeaponInfo.HANDLING - 50) / 100
 
@@ -84,8 +90,13 @@ function Gun:OnEquip()
 
 		WeaponClass.StateManager:SetState("WeaponState", "IDLE")
 	end))
-
-	WeaponClass:Init()
+	-- Confirm only after the model and equip timing have been initialized.
+	PacketSettings.Combat.Weapon.EquipResult.sendTo({
+		Action = "Equip",
+		SlotName = WeaponClass.SlotName,
+		Accepted = true,
+	}, WeaponClass.Player)
+	return true
 end
 
 return Gun

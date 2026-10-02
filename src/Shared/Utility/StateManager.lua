@@ -22,10 +22,12 @@ function StateManager.new()
 	local self = setmetatable({}, StateManager)
 	self.Trove = Trove.new()
 
-	self.WeaponState = States.WeaponState
-	self.AbilityState = States.AbilityState
-	self.MovementState = nil
-	self.AimState = States.AimState
+	-- Combat states are local to this manager; only movement uses the predicted root.
+	self.CombatStates = {
+		WeaponState = States.WeaponState,
+		AbilityState = States.AbilityState,
+		AimState = States.AimState,
+	}
 	return self
 end
 
@@ -36,15 +38,16 @@ end
 
 function StateManager:UnbindRoot()
 	self.Root = nil
+	for stateType in pairs(self.CombatStates) do
+		self.CombatStates[stateType] = States[stateType]
+	end
 end
 
 function StateManager:BindRoot(root)
 	self:UnbindRoot()
 	self.Root = root
 
-	for stateType, defaultState in pairs(States) do
-		self.Root:SetAttribute(stateType, defaultState)
-	end
+	self.Root:SetAttribute("MovementState", States.MovementState)
 end
 
 function StateManager:SetState(stateType, newState)
@@ -56,8 +59,12 @@ function StateManager:SetState(stateType, newState)
 
 	for validStateType, _ in pairs(States) do
 		if stateType == validStateType then
-			self.Root:SetAttribute(stateType, newState)
-			--print("State changed: " .. stateType .. " -> " .. newState)
+			if stateType == "MovementState" then
+				self.Root:SetAttribute(stateType, newState)
+			else
+				self.CombatStates[stateType] = newState
+			end
+			print("State changed: " .. stateType .. " -> " .. newState)
 			return
 		end
 	end
@@ -68,10 +75,10 @@ end
 function StateManager:GetState(stateType)
 	for validStateType, _ in pairs(States) do
 		if stateType == validStateType then
-			if self.Root then
-				return self.Root:GetAttribute(stateType)
+			if stateType == "MovementState" then
+				return if self.Root then self.Root:GetAttribute(stateType) or States[stateType] else States[stateType]
 			end
-			return States[stateType]
+			return self.CombatStates[stateType]
 		end
 	end
 	error("Invalid state type: " .. tostring(stateType))

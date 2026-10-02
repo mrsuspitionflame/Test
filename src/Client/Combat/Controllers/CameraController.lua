@@ -21,7 +21,6 @@ end
 function CameraController:OnEquip(WeaponInfo)
 	self.WeaponInfo = WeaponInfo
 
-	self.Aiming = false
 	self.Zooming = false
 
 	self.ZoomTween = nil

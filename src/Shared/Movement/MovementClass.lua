@@ -3,8 +3,6 @@ local Jump = require(Movement:WaitForChild("Jump"))
 local Sprint = require(Movement:WaitForChild("Sprint"))
 local Slide = require(Movement:WaitForChild("Slide"))
 
-local RunService = game:GetService("RunService")
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
@@ -22,10 +20,10 @@ local MovementStates = table.freeze({
 })
 
 local StateToAnimation = table.freeze({
-	--WALKING = "WALK",
+	WALKING = "WALK",
 	SPRINTING = "SPRINT",
-	--JUMPING = "JUMP",
-	--FALLING = "FALL",
+	JUMPING = "JUMP",
+	FALLING = "FALL",
 	SLIDING = "SLIDE",
 })
 
@@ -44,10 +42,18 @@ function MovementClass.new(Player, StateManager, CombatClasses)
 	self.MovementSettings = table.clone(MovementSettings)
 
 	self.Animations = {}
-	self.ActiveAnimation = nil
 
-	self:Init()
+	self:InputSetup()
 	return self
+end
+
+function MovementClass:InputSetup()
+	self.Inputs = self.Player:WaitForChild("Inputs")
+	local MovementContext = self.Inputs:WaitForChild("MovementContext")
+	self.SprintAction = MovementContext:WaitForChild("SprintAction")
+	self.SlideAction = MovementContext:WaitForChild("SlideAction")
+	self.JumpAction = MovementContext:WaitForChild("JumpAction")
+	return true
 end
 
 function MovementClass:OnCharacterAdded()
@@ -57,10 +63,14 @@ function MovementClass:OnCharacterAdded()
 	-- Dispose any existing components before binding the new character.
 	self:OnCharacterRemoving()
 
-
 	self.Jump = Jump.new(self)
 	self.Sprint = Sprint.new(self)
 	self.Slide = Slide.new(self)
+
+	self:LoadMovementAnimations()
+	if self.CombatClasses.Character ~= character then
+		return
+	end
 
 	self.StateConnection = humanoid.StateChanged:Connect(function(_, newState)
 		if newState == Enum.HumanoidStateType.Jumping then
@@ -69,12 +79,6 @@ function MovementClass:OnCharacterAdded()
 			self.StateManager:SetState("MovementState", "FALLING")
 		end
 	end)
-
-	self:LoadMovementAnimations()
-	if self.CombatClasses.Character ~= character then
-		return
-	end
-	self:UpdateMovementAnimation(self.StateManager:GetState("MovementState"))
 end
 
 function MovementClass:OnCharacterRemoving()
@@ -97,16 +101,26 @@ function MovementClass:OnCharacterRemoving()
 		self.StateConnection = nil
 	end
 
-	if self.ActiveAnimation then
-		self.ActiveAnimation:Stop(0.15)
-		self.ActiveAnimation = nil
+	if self.Animator then
+		for _, Animation in pairs(self.Animations) do
+			local Track = self.Animator:GetTrackByAnimationId(Animation.AnimationId)
+			if Track and Track.IsPlaying then
+				Track:Stop(0.15)
+			end
+		end
 	end
+	self.Animator = nil
 	self.AnimationTrove:Clean()
 	table.clear(self.Animations)
 end
 
 function MovementClass:Step(dt)
-	if not self.CombatClasses.Character or not self.CombatClasses.Humanoid or not self.CombatClasses.Root or not self.Jump then
+	if
+		not self.CombatClasses.Character
+		or not self.CombatClasses.Humanoid
+		or not self.CombatClasses.Root
+		or not self.Jump
+	then
 		return
 	end
 
@@ -115,6 +129,7 @@ function MovementClass:Step(dt)
 	self.Jump:Step(dt)
 
 	self:UpdateMovementState()
+	self:UpdateMovementAnimation()
 end
 
 function MovementClass:UpdateMovementState()
@@ -124,44 +139,86 @@ function MovementClass:UpdateMovementState()
 	local HumanoidState = Humanoid:GetState()
 	local IsSliding = (Root:GetAttribute("SlideTimeRemaining") or 0) > 0
 	local IsGrounded = Humanoid.FloorMaterial ~= Enum.Material.Air
+		and HumanoidState ~= Enum.HumanoidStateType.Jumping
+		and HumanoidState ~= Enum.HumanoidStateType.Freefall
+	local State = nil
 
-	if IsSliding then
-		self.StateManager:SetState("MovementState", "SLIDING")
-	elseif HumanoidState == Enum.HumanoidStateType.Jumping then
-		self.StateManager:SetState("MovementState", "JUMPING")
-	elseif not IsGrounded then
-		self.StateManager:SetState("MovementState", "FALLING")
-	elseif self.Sprint:CanSprint() then
-		self.StateManager:SetState("MovementState", "SPRINTING")
-	elseif Humanoid.MoveDirection.Magnitude > 0.1 then
-		self.StateManager:SetState("MovementState", "WALKING")
+	-- if not IsGrounded then
+	-- 	if HumanoidState == Enum.HumanoidStateType.Jumping then
+	-- 		State = "JUMPING"
+	-- 	else
+	-- 		State = "FALLING"
+	-- 	end
+	-- else
+	-- 	if IsSliding then
+	-- 		State = "SLIDING"
+	-- 	elseif Root:GetAttribute("SprintActive") == true then
+	-- 		State = "SPRINTING"
+	-- 	elseif Humanoid.MoveDirection.Magnitude > 0.1 then
+	-- 		State = "WALKING"
+	-- 	else
+	-- 		State = "IDLE"
+	-- 	end
+	-- end
+
+	if not IsGrounded then
+		return
 	else
-		self.StateManager:SetState("MovementState", "IDLE")
+		if IsSliding then
+			State = "SLIDING"
+		elseif Root:GetAttribute("SprintActive") == true then
+			State = "SPRINTING"
+		elseif Humanoid.MoveDirection.Magnitude > 0.1 then
+			State = "WALKING"
+		else
+			State = "IDLE"
+		end
 	end
+
+	self.StateManager:SetState("MovementState", State)
 end
 
-function MovementClass:UpdateMovementAnimation(newState)
-	local AnimationName = StateToAnimation[newState]
-	local NextAnimation = AnimationName and self.Animations[AnimationName] or nil
-
-	if self.ActiveAnimation == NextAnimation then
+function MovementClass:UpdateMovementAnimation()
+	local Animator = self.Animator
+	if not Animator then
 		return
 	end
 
-	if self.ActiveAnimation then
-		self.ActiveAnimation:Stop(0.15)
+	local Root = self.CombatClasses.Root
+	local State = self.StateManager:GetState("MovementState")
+	local AnimationName = StateToAnimation[State]
+	local PreviousState = Root:GetAttribute("MovementAnimationState")
+
+	-- Resolve live tracks each simulation frame; rollback can replace track handles.
+	for ActionName, Animation in pairs(self.Animations) do
+		if ActionName ~= AnimationName then
+			local Track = Animator:GetTrackByAnimationId(Animation.AnimationId)
+			if Track and Track.IsPlaying then
+				Track:Stop(0.15)
+			end
+		end
 	end
 
-	self.ActiveAnimation = NextAnimation
-
-	if not NextAnimation then
+	Root:SetAttribute("MovementAnimationState", State)
+	local Animation = AnimationName and self.Animations[AnimationName]
+	if not Animation then
 		return
 	end
 
-	-- Keep custom movement tracks above Roblox's default Animate tracks.
-	NextAnimation.Priority = Enum.AnimationPriority.Movement
-	NextAnimation.Looped = newState == "SPRINTING"
-	NextAnimation:Play(0.15)
+	local Track = Animator:GetTrackByAnimationId(Animation.AnimationId)
+	local Looped = State ~= "JUMPING"
+	-- Jump plays once per state entry; the marker is an attribute so it rolls back.
+	if not Looped and PreviousState == State then
+		return
+	end
+	if not Track then
+		Track = Animator:LoadAnimation(Animation)
+	end
+	Track.Priority = Enum.AnimationPriority.Movement
+	Track.Looped = Looped
+	if not Track.IsPlaying or PreviousState ~= State then
+		Track:Play(0.15)
+	end
 end
 
 function MovementClass:LoadMovementAnimations()
@@ -177,14 +234,16 @@ function MovementClass:LoadMovementAnimations()
 	if self.CombatClasses.Character ~= Character or self.CombatClasses.Humanoid ~= Humanoid then
 		return
 	end
+	self.Animator = Animator
+	self.CombatClasses.Root:SetAttribute("MovementAnimationState", nil)
 
 	for ActionName, AnimationId in pairs(MovementSettings.ANIMATION_IDS) do
-		local Animation = Instance.new("Animation")
+		local Animation = self.AnimationTrove:Add(Instance.new("Animation"))
 		Animation.Name = ActionName .. "Animation"
 		Animation.AnimationId = AnimationId
 
-		local LoadedAnimation = Animator:LoadAnimation(Animation)
-		self.Animations[ActionName] = self.AnimationTrove:Add(LoadedAnimation)
+		-- Cache animation definitions only; tracks are loaded inside the simulation.
+		self.Animations[ActionName] = Animation
 	end
 end
 
@@ -196,16 +255,6 @@ function MovementClass:Destroy()
 	self.JumpAction = nil
 	self.SlideAction = nil
 	self.Player = nil
-end
-
-function MovementClass:Init()
-	if RunService:IsServer() then
-		self.Trove:Add(self.StateManager.StateChangedSignal:Connect(function(stateType, newState)
-			if stateType == "MovementState" then
-				self:UpdateMovementAnimation(newState)
-			end
-		end))
-	end
 end
 
 return MovementClass

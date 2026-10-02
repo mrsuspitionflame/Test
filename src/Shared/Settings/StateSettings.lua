@@ -85,12 +85,12 @@ StateSettings.Movement = {
 
 	Sprint = {
 		BlockedStates = {
-			WeaponState = { "FIRING", "EQUIPPING", "RELOADING" },
+			WeaponState = { "FIRING", "EQUIPPING", "RELOADING", "AIMING" },
 			AbilityState = {},
 			MovementState = {},
 		},
 		CancelStates = {
-			AimState = { "AIMING" },
+			AimState = {},
 		},
 	},
 

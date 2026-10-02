@@ -13,7 +13,8 @@ function Jump.new(MovementClass)
 	return self
 end
 
-function Jump:ApplyJump(jumpPower)
+function Jump:ApplyJump(jumpPower, Action)
+	self:CancelStates(Action)
 	local Humanoid = self.MovementClass.CombatClasses.Humanoid
 	local Root = self.MovementClass.CombatClasses.Root
 	if self.MovementClass.Slide then
@@ -26,7 +27,7 @@ function Jump:ApplyJump(jumpPower)
 end
 
 function Jump:DoubleJump()
-	self:ApplyJump(self.Settings.DOUBLE_JUMP_POWER)
+	self:ApplyJump(self.Settings.DOUBLE_JUMP_POWER, "DoubleJump")
 end
 
 function Jump:CanDoubleJump()
@@ -47,7 +48,9 @@ function Jump:CanDoubleJump()
 		and self.MovementClass.StateManager:TryAction("Movement", "DoubleJump")
 end
 
-function Jump:CancelStates() end -- Haven't finished movement cancellation yet, try not to get messed up
+function Jump:CancelStates(Action)
+	self.MovementClass.CombatClasses:CancelStates("Movement", Action or "Jump")
+end
 
 function Jump:Step(dt)
 	local Humanoid = self.MovementClass.CombatClasses.Humanoid
@@ -68,6 +71,9 @@ function Jump:Step(dt)
 		Root:SetAttribute("DoubleJumpAvailable", true)
 
 		if JumpPressed then
+			if self.MovementClass.StateManager:TryAction("Movement", "Jump") then
+				self:CancelStates()
+			end
 			-- Record the grounded press even if the Humanoid changes state
 			-- between two simulation callbacks.
 			Root:SetAttribute("NormalJumpUsed", true)
@@ -78,6 +84,9 @@ function Jump:Step(dt)
 		end
 	elseif HumanoidState == Enum.HumanoidStateType.Jumping then
 		-- Roblox created the normal grounded jump.
+		if Root:GetAttribute("NormalJumpUsed") ~= true then
+			self:CancelStates()
+		end
 		Root:SetAttribute("NormalJumpUsed", true)
 		Root:SetAttribute("CoyoteTimeRemaining", 0)
 	else
