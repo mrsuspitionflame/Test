@@ -22,21 +22,21 @@ local SolarGrenade = {}
 
 SolarGrenade.__index = SolarGrenade
 
-function SolarGrenade.new(AbilityController)
+function SolarGrenade.new(AbilityHandler)
 	local self = setmetatable({}, SolarGrenade)
 
-	self.AbilityController = AbilityController
-	self.StateManager = AbilityController.StateManager
-	self.ViewModelController = AbilityController.ViewModelController
-	self.GrenadeInfo = self.AbilityController.AbilityInfo.GrenadeInfo
+	self.AbilityHandler = AbilityHandler
+	self.StateManager = AbilityHandler.StateManager
+	self.ViewModelController = AbilityHandler.ViewModelController
+	self.GrenadeInfo = self.AbilityHandler.AbilityInfo.GrenadeInfo
 
-	self.Trove = self.AbilityController.Trove:Extend()
+	self.Trove = self.AbilityHandler.Trove:Extend()
 
 	return self
 end
 
 function SolarGrenade:Pressed()
-	if not self.AbilityController.StateManager:TryAction("Ability", "Grenade") then
+	if not self.AbilityHandler.StateManager:TryAction("Ability", "Grenade") then
 		return
 	end
 
@@ -44,11 +44,11 @@ function SolarGrenade:Pressed()
 		Action = "Pressed",
 	})
 
-	self.AbilityController.CombatController:CancelStates("Ability", "Grenade")
+	self.AbilityHandler.CombatHandler:CancelStates("Ability", "Grenade")
 	self.Trove:Clean()
 	self.StateManager:SetState("AbilityState", "USING_GRENADE")
 
-	local Animations = self.AbilityController.Animations
+	local Animations = self.AbilityHandler.Animations
 	local GrenadeHeldAnimation = Animations.Grenade.HELD.VIEWMODEL
 	local GrenadeCharacterAnimation = Animations.Grenade.HELD.CHARACTER
 
@@ -74,7 +74,7 @@ end
 function SolarGrenade:Cancelled()
 	-- Disconnect the marker and stopped callbacks before stopping the tracks.
 	self.Trove:Clean()
-	local animations = self.AbilityController.Animations.Grenade.HELD
+	local animations = self.AbilityHandler.Animations.Grenade.HELD
 	animations.VIEWMODEL:Stop(0.15)
 	animations.CHARACTER:Stop(0.15)
 	if self.ViewModelController.AbilityViewModel then

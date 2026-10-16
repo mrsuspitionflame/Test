@@ -7,12 +7,12 @@ local CameraController = {}
 
 CameraController.__index = CameraController
 
-function CameraController.new(CombatController)
+function CameraController.new(CombatHandler)
 	local self = setmetatable({}, CameraController)
-	self.CombatController = CombatController
+	self.CombatHandler = CombatHandler
 
-	self.WeaponTrove = CombatController.WeaponTrove
-	self.AbilityTrove = CombatController.AbilityTrove
+	self.WeaponTrove = CombatHandler.WeaponTrove
+	self.AbilityTrove = CombatHandler.AbilityTrove
 	return self
 end
 

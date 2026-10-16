@@ -7,10 +7,10 @@ local Magazine = {}
 
 Magazine.__index = Magazine
 
-function Magazine.new(WeaponController)
+function Magazine.new(WeaponHandler)
 	local self = setmetatable({}, Magazine)
 
-	self.WeaponController = WeaponController
+	self.WeaponHandler = WeaponHandler
 	return self
 end
 
@@ -20,22 +20,22 @@ function Magazine:Pressed()
 	end
 
 	PacketSettings.Combat.Weapon.ReloadRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Pressed",
 	})
 
-	self.WeaponController.CombatController:CancelStates("Weapon", "Reload")
+	self.WeaponHandler.CombatHandler:CancelStates("Weapon", "Reload")
 	self.Trove:Clean()
-	self.WeaponController.StateManager:SetState("WeaponState", "RELOADING")
+	self.WeaponHandler.StateManager:SetState("WeaponState", "RELOADING")
 
-	local Animations = self.WeaponController.Animations
+	local Animations = self.WeaponHandler.Animations
 
-	local ReloadSpeed = 1 + (self.WeaponController.WeaponInfo.RELOAD_SPEED - 50) / 100
+	local ReloadSpeed = 1 + (self.WeaponHandler.WeaponInfo.RELOAD_SPEED - 50) / 100
 
-	self.Trove:Connect(self.WeaponController.Animations.RELOAD.VIEWMODEL.Stopped, function()
+	self.Trove:Connect(self.WeaponHandler.Animations.RELOAD.VIEWMODEL.Stopped, function()
 		self.Trove:Clean()
-		if self.WeaponController.StateManager:GetState("WeaponState") == "RELOADING" then
-			self.WeaponController.StateManager:SetState("WeaponState", "IDLE")
+		if self.WeaponHandler.StateManager:GetState("WeaponState") == "RELOADING" then
+			self.WeaponHandler.StateManager:SetState("WeaponState", "IDLE")
 		end
 	end)
 
@@ -46,38 +46,38 @@ function Magazine:Pressed()
 end
 
 function Magazine:CanReload()
-	return self.WeaponController.CombatController.EquippedSlot == self.WeaponController.SlotName
-		and self.WeaponController.StateManager:TryAction("Weapon", "Reload")
-		and self.WeaponController.Ammo < self.WeaponController.WeaponInfo.MAGAZINE_SIZE
-		and self.WeaponController.ReserveAmmo > 0
+	return self.WeaponHandler.CombatHandler.EquippedSlot == self.WeaponHandler.SlotName
+		and self.WeaponHandler.StateManager:TryAction("Weapon", "Reload")
+		and self.WeaponHandler.Ammo < self.WeaponHandler.WeaponInfo.MAGAZINE_SIZE
+		and self.WeaponHandler.ReserveAmmo > 0
 end
 
 function Magazine:Cancelled()
 	self.Trove:Clean()
 	PacketSettings.Combat.Weapon.ReloadRequest.send({
-		SlotName = self.WeaponController.SlotName,
+		SlotName = self.WeaponHandler.SlotName,
 		Action = "Cancelled",
 	})
 
-	if self.WeaponController.StateManager:GetState("WeaponState") == "RELOADING" then
-		self.WeaponController.StateManager:SetState("WeaponState", "IDLE")
+	if self.WeaponHandler.StateManager:GetState("WeaponState") == "RELOADING" then
+		self.WeaponHandler.StateManager:SetState("WeaponState", "IDLE")
 	end
 
-	local Animations = self.WeaponController.Animations
+	local Animations = self.WeaponHandler.Animations
 	Animations.RELOAD.VIEWMODEL:Stop(0)
 	Animations.RELOAD.CHARACTER:Stop(0)
 end
 
 function Magazine:OnUnequip()
 	self.Trove:Clean()
-	local Animations = self.WeaponController.Animations
+	local Animations = self.WeaponHandler.Animations
 	Animations.RELOAD.VIEWMODEL:Stop(0)
 	Animations.RELOAD.CHARACTER:Stop(0)
 end
 
 
 function Magazine:OnEquip()
-	self.Trove = self.WeaponController.EquippedTrove:Extend()
+	self.Trove = self.WeaponHandler.EquippedTrove:Extend()
 end
 
 return Magazine

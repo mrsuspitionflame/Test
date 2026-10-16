@@ -8,11 +8,11 @@ local Hitscan = {}
 
 Hitscan.__index = Hitscan
 
-function Hitscan.new(WeaponController)
+function Hitscan.new(WeaponHandler)
 	local self = setmetatable({}, Hitscan)
 
-	self.WeaponController = WeaponController
-	self.WeaponInfo = WeaponController.WeaponInfo
+	self.WeaponHandler = WeaponHandler
+	self.WeaponInfo = WeaponHandler.WeaponInfo
 
 	return self
 end
@@ -27,7 +27,7 @@ function Hitscan:Fire(ShotData)
 	local Range = self.WeaponInfo.RANGE
 	local Spread = self.WeaponInfo.SPREAD
 
-	if self.WeaponController.StateManager:GetState("AimState") == "AIMING" then
+	if self.WeaponHandler.StateManager:GetState("AimState") == "AIMING" then
 		rayDirections = RaycastService:GetRayDirections(Origin, BulletsPerShot, 0, Seed, Range * 10)
 	else
 		rayDirections = RaycastService:GetRayDirections(Origin, BulletsPerShot, math.rad(Spread), Seed, Range * 10)
@@ -40,7 +40,7 @@ function Hitscan:Fire(ShotData)
 
 	local rayResults =
 		RaycastService:CastRays(Origin.Position, rayDirections, ignoreList, self.WeaponInfo.BULLET_RADIUS)
-	local rayOrigin = self.WeaponController.ViewModelController:GetRayOrigin()
+	local rayOrigin = self.WeaponHandler.ViewModelController:GetRayOrigin()
 
 	RaycastService:DrawRayResults(rayOrigin, rayResults)
 end
