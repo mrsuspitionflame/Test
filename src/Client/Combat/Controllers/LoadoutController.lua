@@ -1,26 +1,26 @@
 local Combat = script:FindFirstAncestor("Combat")
-local Handlers = Combat:WaitForChild("Handlers")
+local Controllers = Combat:WaitForChild("Controllers")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 
 local PacketSettings = require(Settings:WaitForChild("PacketSettings"))
 
-local CombatHandlerModule = require(Handlers:WaitForChild("CombatHandler"))
+local CombatControllerModule = require(Controllers:WaitForChild("CombatController"))
 
-local CombatHandler = CombatHandlerModule.new()
+local CombatController = CombatControllerModule.new()
 
-local LoadoutHandler = {}
+local LoadoutController = {}
 
-function LoadoutHandler:Init()
+function LoadoutController:Init()
 	PacketSettings.Creation.PlayerData.listen(function(data)
 		for _, weaponData in ipairs(data.Weapons) do
-			CombatHandler:CreateWeaponHandler(weaponData)
+			CombatController:CreateWeaponController(weaponData)
 		end
-		CombatHandler:CreateAbilityHandler(data.Abilities)
+		CombatController:CreateAbilityController(data.Abilities)
 	end)
 
 	PacketSettings.Creation.RequestPlayerData.send()
 end
 
-return LoadoutHandler
+return LoadoutController

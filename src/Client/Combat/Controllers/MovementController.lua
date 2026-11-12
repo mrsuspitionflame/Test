@@ -11,16 +11,16 @@ local Trove = require(Packages:WaitForChild("Trove"))
 local Combat = script:FindFirstAncestor("Combat")
 local Movement = Combat:WaitForChild("Movement")
 
-local MovementHandler = {}
+local MovementController = {}
 
-MovementHandler.__index = MovementHandler
+MovementController.__index = MovementController
 
-function MovementHandler.new(StateManager, CombatHandler)
-	local self = setmetatable({}, MovementHandler)
+function MovementController.new(StateManager, CombatController)
+	local self = setmetatable({}, MovementController)
 	self.Trove = Trove.new()
 
 	self.StateManager = StateManager
-	self.CombatHandler = CombatHandler
+	self.CombatController = CombatController
 
 	self.Character = nil
 	self.Humanoid = nil
@@ -38,21 +38,21 @@ function MovementHandler.new(StateManager, CombatHandler)
 	return self
 end
 
-function MovementHandler:GetCharacterAnimations()
-	self.CharacterAnimations = self.CombatHandler.MovementClass.Animations
+function MovementController:GetCharacterAnimations()
+	self.CharacterAnimations = self.CombatController.MovementClass.Animations
 end
 
-function MovementHandler:GetViewModelAnimations()
-	self.ViewModelAnimations = self.CombatHandler.ViewModelController.WeaponAnimations
+function MovementController:GetViewModelAnimations()
+	self.ViewModelAnimations = self.CombatController.ViewModelController.WeaponAnimations
 end
 
-function MovementHandler:OnCharacterAdded(character)
+function MovementController:OnCharacterAdded(character)
 	self.Character = character
 	self.Humanoid = character:WaitForChild("Humanoid")
 	self.HumanoidRootPart = character:WaitForChild("HumanoidRootPart")
 	self.Animate = character:WaitForChild("Animate")
 
-	self.CombatHandler.MovementClass:LoadMovementAnimations()
+	self.CombatController.MovementClass:LoadMovementAnimations()
 	self:GetCharacterAnimations()
 
 	self.Jump:OnCharacterAdded()
@@ -62,7 +62,7 @@ function MovementHandler:OnCharacterAdded(character)
 	self:Init()
 end
 
-function MovementHandler:OnCharacterRemoved()
+function MovementController:OnCharacterRemoved()
 	self.Jump:OnCharacterRemoved()
 	self.Sprint:OnCharacterRemoved()
 	self.Slide:OnCharacterRemoved()
@@ -75,7 +75,7 @@ function MovementHandler:OnCharacterRemoved()
 	self.Animate = nil
 end
 
-function MovementHandler:OnWeaponEquip()
+function MovementController:OnWeaponEquip()
 	self:GetViewModelAnimations()
 	self.Jump:OnWeaponEquip()
 	self.Sprint:OnWeaponEquip()
@@ -83,14 +83,14 @@ function MovementHandler:OnWeaponEquip()
 	self.WalkAndIdle:OnWeaponEquip()
 end
 
-function MovementHandler:OnWeaponUnequip()
+function MovementController:OnWeaponUnequip()
 	self.WalkAndIdle:OnWeaponUnequip()
 	self.Jump:OnWeaponUnequip()
 	self.Sprint:OnWeaponUnequip()
 	self.Slide:OnWeaponUnequip()
 end
 
-function MovementHandler:BindAction(actionName, inputType, callback)
+function MovementController:BindAction(actionName, inputType, callback)
 	CAS:BindAction(actionName, callback, false, inputType)
 
 	self.Trove:Add(function()
@@ -98,7 +98,7 @@ function MovementHandler:BindAction(actionName, inputType, callback)
 	end)
 end
 
-function MovementHandler:Init()
+function MovementController:Init()
 	self.Trove:Add(self.Humanoid.StateChanged:Connect(function(_, newState)
 		if newState == Enum.HumanoidStateType.Landed then
 			self.Jump:StopAnimation()
@@ -158,4 +158,4 @@ function MovementHandler:Init()
 	end)
 end
 
-return MovementHandler
+return MovementController

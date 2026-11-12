@@ -9,37 +9,37 @@ local Gun = {}
 
 Gun.__index = Gun
 
-function Gun.new(WeaponHandler)
+function Gun.new(WeaponController)
 	local self = setmetatable({}, Gun)
 
-	self.WeaponHandler = WeaponHandler
+	self.WeaponController = WeaponController
 
 	return self
 end
 
 function Gun:OnEquip()
-	local WeaponHandler = self.WeaponHandler
-	local CombatHandler = WeaponHandler.CombatHandler
+	local WeaponController = self.WeaponController
+	local CombatController = WeaponController.CombatController
 	-- Apply the server's decision; local combat restrictions may differ.
-	if CombatHandler.EquippedSlot == WeaponHandler.SlotName then
+	if CombatController.EquippedSlot == WeaponController.SlotName then
 		return
 	end
-	local PreviousWeapon = CombatHandler:GetEquippedWeapon()
+	local PreviousWeapon = CombatController:GetEquippedWeapon()
 	if PreviousWeapon then
 		PreviousWeapon.Equipping:OnUnequip()
 	end
 
-	WeaponHandler.CombatHandler:CancelStates("Weapon", "Equip")
-	WeaponHandler.StateManager:SetState("WeaponState", "EQUIPPING")
+	WeaponController.CombatController:CancelStates("Weapon", "Equip")
+	WeaponController.StateManager:SetState("WeaponState", "EQUIPPING")
 
 	UIS.MouseIconEnabled = false
 
-	WeaponHandler.CombatHandler.EquippedSlot = WeaponHandler.SlotName
+	WeaponController.CombatController.EquippedSlot = WeaponController.SlotName
 
-	WeaponHandler.GUIController:EquippedSlotChanged(WeaponHandler.SlotName)
-	WeaponHandler.ViewModelController:OnEquip(WeaponHandler.WeaponInfo)
-	WeaponHandler:GetAnimations()
-	local Animations = WeaponHandler.Animations
+	WeaponController.GUIController:EquippedSlotChanged(WeaponController.SlotName)
+	WeaponController.ViewModelController:OnEquip(WeaponController.WeaponInfo)
+	WeaponController:GetAnimations()
+	local Animations = WeaponController.Animations
 
 	Animations.IDLE.VIEWMODEL.Looped = true
 	Animations.IDLE.CHARACTER.Looped = true
@@ -47,71 +47,71 @@ function Gun:OnEquip()
 	Animations.IDLE.VIEWMODEL:Play(0.15, 1, 0.1)
 	Animations.IDLE.CHARACTER:Play(0.15, 1, 0.1)
 
-	local EquipSpeed = 1 + (WeaponHandler.WeaponInfo.HANDLING - 50) / 100
+	local EquipSpeed = 1 + (WeaponController.WeaponInfo.HANDLING - 50) / 100
 	Animations.EQUIP.VIEWMODEL:Play(0, 1, EquipSpeed)
 	Animations.EQUIP.CHARACTER:Play(0, 1, EquipSpeed)
 
-	WeaponHandler.EquippedTrove:Add(task.delay(WeaponHandler.WeaponInfo.EQUIP_DURATION / EquipSpeed, function()
-		WeaponHandler.EquipTask = nil
-		if WeaponHandler.StateManager:GetState("WeaponState") ~= "EQUIPPING" then
+	WeaponController.EquippedTrove:Add(task.delay(WeaponController.WeaponInfo.EQUIP_DURATION / EquipSpeed, function()
+		WeaponController.EquipTask = nil
+		if WeaponController.StateManager:GetState("WeaponState") ~= "EQUIPPING" then
 			return
 		end
 
-		WeaponHandler.StateManager:SetState("WeaponState", "IDLE")
+		WeaponController.StateManager:SetState("WeaponState", "IDLE")
 	end))
 
-	WeaponHandler.Firing:OnEquip()
-	WeaponHandler.Aiming:OnEquip()
-	WeaponHandler.Reloading:OnEquip()
-	WeaponHandler:BindWeaponInputs()
+	WeaponController.Firing:OnEquip()
+	WeaponController.Aiming:OnEquip()
+	WeaponController.Reloading:OnEquip()
+	WeaponController:BindWeaponInputs()
 end
 
 function Gun:OnUnequip()
-	local WeaponHandler = self.WeaponHandler
+	local WeaponController = self.WeaponController
 	-- Ignore duplicate/stale results without rechecking action restrictions.
-	if WeaponHandler.CombatHandler.EquippedSlot ~= WeaponHandler.SlotName then
+	if WeaponController.CombatController.EquippedSlot ~= WeaponController.SlotName then
 		return
 	end
 
-	WeaponHandler.CombatHandler:CancelStates("Weapon", "UnEquip")
-	WeaponHandler.StateManager:SetState("WeaponState", "UNEQUIPPED")
+	WeaponController.CombatController:CancelStates("Weapon", "UnEquip")
+	WeaponController.StateManager:SetState("WeaponState", "UNEQUIPPED")
 
 	UIS.MouseIconEnabled = true
 
-	WeaponHandler.CombatHandler.EquippedSlot = nil
+	WeaponController.CombatController.EquippedSlot = nil
 
-	local Animations = WeaponHandler.Animations
+	local Animations = WeaponController.Animations
 	Animations.IDLE.VIEWMODEL:Stop(0.15)
 	Animations.IDLE.CHARACTER:Stop(0.15)
 
-	WeaponHandler.Firing:OnUnequip()
-	WeaponHandler.Reloading:OnUnequip()
-	WeaponHandler.Aiming:OnUnequip()
+	WeaponController.Firing:OnUnequip()
+	WeaponController.Reloading:OnUnequip()
+	WeaponController.Aiming:OnUnequip()
 
-	WeaponHandler:UnbindWeaponInputs()
-	WeaponHandler.EquippedTrove:Clean()
-	WeaponHandler.ViewModelController:OnUnequip()
-	WeaponHandler.GUIController:OnUnequip()
+	WeaponController:UnbindWeaponInputs()
+	WeaponController.EquippedTrove:Clean()
+	WeaponController.ViewModelController:OnUnequip()
+	WeaponController.GUIController:OnUnequip()
 end
 
 function Gun:CanEquip()
-	local WeaponHandler = self.WeaponHandler
-	return WeaponHandler.CombatHandler.EquippedSlot == nil
-		and WeaponHandler.StateManager:TryAction("Weapon", "Equip")
+	local WeaponController = self.WeaponController
+	return WeaponController.CombatController.EquippedSlot == nil
+		and WeaponController.StateManager:TryAction("Weapon", "Equip")
 end
 
 function Gun:CanUnequip()
-	local WeaponHandler = self.WeaponHandler
-	return WeaponHandler.CombatHandler.EquippedSlot == WeaponHandler.SlotName
-		and WeaponHandler.StateManager:TryAction("Weapon", "UnEquip")
+	local WeaponController = self.WeaponController
+	return WeaponController.CombatController.EquippedSlot == WeaponController.SlotName
+		and WeaponController.StateManager:TryAction("Weapon", "UnEquip")
 end
 
 -- Input requests a change; OnEquip/OnUnequip apply the server's response.
 function Gun:Pressed()
-	local WeaponHandler = self.WeaponHandler
-	local isEquipped = WeaponHandler.CombatHandler.EquippedSlot == WeaponHandler.SlotName
+	local WeaponController = self.WeaponController
+	local isEquipped = WeaponController.CombatController.EquippedSlot == WeaponController.SlotName
 	PacketSettings.Combat.Weapon.EquipRequest.send({
-		SlotName = WeaponHandler.SlotName,
+		SlotName = WeaponController.SlotName,
 		Action = if isEquipped then "UnEquip" else "Equip",
 	})
 end

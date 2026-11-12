@@ -7,11 +7,11 @@ local ADS = {}
 
 ADS.__index = ADS
 
-function ADS.new(WeaponHandler)
+function ADS.new(WeaponController)
 	local self = setmetatable({}, ADS)
 
 
-	self.WeaponHandler = WeaponHandler
+	self.WeaponController = WeaponController
 
 	return self
 end
@@ -22,51 +22,51 @@ function ADS:Pressed()
 	end
 
 	PacketSettings.Combat.Weapon.AimRequest.send({
-		SlotName = self.WeaponHandler.SlotName,
+		SlotName = self.WeaponController.SlotName,
 		Action = "Pressed",
 	})
 
-	self.WeaponHandler.CombatHandler:CancelStates("Weapon", "Aim")
-	self.WeaponHandler.StateManager:SetState("AimState", "AIMING")
+	self.WeaponController.CombatController:CancelStates("Weapon", "Aim")
+	self.WeaponController.StateManager:SetState("AimState", "AIMING")
 
-	self.WeaponHandler.CameraController:ZoomCamera(55)
+	self.WeaponController.CameraController:ZoomCamera(55)
 end
 
 function ADS:Released()
 	PacketSettings.Combat.Weapon.AimRequest.send({
-		SlotName = self.WeaponHandler.SlotName,
+		SlotName = self.WeaponController.SlotName,
 		Action = "Released",
 	})
 
-	self.WeaponHandler.StateManager:SetState("AimState", "IDLE")
-	self.WeaponHandler.CameraController:ZoomCamera(80)
+	self.WeaponController.StateManager:SetState("AimState", "IDLE")
+	self.WeaponController.CameraController:ZoomCamera(80)
 end
 
 function ADS:Cancelled()
 	PacketSettings.Combat.Weapon.AimRequest.send({
-		SlotName = self.WeaponHandler.SlotName,
+		SlotName = self.WeaponController.SlotName,
 		Action = "Cancelled",
 	})
 
-	if self.WeaponHandler.StateManager:GetState("AimState") == "AIMING" then
-		self.WeaponHandler.StateManager:SetState("AimState", "IDLE")
+	if self.WeaponController.StateManager:GetState("AimState") == "AIMING" then
+		self.WeaponController.StateManager:SetState("AimState", "IDLE")
 	end
 
-	self.WeaponHandler.CameraController:ZoomCamera(80)
+	self.WeaponController.CameraController:ZoomCamera(80)
 end
 
 function ADS:OnUnequip()
 	PacketSettings.Combat.Weapon.AimRequest.send({
-		SlotName = self.WeaponHandler.SlotName,
+		SlotName = self.WeaponController.SlotName,
 		Action = "Released",
 	})
 
-	self.WeaponHandler.StateManager:SetState("AimState", "IDLE")
-	self.WeaponHandler.CameraController:ZoomCamera(80)
+	self.WeaponController.StateManager:SetState("AimState", "IDLE")
+	self.WeaponController.CameraController:ZoomCamera(80)
 end
 
 function ADS:CanAim()
-	return self.WeaponHandler.StateManager:TryAction("Weapon", "Aim")
+	return self.WeaponController.StateManager:TryAction("Weapon", "Aim")
 end
 
 function ADS:OnEquip()

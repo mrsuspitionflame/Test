@@ -13,33 +13,33 @@ local AimType = Weapons:WaitForChild("AimType")
 local ReloadType = Weapons:WaitForChild("ReloadType")
 local ShotType = Weapons:WaitForChild("ShotType")
 
-local WeaponHandler = {}
+local WeaponController = {}
 
-WeaponHandler.__index = WeaponHandler
+WeaponController.__index = WeaponController
 
-function WeaponHandler.new(WeaponName, SlotName, ViewModelController, StateManager, GUIController, CombatHandler)
+function WeaponController.new(WeaponName, SlotName, ViewModelController, StateManager, GUIController, CombatController)
 	local WeaponInfo = WeaponSettings[WeaponName]
 
 	local self = setmetatable({
-		Trove = CombatHandler.Trove:Extend(),
+		Trove = CombatController.Trove:Extend(),
 		WeaponInfo = WeaponInfo,
 		Ammo = WeaponInfo.AMMO,
 		ReserveAmmo = WeaponInfo.RESERVE_AMMO,
 		WeaponName = WeaponName,
 		SlotName = SlotName, --Change later to weaponInfo.SlotName if we add that to the settings
 		ViewModelController = ViewModelController,
-		CameraController = CombatHandler.CameraController,
+		CameraController = CombatController.CameraController,
 		StateManager = StateManager,
 		GUIController = GUIController,
-		CombatHandler = CombatHandler,
-	}, WeaponHandler)
+		CombatController = CombatController,
+	}, WeaponController)
 
 	self.EquippedTrove = self.Trove:Extend()
 	self:Init()
 	return self
 end
 
-function WeaponHandler:SetAmmo(ammo, reserveAmmo)
+function WeaponController:SetAmmo(ammo, reserveAmmo)
 	self.Ammo = ammo
 
 	if reserveAmmo ~= nil then
@@ -49,11 +49,11 @@ function WeaponHandler:SetAmmo(ammo, reserveAmmo)
 	self.GUIController:UpdateAmmo(self.SlotName, self.Ammo, self.ReserveAmmo)
 end
 
-function WeaponHandler:GetAnimations()
+function WeaponController:GetAnimations()
 	self.Animations = self.ViewModelController.WeaponAnimations
 end
 
-function WeaponHandler:InputSetup()
+function WeaponController:InputSetup()
 	local Player = game:GetService("Players").LocalPlayer
 	self.Inputs = Player:WaitForChild("Inputs")
 
@@ -69,7 +69,7 @@ function WeaponHandler:InputSetup()
 	return true
 end
 
-function WeaponHandler:BindWeaponInputs()
+function WeaponController:BindWeaponInputs()
 	if self.EquipTrove then
 		return
 	end
@@ -92,14 +92,14 @@ function WeaponHandler:BindWeaponInputs()
 	end)
 end
 
-function WeaponHandler:UnbindWeaponInputs()
+function WeaponController:UnbindWeaponInputs()
 	if self.EquipTrove then
 		self.Trove:Remove(self.EquipTrove)
 		self.EquipTrove = nil
 	end
 end
 
-function WeaponHandler:Init()
+function WeaponController:Init()
 	if self.Initialized then
 		return
 	end
@@ -153,8 +153,8 @@ function WeaponHandler:Init()
 	end
 end
 
-function WeaponHandler:Destroy()
+function WeaponController:Destroy()
 	self.Trove:Destroy()
 end
 
-return WeaponHandler
+return WeaponController

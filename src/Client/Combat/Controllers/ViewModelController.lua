@@ -23,14 +23,14 @@ ViewModelController.__index = ViewModelController
 
 -- Lifecycle
 
-function ViewModelController.new(CombatHandler)
+function ViewModelController.new(CombatController)
 	local self = setmetatable({}, ViewModelController)
 
-	self.CombatHandler = CombatHandler
-	self.StateManager = CombatHandler.StateManager
-	self.CameraController = CombatHandler.CameraController
-	self.WeaponTrove = CombatHandler.WeaponTrove
-	self.AbilityTrove = CombatHandler.AbilityTrove
+	self.CombatController = CombatController
+	self.StateManager = CombatController.StateManager
+	self.CameraController = CombatController.CameraController
+	self.WeaponTrove = CombatController.WeaponTrove
+	self.AbilityTrove = CombatController.AbilityTrove
 
 	return self
 end

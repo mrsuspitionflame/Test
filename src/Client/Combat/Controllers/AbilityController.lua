@@ -10,21 +10,21 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Settings = Shared:WaitForChild("Settings")
 local AbilitySettings = require(Settings:WaitForChild("AbilitySettings"))
 
-local AbilityHandler = {}
+local AbilityController = {}
 
-AbilityHandler.__index = AbilityHandler
+AbilityController.__index = AbilityController
 
-function AbilityHandler.new(AbilityInfo, viewModelController, stateManager, guiController, combatHandler)
+function AbilityController.new(AbilityInfo, viewModelController, stateManager, guiController, combatController)
 	local self = setmetatable({
 		Trove = Trove.new(),
 
 		ViewModelController = viewModelController,
 		StateManager = stateManager,
 		GUIController = guiController,
-		CombatHandler = combatHandler,
+		CombatController = combatController,
 
 		Animations = nil,
-	}, AbilityHandler)
+	}, AbilityController)
 
 	self.AbilityInfo = {
 		GrenadeInfo = AbilitySettings.Grenade[AbilityInfo.Grenade],
@@ -34,11 +34,11 @@ function AbilityHandler.new(AbilityInfo, viewModelController, stateManager, guiC
 	return self
 end
 
-function AbilityHandler:GetAnimations()
+function AbilityController:GetAnimations()
 	self.Animations = self.ViewModelController.AbilityAnimations
 end
 
-function AbilityHandler:IsFirstPerson()
+function AbilityController:IsFirstPerson()
 	local camera = workspace.CurrentCamera
 
 	if not camera then
@@ -54,11 +54,11 @@ function AbilityHandler:IsFirstPerson()
 	return cameraDistance <= 1
 end
 
-function AbilityHandler:Destroy()
+function AbilityController:Destroy()
 	self.Trove:Destroy()
 end
 
-function AbilityHandler:InputSetup()
+function AbilityController:InputSetup()
 	self.Inputs = Player:WaitForChild("Inputs")
 	if not self.Inputs then
 		return false
@@ -70,7 +70,7 @@ function AbilityHandler:InputSetup()
 	return true
 end
 
-function AbilityHandler:BindAbilityInputs()
+function AbilityController:BindAbilityInputs()
 	if self.InputTrove then
 		return
 	end
@@ -90,14 +90,14 @@ function AbilityHandler:BindAbilityInputs()
 	end
 end
 
-function AbilityHandler:UnbindAbilityInputs()
+function AbilityController:UnbindAbilityInputs()
 	if self.InputTrove then
 		self.Trove:Remove(self.InputTrove)
 		self.InputTrove = nil
 	end
 end
 
-function AbilityHandler:Init(AbilityInfo)
+function AbilityController:Init(AbilityInfo)
 	self.ViewModelController:CreateAbilityViewModel(AbilityInfo)
 	self:GetAnimations()
 
@@ -109,4 +109,4 @@ function AbilityHandler:Init(AbilityInfo)
 	end
 end
 
-return AbilityHandler
+return AbilityController

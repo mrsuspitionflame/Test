@@ -13,10 +13,9 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 
 local Controllers = Combat:WaitForChild("Controllers")
-local Handlers = Combat:WaitForChild("Handlers")
 
-local AbilityHandler = require(Handlers:WaitForChild("AbilityHandler"))
-local WeaponHandler = require(Handlers:WaitForChild("WeaponHandler"))
+local AbilityController = require(Controllers:WaitForChild("AbilityController"))
+local WeaponController = require(Controllers:WaitForChild("WeaponController"))
 local ViewModelController = require(Controllers:WaitForChild("ViewModelController"))
 local CameraController = require(Controllers:WaitForChild("CameraController"))
 local GUIController = require(Controllers:WaitForChild("GUIController"))
@@ -28,17 +27,17 @@ local MovementSimulation = require(Simulations:WaitForChild("MovementSimulation"
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Trove = require(Packages:WaitForChild("Trove"))
 
-local CombatHandler = {}
+local CombatController = {}
 
-CombatHandler.__index = CombatHandler
+CombatController.__index = CombatController
 
-function CombatHandler.new()
-	local self = setmetatable({}, CombatHandler)
-	-- Tracks character event connections, weapon handler troves, the ability handler, and child troves.
+function CombatController.new()
+	local self = setmetatable({}, CombatController)
+	-- Tracks character event connections, weapon controller troves, the ability controller, and child troves.
 	self.Trove = Trove.new()
 
 	self.EquippedSlot = nil
-	self.WeaponHandlers = {}
+	self.WeaponControllers = {}
 
 	self.StateManager = StateManager.new()
 
@@ -55,11 +54,11 @@ function CombatHandler.new()
 	return self
 end
 
-function CombatHandler:GetEquippedWeapon()
-	return self.WeaponHandlers[self.EquippedSlot]
+function CombatController:GetEquippedWeapon()
+	return self.WeaponControllers[self.EquippedSlot]
 end
 
-function CombatHandler:CancelState(stateType, state)
+function CombatController:CancelState(stateType, state)
 	if self.StateManager:GetState(stateType) ~= state then
 		return false
 	end
@@ -75,21 +74,21 @@ function CombatHandler:CancelState(stateType, state)
 		return true
 	end
 
-	local weaponHandler = self:GetEquippedWeapon()
-	if not weaponHandler then
+	local weaponController = self:GetEquippedWeapon()
+	if not weaponController then
 		return false
 	end
 
 	if stateType == "WeaponState" then
 		if state == "RELOADING" then
-			weaponHandler.Reloading:Cancelled()
+			weaponController.Reloading:Cancelled()
 		elseif state == "FIRING" then
-			weaponHandler.Firing:Cancelled()
+			weaponController.Firing:Cancelled()
 		else
 			return false
 		end
 	elseif stateType == "AimState" and state == "AIMING" then
-		weaponHandler.Aiming:Cancelled()
+		weaponController.Aiming:Cancelled()
 	else
 		return false
 	end
@@ -97,7 +96,7 @@ function CombatHandler:CancelState(stateType, state)
 	return true
 end
 
-function CombatHandler:CancelStates(actionType, action)
+function CombatController:CancelStates(actionType, action)
 	local category = StateSettings[actionType]
 	local actionSettings = category and category[action]
 	if not actionSettings then
@@ -111,13 +110,13 @@ function CombatHandler:CancelStates(actionType, action)
 	return true
 end
 
-function CombatHandler:CreateWeaponHandler(data)
-	if not self.WeaponHandlers then
-		self.WeaponHandlers = {}
+function CombatController:CreateWeaponController(data)
+	if not self.WeaponControllers then
+		self.WeaponControllers = {}
 	end
 
-	if self.WeaponHandlers[data.SlotName] == nil then
-		self.WeaponHandlers[data.SlotName] = WeaponHandler.new(
+	if self.WeaponControllers[data.SlotName] == nil then
+		self.WeaponControllers[data.SlotName] = WeaponController.new(
 			data.WeaponName,
 			data.SlotName,
 			self.ViewModelController,
@@ -128,16 +127,16 @@ function CombatHandler:CreateWeaponHandler(data)
 	end
 end
 
-function CombatHandler:CreateAbilityHandler(data)
+function CombatController:CreateAbilityController(data)
 	if self.Ability then
 		return
 	end
 	self.Ability = self.Trove:Add(
-		AbilityHandler.new(data, self.ViewModelController, self.StateManager, self.GUIController, self)
+		AbilityController.new(data, self.ViewModelController, self.StateManager, self.GUIController, self)
 	)
 end
 
-function CombatHandler:CreateMovementClass()
+function CombatController:CreateMovementClass()
 	if self.MovementClass then
 		return
 	end
@@ -145,7 +144,7 @@ function CombatHandler:CreateMovementClass()
 	MovementSimulation:BindPlayerMovementClass(Player, self.MovementClass)
 end
 
-function CombatHandler:OnCharacterAdded(character)
+function CombatController:OnCharacterAdded(character)
 	if Player.Character ~= character or self.Character == character then
 		return
 	end
@@ -173,7 +172,7 @@ function CombatHandler:OnCharacterAdded(character)
 	self.MovementClass:OnCharacterAdded()
 end
 
-function CombatHandler:OnCharacterRemoving(character)
+function CombatController:OnCharacterRemoving(character)
 	if not self.Character or (character and self.Character ~= character) then
 		return
 	end
@@ -184,9 +183,9 @@ function CombatHandler:OnCharacterRemoving(character)
 	end
 	-- Character cleanup must not be blocked by the current combat action.
 	self.StateManager:SetState("WeaponState", "IDLE")
-	for _, handler in pairs(self.WeaponHandlers) do
-		if self.EquippedSlot == handler.SlotName then
-			handler.Equipping:OnUnequip()
+	for _, controller in pairs(self.WeaponControllers) do
+		if self.EquippedSlot == controller.SlotName then
+			controller.Equipping:OnUnequip()
 		end
 	end
 	self.MovementClass:OnCharacterRemoving()
@@ -196,7 +195,7 @@ function CombatHandler:OnCharacterRemoving(character)
 	self.GUIController:SetCombatUIEnabled(false)
 end
 
-function CombatHandler:Init()
+function CombatController:Init()
 	if self.Initialized then
 		return
 	end
@@ -216,4 +215,4 @@ function CombatHandler:Init()
 	end
 end
 
-return CombatHandler
+return CombatController
